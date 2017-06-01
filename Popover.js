@@ -102,6 +102,8 @@ var Popover = React.createClass({
       Math.min(displayArea.x + displayArea.width - contentSize.width,
         Math.max(displayArea.x, fromRect.x + (fromRect.width - contentSize.width) / 2)),
       fromRect.y - contentSize.height - arrowSize.height);
+    if (popoverOrigin.x === 0) popoverOrigin.x += 20;
+    if (popoverOrigin.x + contentSize.width === displayArea.width) popoverOrigin.x -= 20;
     var anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y);
 
     return {
@@ -115,6 +117,8 @@ var Popover = React.createClass({
       Math.min(displayArea.x + displayArea.width - contentSize.width,
         Math.max(displayArea.x, fromRect.x + (fromRect.width - contentSize.width) / 2)),
       fromRect.y + fromRect.height + arrowSize.height);
+    if (popoverOrigin.x === 0) popoverOrigin.x += 20;
+    if (popoverOrigin.x + contentSize.width === displayArea.width) popoverOrigin.x -= 20;
     var anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y + fromRect.height);
 
     return {
@@ -127,6 +131,7 @@ var Popover = React.createClass({
     var popoverOrigin = new Point(fromRect.x - contentSize.width - arrowSize.width,
       Math.min(displayArea.y + displayArea.height - contentSize.height,
         Math.max(displayArea.y, fromRect.y + (fromRect.height - contentSize.height) / 2)));
+    if (popoverOrigin.y === 0) popoverOrigin.y += 10;
     var anchorPoint = new Point(fromRect.x, fromRect.y + fromRect.height / 2.0);
 
     return {
@@ -139,6 +144,7 @@ var Popover = React.createClass({
     var popoverOrigin = new Point(fromRect.x + fromRect.width + arrowSize.width,
       Math.min(displayArea.y + displayArea.height - contentSize.height,
         Math.max(displayArea.y, fromRect.y + (fromRect.height - contentSize.height) / 2)));
+    if (popoverOrigin.y === 0) popoverOrigin.y += 10;
     var anchorPoint = new Point(fromRect.x + fromRect.width, fromRect.y + fromRect.height / 2.0);
 
     return {
@@ -251,6 +257,7 @@ var Popover = React.createClass({
     var commonConfig = {
       duration: animDuration,
       easing: show ? Easing.out(Easing.back()) : Easing.inOut(Easing.quad),
+      useNativeDriver: true
     }
 
     Animated.parallel([
@@ -343,9 +350,10 @@ var Popover = React.createClass({
     arrowStyle = [...arrowStyle, {transform: arrowTransform}];
 
     return (
-      <TouchableWithoutFeedback onPress={this.props.onClose}>
         <View style={[styles.container, contentSizeAvailable && styles.containerVisible ]}>
-          <Animated.View style={[styles.background, ...extendedStyles.background]}/>
+          <TouchableWithoutFeedback onPress={this.props.onClose}>
+            <Animated.View style={[styles.background, ...extendedStyles.background]}/>
+          </TouchableWithoutFeedback>
           <Animated.View style={[styles.popover, {
             top: popoverOrigin.y,
             left: popoverOrigin.x,
@@ -356,7 +364,6 @@ var Popover = React.createClass({
             </Animated.View>
           </Animated.View>
         </View>
-      </TouchableWithoutFeedback>
     );
   }
 });
@@ -389,12 +396,11 @@ var styles = StyleSheet.create({
     shadowColor: 'black',
     shadowOffset: {width: 0, height: 2},
     shadowRadius: 2,
-    shadowOpacity: 0.8,
+    shadowOpacity: 0.8
   },
   content: {
     borderRadius: 3,
-    padding: 6,
-    backgroundColor: '#fff',
+    backgroundColor: 'white',
   },
   arrow: {
     position: 'absolute',
