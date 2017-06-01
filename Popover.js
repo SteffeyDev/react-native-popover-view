@@ -273,24 +273,20 @@ var Popover = React.createClass({
       useNativeDriver: true
     }
 
-    let animations = [
+    Animated.parallel([
       Animated.timing(values.fade, {
         toValue: show ? 1 : 0,
+        ...commonConfig,
+      }),
+      Animated.timing(values.translate, {
+        toValue: show ? new Point(0, 0) : translateOrigin,
         ...commonConfig,
       }),
       Animated.timing(values.scale, {
         toValue: show ? 1 : 0,
         ...commonConfig,
       })
-    ];
-
-    //if (this.props.fromRect)
-      animations.push(Animated.timing(values.translate, {
-        toValue: show ? new Point(0, 0) : translateOrigin,
-        ...commonConfig,
-      }));
-
-    Animated.parallel(animations).start(doneCallback);
+    ]).start(doneCallback);
   },
   _getDefaultAnimatedStyles() {
     // If there's a custom animation handler,
