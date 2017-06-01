@@ -11,7 +11,11 @@ A `<Popover>` component for react-native. Great for use in Tablets; you can put 
 ## Install
 
 ```shell
-npm i --save react-native-popover
+npm i --save https://github.com/SteffeyDev/react-native-popover.git
+```
+or
+```shell
+yarn add https://github.com/SteffeyDev/react-native-popover.git --save
 ```
 
 ## Usage
