@@ -4,9 +4,7 @@
 [![npm version](http://img.shields.io/npm/dm/react-native-popover.svg?style=flat-square)](https://npmjs.org/package/react-native-popover "View this project on npm")
 [![npm licence](http://img.shields.io/npm/l/react-native-popover.svg?style=flat-square)](https://npmjs.org/package/react-native-popover "View this project on npm")
 
-A `<Popover>` component for react-native. This is still very much a work
-in progress and only handles the simplest of cases, ideas and
-contributions are very welcome.
+A `<Popover>` component for react-native. Great for use in Tablets; you can put entire views that you would normally show in a modal (on a smaller device) into a popover, optionally give it an anchor point, and have it float on top of all of the other views.
 
 ![Demo](https://raw.githubusercontent.com/jeanregisser/react-native-popover/master/Screenshots/animated.gif)
 
@@ -93,20 +91,12 @@ var styles = StyleSheet.create({
 AppRegistry.registerComponent('PopoverExample', () => PopoverExample);
 ```
 
-### Displaying the popover on top of other elements
-
-React Native doesn't support directly setting a zIndex on a view.
-What is recommended instead is to rearrange your view hierarchy and put the popover last at the root of your app.
-See [facebook/react-native#131](https://github.com/facebook/react-native/issues/131#issuecomment-77764928)
-
-However, as an alternative, I recommend you use [@brentvatne](https://github.com/brentvatne)'s [react-native-overlay](https://github.com/brentvatne/react-native-overlay) library to wrap `<Popover />` and bring it to the front no matter where it sits in the render tree.
-
 ## Props
 
 Prop              | Type     | Optional | Default     | Description
 ----------------- | -------- | -------- | ----------- | -----------
 isVisible         | bool     | Yes      | false       | Show/Hide the popover
-fromRect          | rect     | No       | {}          | Rectangle at which to anchor the popover
+fromRect          | rect     | Yes      | {}          | Rectangle at which to anchor the popover.  If not provided, the popover will appear in the center of the screen.
 displayArea       | rect     | Yes      | screen rect | Area where the popover is allowed to be displayed
 placement         | string   | Yes      | 'auto'      | How to position the popover - top &#124; bottom &#124; left &#124; right &#124; auto. When 'auto' is specified, it will determine the ideal placement so that the popover is fully visible within `displayArea`.
 onClose           | function | Yes      |             | Callback to be fired when the user taps the popover
