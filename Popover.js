@@ -8,7 +8,8 @@ import {
   Text,
   TouchableWithoutFeedback,
   View,
-  Easing
+  Easing,
+  Modal
 } from 'react-native';
 
 var noop = () => {};
@@ -44,6 +45,7 @@ var Popover = React.createClass({
       anchorPoint: {},
       popoverOrigin: {},
       placement: 'auto',
+      modalVisible: false,
       isTransitioning: false,
       defaultAnimatedValues: {
         scale: new Animated.Value(0),
@@ -77,25 +79,36 @@ var Popover = React.createClass({
   computeGeometry({contentSize, placement}) {
     placement = placement || this.props.placement;
 
-    var options = {
-      displayArea: this.props.displayArea,
-      fromRect: this.props.fromRect,
-      arrowSize: this.getArrowSize(placement),
-      contentSize,
+    if (this.props.fromRect) {
+      var options = {
+        displayArea: this.props.displayArea,
+        fromRect: this.props.fromRect,
+        arrowSize: this.getArrowSize(placement),
+        contentSize,
+      }
+
+      switch (placement) {
+        case 'top':
+          return this.computeTopGeometry(options);
+        case 'bottom':
+          return this.computeBottomGeometry(options);
+        case 'left':
+          return this.computeLeftGeometry(options);
+        case 'right':
+          return this.computeRightGeometry(options);
+        default:
+          return this.computeAutoGeometry(options);
+      }
+    } else {
+      let displayArea = this.props.displayArea;
+      var popoverOrigin = new Point((displayArea.width - contentSize.width)/2, (displayArea.height - contentSize.height)/2);
+      var anchorPoint = new Point(displayArea.width/2, displayArea.height/2);
+      return {
+        popoverOrigin,
+        anchorPoint
+      }
     }
 
-    switch (placement) {
-      case 'top':
-        return this.computeTopGeometry(options);
-      case 'bottom':
-        return this.computeBottomGeometry(options);
-      case 'left':
-        return this.computeLeftGeometry(options);
-      case 'right':
-        return this.computeRightGeometry(options);
-      default:
-        return this.computeAutoGeometry(options);
-    }
   },
   computeTopGeometry({displayArea, fromRect, contentSize, arrowSize}) {
     var popoverOrigin = new Point(
@@ -234,7 +247,7 @@ var Popover = React.createClass({
       if (willBeVisible) {
         // We want to start the show animation only when contentSize is known
         // so that we can have some logic depending on the geometry
-        this.setState({contentSize: {}, isAwaitingShow: true});
+        this.setState({contentSize: {}, isAwaitingShow: true, modalVisible: true});
       } else {
         this._startAnimation({show: false});
       }
@@ -242,7 +255,7 @@ var Popover = React.createClass({
   },
   _startAnimation({show}) {
     var handler = this.props.startCustomAnimation || this._startDefaultAnimation;
-    handler({show, doneCallback: () => this.setState({isTransitioning: false})});
+    handler({show, doneCallback: () => this.setState(Object.assign({isTransitioning: false}, !show ? {modalVisible: false} : null))});
     this.setState({isTransitioning: true});
   },
   _startDefaultAnimation({show, doneCallback}) {
@@ -260,20 +273,24 @@ var Popover = React.createClass({
       useNativeDriver: true
     }
 
-    Animated.parallel([
+    let animations = [
       Animated.timing(values.fade, {
         toValue: show ? 1 : 0,
-        ...commonConfig,
-      }),
-      Animated.timing(values.translate, {
-        toValue: show ? new Point(0, 0) : translateOrigin,
         ...commonConfig,
       }),
       Animated.timing(values.scale, {
         toValue: show ? 1 : 0,
         ...commonConfig,
       })
-    ]).start(doneCallback);
+    ];
+
+    //if (this.props.fromRect)
+      animations.push(Animated.timing(values.translate, {
+        toValue: show ? new Point(0, 0) : translateOrigin,
+        ...commonConfig,
+      }));
+
+    Animated.parallel(animations).start(doneCallback);
   },
   _getDefaultAnimatedStyles() {
     // If there's a custom animation handler,
@@ -350,6 +367,7 @@ var Popover = React.createClass({
     arrowStyle = [...arrowStyle, {transform: arrowTransform}];
 
     return (
+      <Modal transparent={true} supportedOrientations={['portrait', 'landscape']} hardwareAccelerated={true} visible={this.state.modalVisible} onRequestClose={this.props.onClose}>
         <View style={[styles.container, contentSizeAvailable && styles.containerVisible ]}>
           <TouchableWithoutFeedback onPress={this.props.onClose}>
             <Animated.View style={[styles.background, ...extendedStyles.background]}/>
@@ -358,12 +376,13 @@ var Popover = React.createClass({
             top: popoverOrigin.y,
             left: popoverOrigin.x,
             }, ...extendedStyles.popover]}>
-            <Animated.View style={arrowStyle}/>
+            {this.props.fromRect !== undefined && <Animated.View style={arrowStyle}/>}
             <Animated.View ref='content' onLayout={this.measureContent} style={contentStyle}>
               {this.props.children}
             </Animated.View>
           </Animated.View>
         </View>
+      </Modal>
     );
   }
 });
