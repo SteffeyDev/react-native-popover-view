@@ -72,6 +72,8 @@ var Popover = React.createClass({
     }
 
     var geom = this.computeGeometry({contentSize});
+    console.log("Got New Geometry");
+    console.log(geom);
 
     var isAwaitingShow = this.state.isAwaitingShow;
     this.updateState(Object.assign(geom,
@@ -95,7 +97,7 @@ var Popover = React.createClass({
         displayArea: new Rect(10, 20, this.props.displayArea.width - 20, this.props.displayArea.height - 30),
         fromRect: this.props.fromRect,
         arrowSize: this.getArrowSize(placement),
-        contentSize,
+        contentSize
       }
 
       switch (placement) {
@@ -126,6 +128,11 @@ var Popover = React.createClass({
       Math.min(displayArea.x + displayArea.width - contentSize.width,
         Math.max(displayArea.x, fromRect.x + (fromRect.width - contentSize.width) / 2)),
       fromRect.y - contentSize.height - arrowSize.height);
+    console.log("computeTopGeometry");
+    console.log(displayArea);
+    console.log(fromRect);
+    console.log(contentSize);
+    console.log(arrowSize);
     //if (popoverOrigin.x < 20) popoverOrigin.x = 20;
     //if (popoverOrigin.x + contentSize.width >= displayArea.width) popoverOrigin.x = displayArea.width - contentSize.width - 20;
     var anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y);
@@ -244,6 +251,10 @@ var Popover = React.createClass({
   },
   getTranslateOrigin() {
     var {contentSize, popoverOrigin, anchorPoint} = this.state;
+    // console.log("getTranslateOrigin");
+    // console.log(popoverOrigin);
+    // console.log(anchorPoint);
+    // console.log(contentSize);
     var popoverCenter = new Point(popoverOrigin.x + contentSize.width / 2,
       popoverOrigin.y + contentSize.height / 2);
     return new Point(anchorPoint.x - popoverCenter.x, anchorPoint.y - popoverCenter.y);
@@ -253,6 +264,9 @@ var Popover = React.createClass({
     var {
       isVisible,
     } = this.props;
+
+    console.log("New Display Area");
+    console.log(nextProps.displayArea);
 
     if (willBeVisible !== isVisible) {
       if (willBeVisible) {
@@ -308,6 +322,10 @@ var Popover = React.createClass({
     }
 
     var animatedValues = this.state.defaultAnimatedValues;
+
+    // console.log("Animated Values");
+    // console.log(animatedValues)
+    // console.log(animatedValues.translate.x._value);
 
     return {
       backgroundStyle: {
