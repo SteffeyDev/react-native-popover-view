@@ -1,7 +1,7 @@
 'use strict';
 
 import React, {PropTypes} from 'react';
-import {StyleSheet, Dimensions, Animated, Text, TouchableWithoutFeedback, View, Modal, Platform} from 'react-native';
+import {StyleSheet, Dimensions, Animated, Text, TouchableWithoutFeedback, View, Modal, Platform, Keyboard, Alert} from 'react-native';
 import _ from 'underscore';
 
 var flattenStyle = require('react-native/Libraries/StyleSheet/flattenStyle');
@@ -50,11 +50,49 @@ var Popover = React.createClass({
         layoutDirection: PropTypes.string
     },
 
+    componentWillMount() {
+      this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', e => this.keyboardDidShow(e));
+      this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => this.keyboardDidHide());
+    },
+    keyboardDidShow(e) {
+      if (this.state.contentSize.height !== undefined && this.state.popoverOrigin.y !== undefined && this.props.displayArea.height !== undefined) {
+        let keyboardHeight = e.endCoordinates.height;
+
+        if (this.props.isVisible && this.state.contentSize.height + this.state.popoverOrigin.y > this.props.displayArea.height - keyboardHeight) {
+          let toShiftTo = (this.props.displayArea.height - keyboardHeight) - (this.state.contentSize.height + this.state.popoverOrigin.y) - 10;
+          if (toShiftTo <= -this.state.popoverOrigin.y)
+            toShiftTo = -this.state.popoverOrigin.y + 10;
+          this.shiftForKeyboard(toShiftTo);
+        }
+
+        this.setState({keyboardHeight})
+      }
+    },
+    shiftForKeyboard(toShift) {
+      Animated.timing(this.state.defaultAnimatedValues.translate, {
+        toValue: toShift !== 0 ? new Point(0, toShift) : new Point(0, 0),
+        duration: 500,
+        easing: Easing.inOut(Easing.quad),
+        useNativeDriver: false
+      }).start(() => this.setState({shiftedUp: toShift !== 0}))
+    },
+    keyboardDidHide() {
+      if (this.state.shiftedUp)
+        this.shiftForKeyboard(0);
+
+      this.setState({keyboardHeight: 0})
+    },
+    componentWillUnmount() {
+      this.keyboardDidShowListener.remove()
+      this.keyboardDidHideListener.remove()
+    },
+
     getInitialState() {
         return {
             contentSize: {},
             anchorPoint: {},
             popoverOrigin: {},
+            shiftedUp: false,
             placement: PLACEMENT_OPTIONS.AUTO,
             visible: false,
             defaultAnimatedValues: {
