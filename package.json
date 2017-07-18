@@ -1,6 +1,6 @@
 {
   "name": "react-native-popover",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "A <Popover /> component for react-native",
   "main": "NewPopover.js",
   "author": "Jean Regisser <jean.regisser@gmail.com> (https://github.com/jeanregisser)",
