@@ -12,7 +12,7 @@ import {
   Modal,
   Alert
 } from 'react-native';
-import _ from 'underscore';
+import _ from 'lodash';
 
 var noop = () => {};
 

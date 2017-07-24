@@ -2,7 +2,7 @@
 
 import React, {PropTypes} from 'react';
 import {StyleSheet, Dimensions, Animated, Text, TouchableWithoutFeedback, View, Modal, Platform, Keyboard, Alert} from 'react-native';
-import _ from 'underscore';
+import _ from 'lodash';
 
 var flattenStyle = require('react-native/Libraries/StyleSheet/flattenStyle');
 var Easing = require('react-native/Libraries/Animated/src/Easing');
