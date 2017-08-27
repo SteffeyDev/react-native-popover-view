@@ -1,6 +1,6 @@
 {
   "name": "react-native-popover",
-  "version": "0.4.2",
+  "version": "0.4.4",
   "description": "A <Popover /> component for react-native",
   "main": "Popover.js",
   "author": "Jean Regisser <jean.regisser@gmail.com> (https://github.com/jeanregisser)",
@@ -23,5 +23,8 @@
   "devDependencies": {
     "react": "^15.0.2",
     "react-native": "^0.26.2"
+  },
+  "dependencies": {
+    "underscore": "^1.8.3"
   }
 }
