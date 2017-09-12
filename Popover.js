@@ -145,6 +145,7 @@ var Popover = React.createClass({
         fromRect = fromRect || this.props.fromRect;
         displayArea = displayArea || this.props.displayArea;
 
+		
         //check to see if the mode is select
         //and pass in a dummy arrowSize object
         var arrowSize;
@@ -162,6 +163,10 @@ var Popover = React.createClass({
         }
 
         if (fromRect) {
+          //check to see if fromRect is outside of displayArea, and adjust if it is
+          if (fromRect.x > displayArea.x + displayArea.width) fromRect.x = displayArea.x + displayArea.width;
+          if (fromRect.y > displayArea.y + displayArea.height) fromRect.y = displayArea.y + displayArea.height;
+
           var options = {
               displayArea,
               fromRect,
@@ -182,11 +187,6 @@ var Popover = React.createClass({
                 return this.computeAutoGeometry(options);
           }
         } else {
-          console.log("floating");
-          console.log(displayArea);
-          console.log(contentSize);
-          console.log(new Point((displayArea.width - contentSize.width)/2, (displayArea.height - contentSize.height)/2));
-          console.log(new Point(displayArea.width/2, displayArea.height/2));
           return {
             popoverOrigin: new Point((displayArea.width - contentSize.width)/2, (displayArea.height - contentSize.height)/2),
             anchorPoint: new Point(displayArea.width/2, displayArea.height/2),
@@ -295,13 +295,13 @@ var Popover = React.createClass({
         // }
 
         if (fromRect.x - displayArea.x - arrowSize.width >= contentSize.width) { // We could fit it on the left side
-            return this.computeGeometry({contentSize, placement: 'left'});
+            return this.computeGeometry({contentSize, placement: 'left'}, fromRect, displayArea);
         } else if (displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width >= contentSize.width) { // We could fit it on the right side
-            return this.computeGeometry({contentSize, placement: 'right'});
+            return this.computeGeometry({contentSize, placement: 'right'}, fromRect, displayArea);
         } else { // We could fit it on the top or bottom, need to figure out which is better
             let topSpace = fromRect.y - displayArea.y;
             let bottomSpace = displayArea.y + displayArea.height - (fromRect.y + fromRect.height);
-            return topSpace > bottomSpace ? this.computeGeometry({contentSize, placement: 'top'}) : this.computeGeometry({contentSize, placement: 'bottom'});
+            return topSpace > bottomSpace ? this.computeGeometry({contentSize, placement: 'top'}, fromRect, displayArea) : this.computeGeometry({contentSize, placement: 'bottom'}, fromRect, displayArea);
         }
 
 
