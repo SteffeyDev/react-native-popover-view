@@ -47,7 +47,8 @@ var Popover = React.createClass({
         isVisible: PropTypes.bool,
         onClose: PropTypes.func,
         mode: PropTypes.string,
-        layoutDirection: PropTypes.string
+        layoutDirection: PropTypes.string,
+		showInModal: PropTypes.bool
     },
 
     componentWillMount() {
@@ -109,7 +110,8 @@ var Popover = React.createClass({
             arrowSize: DEFAULT_ARROW_SIZE,
             placement: PLACEMENT_OPTIONS.AUTO,
             onClose: noop,
-            mode: 'popover'
+            mode: 'popover',
+			showInModal: true
         };
     },
 
@@ -117,8 +119,6 @@ var Popover = React.createClass({
         var {width, height} = x.nativeEvent.layout;
         var contentSize = {width, height};
         if (contentSize.width && contentSize.height && this.state.isAwaitingShow) {
-          console.log("check");
-          console.log(contentSize);
           var geom = this.computeGeometry({contentSize});
 
           var isAwaitingShow = this.state.isAwaitingShow;
@@ -539,8 +539,7 @@ var Popover = React.createClass({
 
         var contentSizeAvailable = this.state.contentSize.width;
 
-        return (
-          <Modal transparent={true} supportedOrientations={['portrait', 'landscape']} hardwareAccelerated={true} visible={this.state.visible} onRequestClose={this.props.onClose}>
+        let contentView = (
             <View style={[styles.container, contentSizeAvailable && styles.containerVisible]}>
               <TouchableWithoutFeedback onPress={this.props.onClose}>
                 <Animated.View style={[styles.background, ...extendedStyles.background]}/>
@@ -554,8 +553,17 @@ var Popover = React.createClass({
                   {this.props.mode === 'popover' && this.props.fromRect !== undefined && <Animated.View style={arrowStyle}/>}
               </Animated.View>
             </View>
-          </Modal>
         );
+
+		if (this.props.showInModal) {
+			return (
+				<Modal transparent={true} supportedOrientations={['portrait', 'landscape']} hardwareAccelerated={true} visible={this.state.visible} onRequestClose={this.props.onClose}>
+					{contentView}
+				</Modal>
+			);
+		} else {
+			return contentView;
+		}
     }
 });
 
