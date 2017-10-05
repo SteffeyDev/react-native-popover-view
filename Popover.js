@@ -1,6 +1,7 @@
 'use strict';
 
-import React, {PropTypes} from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import {StyleSheet, Dimensions, Animated, Text, TouchableWithoutFeedback, View, Modal, Platform, Keyboard, Alert} from 'react-native';
 import _ from 'lodash';
 
@@ -42,19 +43,31 @@ function isIOS() {
   })()
 }
 
-var Popover = React.createClass({
-    propTypes: {
-        isVisible: PropTypes.bool,
-        onClose: PropTypes.func,
-        mode: PropTypes.string,
-        layoutDirection: PropTypes.string,
-		showInModal: PropTypes.bool
-    },
+export default class Popover extends React.Component {
+
+	constructor(props) {
+		super(props)
+
+		this.state = {
+            contentSize: {},
+            anchorPoint: {},
+            popoverOrigin: {},
+            shiftedUp: false,
+            placement: PLACEMENT_OPTIONS.AUTO,
+            defaultAnimatedValues: {
+                scale: new Animated.Value(0),
+                translate: new Animated.ValueXY(),
+                fade: new Animated.Value(0)
+            }
+        };
+
+	}
 
     componentWillMount() {
       this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', e => this.keyboardDidShow(e));
       this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => this.keyboardDidHide());
-    },
+    }
+
     keyboardDidShow(e) {
       if (this.state.contentSize.height !== undefined && this.state.popoverOrigin.y !== undefined && this.props.displayArea.height !== undefined) {
         let keyboardHeight = e.endCoordinates.height;
@@ -68,7 +81,8 @@ var Popover = React.createClass({
 
         this.setState({keyboardHeight})
       }
-    },
+    }
+
     shiftForKeyboard(toShift) {
       Animated.timing(this.state.defaultAnimatedValues.translate, {
         toValue: toShift !== 0 ? new Point(0, toShift) : new Point(0, 0),
@@ -76,44 +90,17 @@ var Popover = React.createClass({
         easing: Easing.inOut(Easing.quad),
         useNativeDriver: false
       }).start(() => this.setState({shiftedUp: toShift !== 0}))
-    },
+    }
     keyboardDidHide() {
       if (this.state.shiftedUp)
         this.shiftForKeyboard(0);
 
       this.setState({keyboardHeight: 0})
-    },
+    }
     componentWillUnmount() {
       this.keyboardDidShowListener.remove()
       this.keyboardDidHideListener.remove()
-    },
-
-    getInitialState() {
-        return {
-            contentSize: {},
-            anchorPoint: {},
-            popoverOrigin: {},
-            shiftedUp: false,
-            placement: PLACEMENT_OPTIONS.AUTO,
-            defaultAnimatedValues: {
-                scale: new Animated.Value(0),
-                translate: new Animated.ValueXY(),
-                fade: new Animated.Value(0)
-            }
-        };
-    },
-
-    getDefaultProps() {
-        return {
-            isVisible: false,
-            displayArea: new Rect(10, 10, SCREEN_WIDTH-20, SCREEN_HEIGHT-20),
-            arrowSize: DEFAULT_ARROW_SIZE,
-            placement: PLACEMENT_OPTIONS.AUTO,
-            onClose: noop,
-            mode: 'popover',
-			showInModal: true
-        };
-    },
+    }
 
     measureContent(x) {
         var {width, height} = x.nativeEvent.layout;
@@ -131,14 +118,14 @@ var Popover = React.createClass({
               isAwaitingShow && this._startAnimation({show: true});
           });
         }
-    },
+    }
 
     updateState(state, callback) {
         if(!this._updateState) {
             this._updateState = _.debounce(this.setState.bind(this), 100);
         }
         this._updateState(state, callback);
-    },
+    }
 
     computeGeometry({contentSize, placement}, fromRect, displayArea) {
         placement = placement || this.props.placement;
@@ -193,7 +180,7 @@ var Popover = React.createClass({
             forcedHeight: contentSize.height > displayArea.height ? displayArea.height : null
           }
         }
-    },
+    }
 
     computeTopGeometry({displayArea, fromRect, contentSize, arrowSize}) {
         let maxX = displayArea.x + displayArea.width - contentSize.width;
@@ -216,7 +203,7 @@ var Popover = React.createClass({
             placement: PLACEMENT_OPTIONS.TOP,
             forcedHeight: preferedY < minY ? (fromRect.y - arrowSize.height - displayArea.y) : null
         }
-    },
+    }
 
     computeBottomGeometry({displayArea, fromRect, contentSize, arrowSize}) {
         let maxX = displayArea.x + displayArea.width - contentSize.width;
@@ -238,11 +225,11 @@ var Popover = React.createClass({
             placement: PLACEMENT_OPTIONS.BOTTOM,
             forcedHeight: preferedY + contentSize.height > displayArea.y + displayArea.height ? displayArea.y + displayArea.height - preferedY : null
         }
-    },
+    }
 
     getPolarity () {
         return this.props.layoutDirection === 'rtl' ? -1 : 1;
-    },
+    }
 
     computeLeftGeometry({displayArea, fromRect, contentSize, arrowSize}) {
         let preferedX = fromRect.x - contentSize.width - arrowSize.width;
@@ -263,7 +250,7 @@ var Popover = React.createClass({
             placement: PLACEMENT_OPTIONS.LEFT,
             forcedHeight: contentSize.height > displayArea.height ? displayArea.height : null
         }
-    },
+    }
 
     computeRightGeometry({displayArea, fromRect, contentSize, arrowSize}) {
         let preferedX = fromRect.x + fromRect.width + arrowSize.width;
@@ -284,7 +271,7 @@ var Popover = React.createClass({
             placement: PLACEMENT_OPTIONS.RIGHT,
             forcedHeight: contentSize.height > displayArea.height ? displayArea.height : null
         }
-    },
+    }
 
     computeAutoGeometry({displayArea, contentSize, fromRect, arrowSize}) {
         //let placementsToTry;
@@ -304,22 +291,8 @@ var Popover = React.createClass({
             return topSpace > bottomSpace ? this.computeGeometry({contentSize, placement: 'top'}, fromRect, displayArea) : this.computeGeometry({contentSize, placement: 'bottom'}, fromRect, displayArea);
         }
 
-
-        // for (var i = 0; i < placementsToTry.length; i++) {
-        //     var placement = placementsToTry[i];
-        //     var geom = this.computeGeometry({contentSize, placement});
-        //     var {popoverOrigin} = geom;
-        //
-        //     if (popoverOrigin.x >= displayArea.x
-        //         && popoverOrigin.x <= displayArea.x + displayArea.width - contentSize.width
-        //         && popoverOrigin.y >= displayArea.y
-        //         && popoverOrigin.y <= displayArea.y + displayArea.height - contentSize.height) {
-        //             break;
-        //         }
-        // }
-
         return geom;
-    },
+    }
 
     getArrowSize(placement) {
         var size = this.props.arrowSize;
@@ -330,11 +303,11 @@ var Popover = React.createClass({
             default:
                 return size;
         }
-    },
+    }
 
     getArrowColorStyle(color) {
         return { borderTopColor: color };
-    },
+    }
 
     getArrowRotation(placement) {
         switch (placement) {
@@ -347,7 +320,7 @@ var Popover = React.createClass({
             default:
                 return '0deg';
         }
-    },
+    }
 
     getArrowDynamicStyle() {
         var {anchorPoint, popoverOrigin} = this.state;
@@ -370,7 +343,7 @@ var Popover = React.createClass({
             borderBottomWidth: height / 2,
             borderLeftWidth: width / 2,
         }
-    },
+    }
 
     getTranslateOrigin() {
         var {contentSize, popoverOrigin, anchorPoint, forcedHeight} = this.state;
@@ -379,12 +352,12 @@ var Popover = React.createClass({
         var popoverCenter = new Point(popoverOrigin.x + contentSize.width / 2,
             popoverOrigin.y + height / 2);
         return new Point(this.getPolarity() * (anchorPoint.x - popoverCenter.x), anchorPoint.y - popoverCenter.y);
-    },
+    }
 
     componentDidMount() {
       if (this.props.isVisible)
         this.setState({contentSize: {}, isAwaitingShow: true, visible: true});
-    },
+    }
 
     componentWillReceiveProps(nextProps:any) {
         var willBeVisible = nextProps.isVisible;
@@ -415,12 +388,12 @@ var Popover = React.createClass({
 
             });
         }
-    },
+    }
 
     _startAnimation({show}) {
         var handler = this.props.startCustomAnimation || this._startDefaultAnimation;
         handler({show, doneCallback: show ? null : obj => this.setState({visible: false})});
-    },
+    }
 
     _startDefaultAnimation({show, doneCallback}) {
         var animDuration = 300;
@@ -451,7 +424,7 @@ var Popover = React.createClass({
                 ...commonConfig,
             })
         ]).start(doneCallback);
-    },
+    }
 
     _getDefaultAnimatedStyles() {
         // If there's a custom animation handler,
@@ -485,7 +458,7 @@ var Popover = React.createClass({
                 ],
             }
         };
-    },
+    }
 
     _getExtendedStyles() {
         var background = [];
@@ -508,7 +481,7 @@ var Popover = React.createClass({
             arrow,
             content
         }
-    },
+    }
 
     render() {
 
@@ -565,7 +538,7 @@ var Popover = React.createClass({
 			return contentView;
 		}
     }
-});
+}
 
 var styles = StyleSheet.create({
     container: {
@@ -619,4 +592,20 @@ var styles = StyleSheet.create({
     }
 });
 
-module.exports = Popover;
+Popover.defaultProps = {
+	isVisible: false,
+	displayArea: new Rect(10, 10, SCREEN_WIDTH-20, SCREEN_HEIGHT-20),
+	arrowSize: DEFAULT_ARROW_SIZE,
+	placement: PLACEMENT_OPTIONS.AUTO,
+	onClose: noop,
+	mode: 'popover',
+	showInModal: true
+}
+
+Popover.propTypes = {
+	isVisible: PropTypes.bool,
+    onClose: PropTypes.func,
+	mode: PropTypes.string,
+	layoutDirection: PropTypes.string,
+	showInModal: PropTypes.bool
+}
