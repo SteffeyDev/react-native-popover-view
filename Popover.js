@@ -61,6 +61,25 @@ export default class Popover extends React.Component {
             }
         };
 
+		this.keyboardDidShow = this.keyboardDidShow.bind(this);
+		this.shiftForKeyboard = this.shiftForKeyboard.bind(this);
+		this.keyboardDidHide = this.keyboardDidHide.bind(this);
+		this.measureContent = this.measureContent.bind(this);
+		this.computeGeometry = this.computeGeometry.bind(this);
+		this.computeTopGeometry = this.computeTopGeometry.bind(this);
+		this.computeBottomGeometry = this.computeBottomGeometry.bind(this);
+		this.computeLeftGeometry = this.computeLeftGeometry.bind(this);
+		this.computeRightGeometry = this.computeRightGeometry.bind(this);
+		this.computeAutoGeometry = this.computeAutoGeometry.bind(this);
+		this.getArrowSize = this.getArrowSize.bind(this);
+		this.getArrowColorStyle = this.getArrowColorStyle.bind(this);
+		this.getArrowRotation = this.getArrowRotation.bind(this);
+		this.getArrowDynamicStyle = this.getArrowDynamicStyle.bind(this);
+		this.getTranslateOrigin = this.getTranslateOrigin.bind(this);
+		this._startAnimation = this._startAnimation.bind(this);
+		this._startDefaultAnimation = this._startDefaultAnimation.bind(this);
+		this._getDefaultAnimatedStyles = this._getDefaultAnimatedStyles.bind(this);
+		this._getExtendedStyles = this._getExtendedStyles.bind(this);
 	}
 
     componentWillMount() {
@@ -518,7 +537,7 @@ export default class Popover extends React.Component {
                 <Animated.View style={[styles.background, ...extendedStyles.background]}/>
               </TouchableWithoutFeedback>
               <Animated.View style={[{top: popoverOrigin.y, left: popoverOrigin.x,}, ...extendedStyles.popover]}>
-                  <Animated.View ref='content' onLayout={this.measureContent} style={[contentContainerStyle, contentModeStyling]}>
+                  <Animated.View ref='content' onLayout={evt => this.measureContent(evt)} style={[contentContainerStyle, contentModeStyling]}>
                       <Animated.View style={[{width: contentSizeAvailable, height: forcedHeight}, contentStyle, dropShadowStyling]}>
                           {this.props.children}
                       </Animated.View>
