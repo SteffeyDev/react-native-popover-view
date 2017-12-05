@@ -103,7 +103,7 @@ export default class Popover extends React.Component {
           displayArea = new Rect(10, isIOS() ? 20 : 10, displayArea.width - 20, displayArea.height - 30);
       }
 
-      const absoluteVerticalCutoff = Dimensions.get('window').height - keyboardHeight - 10;
+      const absoluteVerticalCutoff = Dimensions.get('window').height - keyboardHeight - (isIOS() ? 10 : 40);
       const combinedY = Math.min(displayArea.height + displayArea.y, absoluteVerticalCutoff);
 
       this.handleGeomChange({displayArea: {
@@ -195,7 +195,7 @@ export default class Popover extends React.Component {
 
     computeTopGeometry({displayArea, fromRect, requestedContentSize, arrowSize}) {
         let minY = displayArea.y;
-        let preferedY = fromRect.y - forcedContentSize.height - arrowSize.height;
+        let preferedY = fromRect.y - requestedContentSize.height - arrowSize.height;
 
         let forcedContentSize = {
           height: preferedY < minY ? (fromRect.y - arrowSize.height - displayArea.y) : requestedContentSize.height,
@@ -320,14 +320,14 @@ export default class Popover extends React.Component {
         // Keep same placement if possible
         if (possiblePlacements.length === 2) {
           if (this.state.placement !== PLACEMENT_OPTIONS.AUTO)
-            return this.computeGeometry({requestedContentSize, placement: this.state.placement}, fromRect, displayArea);
+            return this.computeGeometry({requestedContentSize, placement: this.state.placement, fromRect, displayArea});
           else
-            return this.computeGeometry({requestedContentSize, placement: possiblePlacements[0]}, fromRect, displayArea);
+            return this.computeGeometry({requestedContentSize, placement: possiblePlacements[0], fromRect, displayArea});
         } else if (possiblePlacements.length === 1) {
-            return this.computeGeometry({requestedContentSize, placement: possiblePlacements[0]}, fromRect, displayArea);
+            return this.computeGeometry({requestedContentSize, placement: possiblePlacements[0], fromRect, displayArea});
         } else {
           if (this.state.placement === PLACEMENT_OPTIONS.TOP || this.state.placement === PLACEMENT_OPTIONS.BOTTOM)
-            return this.computeGeometry({requestedContentSize, placement: this.state.placement}, fromRect, displayArea);
+            return this.computeGeometry({requestedContentSize, placement: this.state.placement, fromRect, displayArea});
 
           // We could fit it on the top or bottom, need to figure out which is better
           else {
@@ -400,7 +400,6 @@ export default class Popover extends React.Component {
     componentDidMount() {
       if (this.props.isVisible)
         this.setState({requestedContentSize: {}, forcedContentSize: {}, isAwaitingShow: true, visible: true});
-      this.fromRectStore = this.props.fromRect;
     }
 
     componentWillReceiveProps(nextProps:any) {
@@ -535,7 +534,7 @@ export default class Popover extends React.Component {
           opacity: animatedValues.fade
         };
 
-        let containerStyle = Object.assign({opacity: forcedContentSize.width ? 1 : 0}, styles.container);
+        let containerStyle = Object.assign({opacity: this.state.visible && forcedContentSize.width !== undefined ? 1 : 0}, styles.container);
 
         let popoverViewStyle = {
           transform: [
@@ -583,9 +582,6 @@ var styles = {
         right: 0,
         position: 'absolute',
         backgroundColor: 'transparent'
-    },
-    containerVisible: {
-        opacity: 1
     },
     background: {
         top: 0,
