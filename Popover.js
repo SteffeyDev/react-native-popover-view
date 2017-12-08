@@ -458,7 +458,7 @@ export default class Popover extends React.Component {
         fade: 0,
         scale: 0,
         translatePoint: this.getTranslateOrigin(),
-        callback: () => this.setState({visible: false}),
+        callback: () => this.setState({visible: false}, () => this.props.doneClosingCallback()),
         easing: Easing.inOut(Easing.quad)
       })
     }
@@ -467,7 +467,9 @@ export default class Popover extends React.Component {
       var values = this.state.animatedValues;
 
       // Should grow from anchor point
-      values.translate.setValue(this.getTranslateOrigin());
+      let translateStart = this.getTranslateOrigin()
+      translateStart.x += SCREEN_WIDTH // Temp fix for useNativeDriver issue
+      values.translate.setValue(translateStart);
 
       this.animateTo({
         values,
@@ -482,8 +484,10 @@ export default class Popover extends React.Component {
       var commonConfig = {
           duration: 300,
           easing,
-          useNativeDriver: false
+          useNativeDriver: true
       }
+
+      translatePoint.x = translatePoint.x + SCREEN_WIDTH // Temp fix for useNativeDriver issue
 
       Animated.parallel([
           Animated.timing(values.fade, {
@@ -502,7 +506,6 @@ export default class Popover extends React.Component {
     }
 
     render() {
-
         var {popoverOrigin, placement, forcedHeight, animatedValues, anchorPoint, forcedContentSize} = this.state;
 
         let arrowScale = animatedValues.scale.interpolate({
@@ -515,32 +518,54 @@ export default class Popover extends React.Component {
         var arrowWidth = arrowSize.width + 2;
         var arrowHeight = arrowSize.height * 2 + 2;
 
-        var arrowStyle = [
+        var arrowStyle = {
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: arrowWidth,
+          height: arrowHeight,
+          transform: [
+            {translateX: SCREEN_WIDTH /* Temp fix for useNativeDriver issue */ + anchorPoint.x - arrowWidth / 2},
+            {translateY: anchorPoint.y - arrowHeight / 2},
+            {rotate: this.getArrowRotation(placement)},
+          ]
+        };
+
+        let arrowInnerStyle = [
           styles.arrow,
           this.getArrowDynamicStyle(),
           {
             borderTopColor: styles.popoverContent.backgroundColor,
             transform: [
-              {translateX: anchorPoint.x - arrowWidth / 2},
-              {translateY: anchorPoint.y - arrowHeight / 2},
               {scale: arrowScale},
-              {rotate: this.getArrowRotation(placement)}
             ]
           }
         ];
 
+        // Temp fix for useNativeDriver issue
+        let backgroundShift = animatedValues.fade.interpolate({
+          inputRange: [0, 0.0001, 1],
+          outputRange: [0, SCREEN_WIDTH, SCREEN_WIDTH]
+        })
+
         let backgroundStyle = {
           ...styles.background,
-          opacity: animatedValues.fade
+          transform: [
+            {translateX: backgroundShift}
+          ]
         };
 
-        let containerStyle = Object.assign({opacity: this.state.visible && forcedContentSize.width !== undefined ? 1 : 0}, styles.container);
+        let containerStyle = {
+          ...styles.container,
+          opacity: animatedValues.fade
+        };
 
         let popoverViewStyle = {
           transform: [
               {translateX: animatedValues.translate.x},
               {translateY: animatedValues.translate.y},
               {scale: animatedValues.scale},
+              {perspective: 1000}
           ],
           ...forcedContentSize,
           position: 'absolute',
@@ -549,28 +574,32 @@ export default class Popover extends React.Component {
         };
 
         let contentView = (
-            <View style={containerStyle}>
+            <Animated.View style={containerStyle}>
               <TouchableWithoutFeedback onPress={this.props.onClose}>
                 <Animated.View style={backgroundStyle}/>
               </TouchableWithoutFeedback>
               <Animated.View style={{top: 0, left: 0}}>
                   <Animated.View ref='content' onLayout={evt => this.measureContent(evt)} style={popoverViewStyle}>
-                      {this.props.children}
+                    {this.props.children}
                   </Animated.View>
-                  {this.props.mode === 'popover' && this.props.fromRect !== undefined && <Animated.View style={arrowStyle}/>}
+                  {this.props.mode === 'popover' && this.props.fromRect !== undefined &&
+                    <View style={arrowStyle}>
+                      <Animated.View style={arrowInnerStyle}/>
+                    </View>
+                  }
               </Animated.View>
-            </View>
+            </Animated.View>
         );
 
-    		if (this.props.showInModal) {
-    			return (
-    				<Modal transparent={true} supportedOrientations={['portrait', 'landscape']} hardwareAccelerated={true} visible={this.state.visible} onRequestClose={this.props.onClose}>
-    					{contentView}
-    				</Modal>
-    			);
-    		} else {
-    			return contentView;
-    		}
+        if (this.props.showInModal) {
+            return (
+                <Modal transparent={true} supportedOrientations={['portrait', 'landscape']} hardwareAccelerated={true} visible={this.state.visible} onRequestClose={this.props.onClose}>
+                  {contentView}
+                </Modal>
+            );
+        } else {
+            return contentView;
+        }
     }
 }
 
@@ -578,7 +607,7 @@ var styles = {
     container: {
         top: 0,
         bottom: 0,
-        left: 0,
+        left: -1 * SCREEN_WIDTH,
         right: 0,
         position: 'absolute',
         backgroundColor: 'transparent'
@@ -587,7 +616,7 @@ var styles = {
         top: 0,
         bottom: 0,
         left: 0,
-        right: 0,
+        right: SCREEN_WIDTH,
         position: 'absolute',
         backgroundColor: 'rgba(0,0,0,0.5)'
     },
@@ -628,6 +657,7 @@ Popover.defaultProps = {
 	arrowSize: DEFAULT_ARROW_SIZE,
 	placement: PLACEMENT_OPTIONS.AUTO,
 	onClose: noop,
+	doneClosingCallback: noop,
 	mode: 'popover',
 	showInModal: true
 }
