@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1513716245849" clover="3.2.0">
+  <project timestamp="1513716245849" name="All files">
+    <metrics statements="210" coveredstatements="164" conditionals="125" coveredconditionals="74" methods="41" coveredmethods="23" elements="376" coveredelements="261" complexity="0" loc="210" ncloc="210" packages="1" files="1" classes="1">
+      <file name="Popover.js" path="/Users/petersteffey/Documents/react-native-popover/Popover.js">
+        <metrics statements="210" coveredstatements="164" conditionals="125" coveredconditionals="74" methods="41" coveredmethods="23"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="9" count="1" type="stmt"/>
+        <line num="10" count="1" type="stmt"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="14" count="1" type="stmt"/>
+        <line num="23" count="118" type="stmt"/>
+        <line num="24" count="118" type="stmt"/>
+        <line num="28" count="9" type="stmt"/>
+        <line num="29" count="9" type="stmt"/>
+        <line num="33" count="13" type="stmt"/>
+        <line num="34" count="13" type="stmt"/>
+        <line num="35" count="13" type="stmt"/>
+        <line num="36" count="13" type="stmt"/>
+        <line num="40" count="0" type="stmt"/>
+        <line num="41" count="0" type="stmt"/>
+        <line num="42" count="0" type="stmt"/>
+        <line num="49" count="17" type="stmt"/>
+        <line num="51" count="17" type="stmt"/>
+        <line num="68" count="17" type="stmt"/>
+        <line num="69" count="17" type="stmt"/>
+        <line num="70" count="17" type="stmt"/>
+        <line num="71" count="17" type="stmt"/>
+        <line num="72" count="17" type="stmt"/>
+        <line num="73" count="17" type="stmt"/>
+        <line num="74" count="17" type="stmt"/>
+        <line num="75" count="17" type="stmt"/>
+        <line num="76" count="17" type="stmt"/>
+        <line num="77" count="17" type="stmt"/>
+        <line num="78" count="17" type="stmt"/>
+        <line num="79" count="17" type="stmt"/>
+        <line num="80" count="17" type="stmt"/>
+        <line num="84" count="17" type="stmt"/>
+        <line num="85" count="17" type="stmt"/>
+        <line num="89" count="0" type="stmt"/>
+        <line num="93" count="0" type="stmt"/>
+        <line num="94" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="95" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="97" count="0" type="stmt"/>
+        <line num="101" count="0" type="stmt"/>
+        <line num="102" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="103" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="106" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="107" count="0" type="stmt"/>
+        <line num="109" count="0" type="stmt"/>
+        <line num="118" count="0" type="stmt"/>
+        <line num="119" count="0" type="stmt"/>
+        <line num="120" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="121" count="0" type="stmt"/>
+        <line num="125" count="15" type="stmt"/>
+        <line num="126" count="15" type="cond" truecount="4" falsecount="1"/>
+        <line num="127" count="15" type="stmt"/>
+        <line num="131" count="15" type="stmt"/>
+        <line num="136" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="137" count="0" type="stmt"/>
+        <line num="139" count="0" type="stmt"/>
+        <line num="143" count="27" type="cond" truecount="2" falsecount="0"/>
+        <line num="144" count="27" type="cond" truecount="2" falsecount="0"/>
+        <line num="145" count="27" type="cond" truecount="2" falsecount="0"/>
+        <line num="150" count="27" type="cond" truecount="1" falsecount="1"/>
+        <line num="151" count="0" type="stmt"/>
+        <line num="156" count="27" type="stmt"/>
+        <line num="159" count="27" type="cond" truecount="3" falsecount="1"/>
+        <line num="160" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="163" count="27" type="cond" truecount="2" falsecount="0"/>
+        <line num="165" count="24" type="cond" truecount="2" falsecount="0"/>
+        <line num="166" count="24" type="cond" truecount="2" falsecount="0"/>
+        <line num="167" count="24" type="cond" truecount="2" falsecount="0"/>
+        <line num="168" count="24" type="cond" truecount="2" falsecount="0"/>
+        <line num="170" count="24" type="stmt"/>
+        <line num="177" count="24" type="cond" truecount="5" falsecount="0"/>
+        <line num="179" count="2" type="stmt"/>
+        <line num="181" count="2" type="stmt"/>
+        <line num="183" count="4" type="stmt"/>
+        <line num="185" count="4" type="stmt"/>
+        <line num="187" count="12" type="stmt"/>
+        <line num="190" count="3" type="stmt"/>
+        <line num="202" count="2" type="stmt"/>
+        <line num="203" count="2" type="stmt"/>
+        <line num="205" count="2" type="stmt"/>
+        <line num="210" count="2" type="stmt"/>
+        <line num="211" count="2" type="stmt"/>
+        <line num="212" count="2" type="stmt"/>
+        <line num="214" count="2" type="stmt"/>
+        <line num="219" count="2" type="stmt"/>
+        <line num="222" count="2" type="stmt"/>
+        <line num="223" count="2" type="stmt"/>
+        <line num="225" count="2" type="stmt"/>
+        <line num="234" count="2" type="stmt"/>
+        <line num="236" count="2" type="stmt"/>
+        <line num="241" count="2" type="stmt"/>
+        <line num="242" count="2" type="stmt"/>
+        <line num="243" count="2" type="stmt"/>
+        <line num="245" count="2" type="stmt"/>
+        <line num="250" count="2" type="stmt"/>
+        <line num="253" count="2" type="stmt"/>
+        <line num="254" count="2" type="stmt"/>
+        <line num="256" count="2" type="stmt"/>
+        <line num="265" count="8" type="cond" truecount="1" falsecount="1"/>
+        <line num="269" count="4" type="stmt"/>
+        <line num="274" count="4" type="stmt"/>
+        <line num="276" count="4" type="stmt"/>
+        <line num="277" count="4" type="stmt"/>
+        <line num="278" count="4" type="stmt"/>
+        <line num="280" count="4" type="stmt"/>
+        <line num="285" count="4" type="stmt"/>
+        <line num="288" count="4" type="stmt"/>
+        <line num="289" count="4" type="stmt"/>
+        <line num="291" count="4" type="stmt"/>
+        <line num="300" count="4" type="stmt"/>
+        <line num="305" count="4" type="stmt"/>
+        <line num="307" count="4" type="stmt"/>
+        <line num="308" count="4" type="stmt"/>
+        <line num="309" count="4" type="stmt"/>
+        <line num="311" count="4" type="stmt"/>
+        <line num="316" count="4" type="stmt"/>
+        <line num="319" count="4" type="stmt"/>
+        <line num="320" count="4" type="stmt"/>
+        <line num="322" count="4" type="stmt"/>
+        <line num="331" count="12" type="stmt"/>
+        <line num="332" count="12" type="cond" truecount="2" falsecount="0"/>
+        <line num="333" count="4" type="stmt"/>
+        <line num="334" count="4" type="stmt"/>
+        <line num="336" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="337" count="4" type="stmt"/>
+        <line num="342" count="8" type="cond" truecount="1" falsecount="1"/>
+        <line num="343" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="344" count="0" type="stmt"/>
+        <line num="346" count="0" type="stmt"/>
+        <line num="347" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="348" count="4" type="stmt"/>
+        <line num="350" count="4" type="cond" truecount="3" falsecount="1"/>
+        <line num="351" count="0" type="stmt"/>
+        <line num="355" count="4" type="stmt"/>
+        <line num="356" count="4" type="stmt"/>
+        <line num="357" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="363" count="27" type="stmt"/>
+        <line num="364" count="27" type="cond" truecount="3" falsecount="0"/>
+        <line num="367" count="8" type="stmt"/>
+        <line num="369" count="19" type="stmt"/>
+        <line num="374" count="0" type="stmt"/>
+        <line num="378" count="49" type="cond" truecount="4" falsecount="0"/>
+        <line num="380" count="2" type="stmt"/>
+        <line num="382" count="4" type="stmt"/>
+        <line num="384" count="4" type="stmt"/>
+        <line num="386" count="39" type="stmt"/>
+        <line num="391" count="49" type="stmt"/>
+        <line num="392" count="49" type="stmt"/>
+        <line num="398" count="49" type="stmt"/>
+        <line num="399" count="49" type="stmt"/>
+        <line num="401" count="49" type="stmt"/>
+        <line num="412" count="15" type="stmt"/>
+        <line num="414" count="15" type="stmt"/>
+        <line num="416" count="15" type="stmt"/>
+        <line num="417" count="15" type="stmt"/>
+        <line num="418" count="15" type="stmt"/>
+        <line num="422" count="17" type="cond" truecount="1" falsecount="1"/>
+        <line num="423" count="0" type="stmt"/>
+        <line num="427" count="15" type="stmt"/>
+        <line num="432" count="15" type="stmt"/>
+        <line num="434" count="15" type="cond" truecount="2" falsecount="0"/>
+        <line num="435" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="438" count="2" type="stmt"/>
+        <line num="440" count="0" type="stmt"/>
+        <line num="442" count="13" type="cond" truecount="5" falsecount="2"/>
+        <line num="443" count="0" type="stmt"/>
+        <line num="448" count="0" type="stmt"/>
+        <line num="450" count="0" type="stmt"/>
+        <line num="452" count="0" type="stmt"/>
+        <line num="454" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="455" count="0" type="stmt"/>
+        <line num="457" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="458" count="0" type="stmt"/>
+        <line num="460" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="461" count="0" type="stmt"/>
+        <line num="463" count="0" type="stmt"/>
+        <line num="464" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="465" count="0" type="stmt"/>
+        <line num="477" count="0" type="stmt"/>
+        <line num="482" count="0" type="stmt"/>
+        <line num="488" count="15" type="stmt"/>
+        <line num="491" count="15" type="stmt"/>
+        <line num="492" count="15" type="stmt"/>
+        <line num="493" count="15" type="stmt"/>
+        <line num="495" count="15" type="stmt"/>
+        <line num="505" count="15" type="stmt"/>
+        <line num="511" count="15" type="stmt"/>
+        <line num="513" count="15" type="cond" truecount="2" falsecount="2"/>
+        <line num="514" count="15" type="cond" truecount="3" falsecount="3"/>
+        <line num="515" count="15" type="cond" truecount="2" falsecount="2"/>
+        <line num="517" count="15" type="stmt"/>
+        <line num="535" count="49" type="stmt"/>
+        <line num="537" count="49" type="stmt"/>
+        <line num="543" count="49" type="stmt"/>
+        <line num="544" count="49" type="stmt"/>
+        <line num="545" count="49" type="stmt"/>
+        <line num="547" count="49" type="stmt"/>
+        <line num="560" count="49" type="stmt"/>
+        <line num="572" count="49" type="stmt"/>
+        <line num="577" count="49" type="stmt"/>
+        <line num="584" count="49" type="stmt"/>
+        <line num="589" count="49" type="stmt"/>
+        <line num="603" count="49" type="stmt"/>
+        <line num="608" count="0" type="stmt"/>
+        <line num="620" count="49" type="cond" truecount="2" falsecount="0"/>
+        <line num="621" count="48" type="stmt"/>
+        <line num="627" count="1" type="stmt"/>
+        <line num="632" count="1" type="stmt"/>
+        <line num="680" count="1" type="stmt"/>
+        <line num="692" count="1" type="stmt"/>
+      </file>
+    </metrics>
+  </project>
+</coverage>

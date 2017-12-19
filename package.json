@@ -1,6 +1,6 @@
 {
   "name": "react-native-popover",
-  "version": "0.4.8",
+  "version": "0.4.9",
   "description": "A <Popover /> component for react-native",
   "main": "Popover.js",
   "author": "Jean Regisser <jean.regisser@gmail.com> (https://github.com/jeanregisser)",
@@ -14,15 +14,33 @@
   ],
   "license": "MIT",
   "scripts": {
-    "start": "node_modules/react-native/packager/packager.sh"
+    "start": "node_modules/react-native/packager/packager.sh",
+    "test": "jest"
+  },
+  "jest": {
+    "preset": "react-native",
+    "snapshotSerializers": [
+      "enzyme-to-json/serializer"
+    ],
+    "collectCoverage": true,
+    "coverageFormats": ["json", "html"]
   },
   "repository": {
     "type": "git",
     "url": "git@github.com:jeanregisser/react-native-popover.git"
   },
   "devDependencies": {
-    "react": "^15.0.2",
-    "react-native": "^0.26.2"
+    "babel-jest": "^22.0.0",
+    "enzyme": "^3.2.0",
+    "enzyme-adapter-react-16": "^1.1.0",
+    "enzyme-to-json": "^3.3.0",
+    "jest": "^22.0.0",
+    "jest-serializer-enzyme": "^1.0.0",
+    "react": "16",
+    "react-addons-test-utils": "^15.6.2",
+    "react-dom": "16",
+    "react-native": "^0.51.0",
+    "react-test-renderer": "^16.2.0"
   },
   "dependencies": {
     "lodash": "^4.17.4"

@@ -1,0 +1,2174 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for Popover.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="prettify.css" />
+    <link rel="stylesheet" href="base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="index.html">All files</a> Popover.js
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">76.47% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>169/221</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">59.2% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>74/125</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">56.1% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>23/41</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">78.1% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>164/210</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line medium'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+434
+435
+436
+437
+438
+439
+440
+441
+442
+443
+444
+445
+446
+447
+448
+449
+450
+451
+452
+453
+454
+455
+456
+457
+458
+459
+460
+461
+462
+463
+464
+465
+466
+467
+468
+469
+470
+471
+472
+473
+474
+475
+476
+477
+478
+479
+480
+481
+482
+483
+484
+485
+486
+487
+488
+489
+490
+491
+492
+493
+494
+495
+496
+497
+498
+499
+500
+501
+502
+503
+504
+505
+506
+507
+508
+509
+510
+511
+512
+513
+514
+515
+516
+517
+518
+519
+520
+521
+522
+523
+524
+525
+526
+527
+528
+529
+530
+531
+532
+533
+534
+535
+536
+537
+538
+539
+540
+541
+542
+543
+544
+545
+546
+547
+548
+549
+550
+551
+552
+553
+554
+555
+556
+557
+558
+559
+560
+561
+562
+563
+564
+565
+566
+567
+568
+569
+570
+571
+572
+573
+574
+575
+576
+577
+578
+579
+580
+581
+582
+583
+584
+585
+586
+587
+588
+589
+590
+591
+592
+593
+594
+595
+596
+597
+598
+599
+600
+601
+602
+603
+604
+605
+606
+607
+608
+609
+610
+611
+612
+613
+614
+615
+616
+617
+618
+619
+620
+621
+622
+623
+624
+625
+626
+627
+628
+629
+630
+631
+632
+633
+634
+635
+636
+637
+638
+639
+640
+641
+642
+643
+644
+645
+646
+647
+648
+649
+650
+651
+652
+653
+654
+655
+656
+657
+658
+659
+660
+661
+662
+663
+664
+665
+666
+667
+668
+669
+670
+671
+672
+673
+674
+675
+676
+677
+678
+679
+680
+681
+682
+683
+684
+685
+686
+687
+688
+689
+690
+691
+692
+693
+694
+695
+696
+697
+698
+699
+700
+701
+702
+703
+704</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">118x</span>
+<span class="cline-any cline-yes">118x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">19x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">39x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-yes">48x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">'use strict';
+&nbsp;
+import React from 'react';
+import PropTypes from 'prop-types';
+import {StyleSheet, Dimensions, Animated, Text, TouchableWithoutFeedback, View, Modal, Platform, Keyboard, Alert} from 'react-native';
+import _ from 'lodash';
+&nbsp;
+var flattenStyle = require('react-native/Libraries/StyleSheet/flattenStyle');
+var Easing = require('react-native/Libraries/Animated/src/Easing');
+var noop = <span class="fstat-no" title="function not covered" >()</span> =&gt; {};
+&nbsp;
+var {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window');
+var DEFAULT_ARROW_SIZE = new Size(16, 8);
+const PLACEMENT_OPTIONS = {
+    TOP: 'top',
+    RIGHT: 'right',
+    BOTTOM: 'bottom',
+    LEFT: 'left',
+    AUTO: 'auto'
+};
+&nbsp;
+export function Point(x, y) {
+    this.x = x;
+    this.y = y;
+}
+&nbsp;
+export function Size(width, height) {
+    this.width = width;
+    this.height = height;
+}
+&nbsp;
+export function Rect(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >isIOS(</span>) {
+<span class="cstat-no" title="statement not covered" >  return Platform.select({</span>
+    ios: <span class="fstat-no" title="function not covered" >()</span> =&gt; { <span class="cstat-no" title="statement not covered" >return true </span>},
+    android: <span class="fstat-no" title="function not covered" >()</span> =&gt; { <span class="cstat-no" title="statement not covered" >return false </span>}
+  })()
+}
+&nbsp;
+export default class Popover extends React.Component {
+&nbsp;
+	constructor(props) {
+		super(props)
+&nbsp;
+		this.state = {
+            requestedContentSize: {},
+            forcedContentSize: {},
+            anchorPoint: new Point(0, 0),
+            popoverOrigin: {},
+            shiftedUp: false,
+            forcedHeight: null,
+            placement: PLACEMENT_OPTIONS.AUTO,
+            isAwaitingShow: true,
+            visible: false,
+            animatedValues: {
+                scale: new Animated.Value(0),
+                translate: new Animated.ValueXY(),
+                fade: new Animated.Value(0)
+            }
+        };
+&nbsp;
+		this.measureContent = this.measureContent.bind(this);
+		this.computeGeometry = this.computeGeometry.bind(this);
+		this.computeTopGeometry = this.computeTopGeometry.bind(this);
+		this.computeBottomGeometry = this.computeBottomGeometry.bind(this);
+		this.computeLeftGeometry = this.computeLeftGeometry.bind(this);
+		this.computeRightGeometry = this.computeRightGeometry.bind(this);
+		this.computeAutoGeometry = this.computeAutoGeometry.bind(this);
+		this.getArrowSize = this.getArrowSize.bind(this);
+		this.getArrowColorStyle = this.getArrowColorStyle.bind(this);
+		this.getArrowRotation = this.getArrowRotation.bind(this);
+		this.getArrowDynamicStyle = this.getArrowDynamicStyle.bind(this);
+		this.getTranslateOrigin = this.getTranslateOrigin.bind(this);
+		this.animateIn = this.animateIn.bind(this);
+	}
+&nbsp;
+    componentWillMount() {
+      this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', <span class="fstat-no" title="function not covered" >e </span>=&gt; <span class="cstat-no" title="statement not covered" >this.keyboardDidShow(e))</span>;
+      this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', <span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >this.keyboardDidHide())</span>;
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    ke</span>yboardDidShow(e) {
+<span class="cstat-no" title="statement not covered" >      this.shiftForKeyboard(e.endCoordinates.height);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    ke</span>yboardDidHide() {
+      let { displayArea } = <span class="cstat-no" title="statement not covered" >this.props;</span>
+<span class="cstat-no" title="statement not covered" >      if (displayArea.x === undefined || displayArea.y === undefined) {</span>
+<span class="cstat-no" title="statement not covered" >          displayArea = new Rect(10, isIOS() ? 20 : 10, displayArea.width - 20, displayArea.height - 30);</span>
+      }
+<span class="cstat-no" title="statement not covered" >      this.handleGeomChange({displayArea});</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    sh</span>iftForKeyboard(keyboardHeight) {
+      let { displayArea } = <span class="cstat-no" title="statement not covered" >this.props;</span>
+<span class="cstat-no" title="statement not covered" >      if (displayArea.x === undefined || displayArea.y === undefined) {</span>
+<span class="cstat-no" title="statement not covered" >          displayArea = new Rect(10, isIOS() ? 20 : 10, displayArea.width - 20, displayArea.height - 30);</span>
+      }
+&nbsp;
+      const absoluteVerticalCutoff = <span class="cstat-no" title="statement not covered" >Dimensions.get('window').height - keyboardHeight - (isIOS() ? 10 : 40);</span>
+      const combinedY = <span class="cstat-no" title="statement not covered" >Math.min(displayArea.height + displayArea.y, absoluteVerticalCutoff);</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      this.handleGeomChange({displayArea: {</span>
+        x: displayArea.x,
+        y: displayArea.y,
+        width: displayArea.width,
+        height: combinedY - displayArea.y
+      }});
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    co</span>mponentWillUnmount() {
+<span class="cstat-no" title="statement not covered" >      this.keyboardDidShowListener.remove()</span>
+<span class="cstat-no" title="statement not covered" >      this.keyboardDidHideListener.remove()</span>
+<span class="cstat-no" title="statement not covered" >      if (this.state.visible)</span>
+<span class="cstat-no" title="statement not covered" >        this.animateOut()</span>
+    }
+&nbsp;
+    measureContent(x) {
+        var requestedContentSize = x.nativeEvent.layout;
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (requestedContentSize.width &amp;&amp; requestedContentSize.height &amp;&amp; this.state.isAwaitingShow) {
+          var geom = this.computeGeometry({requestedContentSize});
+&nbsp;
+          //Debounce to prevent flickering when displaying a popover with content
+          //that doesn't show immediately.
+          this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), () =&gt; this.animateIn());
+        }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    up</span>dateState(state, callback) {
+<span class="cstat-no" title="statement not covered" >        if(!this._updateState) {</span>
+<span class="cstat-no" title="statement not covered" >            this._updateState = _.debounce(this.setState.bind(this), 100);</span>
+        }
+<span class="cstat-no" title="statement not covered" >        this._updateState(state, callback);</span>
+    }
+&nbsp;
+    computeGeometry({requestedContentSize, placement, fromRect, displayArea}) {
+        placement = placement || this.props.placement;
+        fromRect = fromRect || this.props.fromRect;
+        displayArea = displayArea || this.props.displayArea;
+&nbsp;
+        //check to see if the mode is select
+        //and pass in a dummy arrowSize object
+        var arrowSize;
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (this.props.mode === 'select') {
+<span class="cstat-no" title="statement not covered" >            arrowSize = {</span>
+                height: 0,
+                width: 0
+            };
+        } else {
+            arrowSize = this.getArrowSize(placement);
+        }
+&nbsp;
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (displayArea.x === undefined || displayArea.y === undefined) {
+<span class="cstat-no" title="statement not covered" >            displayArea = new Rect(10, isIOS() ? 20 : 10, displayArea.width - 20, displayArea.height - 30);</span>
+        }
+&nbsp;
+        if (fromRect) {
+          //check to see if fromRect is outside of displayArea, and adjust if it is
+          if (fromRect.x &gt; displayArea.x + displayArea.width) fromRect.x = displayArea.x + displayArea.width;
+          if (fromRect.y &gt; displayArea.y + displayArea.height) fromRect.y = displayArea.y + displayArea.height;
+          if (fromRect.x &lt; 0) fromRect.x = -1 * fromRect.width;
+          if (fromRect.y &lt; 0) fromRect.y = -1 * fromRect.height;
+&nbsp;
+          var options = {
+              displayArea,
+              fromRect,
+              arrowSize,
+              requestedContentSize
+          }
+&nbsp;
+          switch (placement) {
+            case PLACEMENT_OPTIONS.TOP:
+                return this.computeTopGeometry(options);
+            case PLACEMENT_OPTIONS.BOTTOM:
+                return this.computeBottomGeometry(options);
+            case PLACEMENT_OPTIONS.LEFT:
+                return this.computeLeftGeometry(options);
+            case PLACEMENT_OPTIONS.RIGHT:
+                return this.computeRightGeometry(options);
+            default:
+                return this.computeAutoGeometry(options);
+          }
+        } else {
+          return {
+            popoverOrigin: new Point((displayArea.width - requestedContentSize.width)/2, (displayArea.height - requestedContentSize.height)/2),
+            anchorPoint: new Point(displayArea.width/2, displayArea.height/2),
+            forcedContentSize: {
+              height: Math.min(requestedContentSize.height, displayArea.height),
+              width: Math.min(requestedContentSize.width, displayArea.width)
+            }
+          }
+        }
+    }
+&nbsp;
+    computeTopGeometry({displayArea, fromRect, requestedContentSize, arrowSize}) {
+        let minY = displayArea.y;
+        let preferedY = fromRect.y - requestedContentSize.height - arrowSize.height;
+&nbsp;
+        let forcedContentSize = {
+          height: preferedY &lt; minY ? (<span class="branch-0 cbranch-no" title="branch not covered" >fromRect.y - arrowSize.height - displayArea.y)</span> : requestedContentSize.height,
+          width: Math.min(requestedContentSize.width, displayArea.width)
+        }
+&nbsp;
+        let maxX = displayArea.x + displayArea.width - forcedContentSize.width;
+        let minX = displayArea.x;
+        let preferedX = fromRect.x + (fromRect.width - forcedContentSize.width) / 2;
+&nbsp;
+        var popoverOrigin = new Point(
+            Math.min(maxX, Math.max(minX, preferedX)),
+            Math.max(minY, preferedY)
+        );
+&nbsp;
+        var anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y);
+&nbsp;
+        // Make sure the arrow isn't cut off
+        anchorPoint.x = Math.max(anchorPoint.x, arrowSize.width / 2);
+        anchorPoint.x = Math.min(anchorPoint.x, displayArea.x + displayArea.width - (arrowSize.width / 2));
+&nbsp;
+        return {
+            popoverOrigin,
+            anchorPoint,
+            placement: PLACEMENT_OPTIONS.TOP,
+            forcedContentSize
+        }
+    }
+&nbsp;
+    computeBottomGeometry({displayArea, fromRect, requestedContentSize, arrowSize}) {
+        let preferedY = fromRect.y + fromRect.height + arrowSize.height;
+&nbsp;
+        let forcedContentSize = {
+          height: preferedY + requestedContentSize.height &gt; displayArea.y + displayArea.height ? <span class="branch-0 cbranch-no" title="branch not covered" >displayArea.y + displayArea.height - preferedY </span>: requestedContentSize.height,
+          width: Math.min(requestedContentSize.width, displayArea.width)
+        }
+&nbsp;
+        let maxX = displayArea.x + displayArea.width - forcedContentSize.width;
+        let minX = displayArea.x;
+        let preferedX = fromRect.x + (fromRect.width - forcedContentSize.width) / 2;
+&nbsp;
+        var popoverOrigin = new Point(
+            Math.min(maxX, Math.max(minX, preferedX)),
+            preferedY
+        );
+&nbsp;
+        var anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y + fromRect.height);
+&nbsp;
+        // Make sure the arrow isn't cut off
+        anchorPoint.x = Math.max(anchorPoint.x, arrowSize.width / 2);
+        anchorPoint.x = Math.min(anchorPoint.x, displayArea.x + displayArea.width - (arrowSize.width / 2));
+&nbsp;
+        return {
+            popoverOrigin,
+            anchorPoint,
+            placement: PLACEMENT_OPTIONS.BOTTOM,
+            forcedContentSize
+        }
+    }
+&nbsp;
+    getPolarity () {
+        return this.props.layoutRtl ? <span class="branch-0 cbranch-no" title="branch not covered" >-1 </span>: 1;
+    }
+&nbsp;
+    computeLeftGeometry({displayArea, fromRect, requestedContentSize, arrowSize}) {
+        let forcedContentSize = {
+          height: requestedContentSize.height &gt; displayArea.height ? <span class="branch-0 cbranch-no" title="branch not covered" >displayArea.height </span>: requestedContentSize.height,
+          width: Math.min(requestedContentSize.width, displayArea.width)
+        }
+&nbsp;
+        let preferedX = fromRect.x - forcedContentSize.width - arrowSize.width;
+&nbsp;
+        let preferedY = fromRect.y + (fromRect.height - forcedContentSize.height) / 2;
+        let minY = displayArea.y;
+        let maxY = (displayArea.height - forcedContentSize.height) + displayArea.y;
+&nbsp;
+        var popoverOrigin = new Point(
+            preferedX,
+            Math.min(Math.max(minY, preferedY), maxY)
+        );
+&nbsp;
+        var anchorPoint = new Point(fromRect.x, fromRect.y + fromRect.height / 2.0);
+&nbsp;
+        // Make sure the arrow isn't cut off
+        anchorPoint.y = Math.max(anchorPoint.y, arrowSize.height / 2);
+        anchorPoint.y = Math.min(anchorPoint.y, displayArea.y + displayArea.height - (arrowSize.height / 2));
+&nbsp;
+        return {
+            popoverOrigin,
+            anchorPoint,
+            placement: PLACEMENT_OPTIONS.LEFT,
+            forcedContentSize
+        }
+    }
+&nbsp;
+    computeRightGeometry({displayArea, fromRect, requestedContentSize, arrowSize}) {
+        let forcedContentSize = {
+          height: requestedContentSize.height &gt; displayArea.height ? <span class="branch-0 cbranch-no" title="branch not covered" >displayArea.height </span>: requestedContentSize.height,
+          width: Math.min(requestedContentSize.width, displayArea.width)
+        }
+&nbsp;
+        let preferedX = fromRect.x + fromRect.width + arrowSize.width;
+&nbsp;
+        let preferedY = fromRect.y + (fromRect.height - forcedContentSize.height) / 2;
+        let minY = displayArea.y;
+        let maxY = (displayArea.height - forcedContentSize.height) + displayArea.y;
+&nbsp;
+        var popoverOrigin = new Point(
+            preferedX,
+            Math.min(Math.max(minY, preferedY), maxY)
+        );
+&nbsp;
+        var anchorPoint = new Point(fromRect.x + fromRect.width, fromRect.y + fromRect.height / 2.0);
+&nbsp;
+        // Make sure the arrow isn't cut off
+        anchorPoint.y = Math.max(anchorPoint.y, arrowSize.height / 2);
+        anchorPoint.y = Math.min(anchorPoint.y, displayArea.y + displayArea.height - (arrowSize.height / 2));
+&nbsp;
+        return {
+            popoverOrigin,
+            anchorPoint,
+            placement: PLACEMENT_OPTIONS.RIGHT,
+            forcedContentSize
+        }
+    }
+&nbsp;
+    computeAutoGeometry({displayArea, requestedContentSize, fromRect, arrowSize}) {
+        let possiblePlacements = [];
+        if (fromRect.x - displayArea.x - arrowSize.width &gt;= requestedContentSize.width) { // We could fit it on the left side
+            possiblePlacements.push(PLACEMENT_OPTIONS.LEFT)
+            return this.computeGeometry({requestedContentSize, placement: PLACEMENT_OPTIONS.LEFT, fromRect, displayArea});
+        }
+        if (displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width &gt;= requestedContentSize.width) { // We could fit it on the right side
+            possiblePlacements.push(PLACEMENT_OPTIONS.RIGHT)
+&nbsp;
+        }
+&nbsp;
+        // Keep same placement if possible
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (possiblePlacements.length === 2) {
+<span class="cstat-no" title="statement not covered" >          if (this.state.placement !== PLACEMENT_OPTIONS.AUTO)</span>
+<span class="cstat-no" title="statement not covered" >            return this.computeGeometry({requestedContentSize, placement: this.state.placement, fromRect, displayArea});</span>
+          else
+<span class="cstat-no" title="statement not covered" >            return this.computeGeometry({requestedContentSize, placement: possiblePlacements[0], fromRect, displayArea});</span>
+        } else if (possiblePlacements.length === 1) {
+            return this.computeGeometry({requestedContentSize, placement: possiblePlacements[0], fromRect, displayArea});
+        } else {
+          <span class="missing-if-branch" title="if path not taken" >I</span>if (this.state.placement === PLACEMENT_OPTIONS.TOP || this.state.placement === PLACEMENT_OPTIONS.BOTTOM)
+<span class="cstat-no" title="statement not covered" >            return this.computeGeometry({requestedContentSize, placement: this.state.placement, fromRect, displayArea});</span>
+&nbsp;
+          // We could fit it on the top or bottom, need to figure out which is better
+          else {
+            let topSpace = fromRect.y - displayArea.y;
+            let bottomSpace = displayArea.y + displayArea.height - (fromRect.y + fromRect.height);
+            return (topSpace - 50) &gt; bottomSpace ? this.computeGeometry({requestedContentSize, placement: PLACEMENT_OPTIONS.TOP, fromRect, displayArea}) : this.computeGeometry({requestedContentSize, placement: PLACEMENT_OPTIONS.BOTTOM, fromRect, displayArea});
+          }
+        }
+    }
+&nbsp;
+    getArrowSize(placement) {
+        var size = this.props.arrowSize;
+        switch(placement) {
+            case PLACEMENT_OPTIONS.LEFT:
+            case PLACEMENT_OPTIONS.RIGHT:
+                return new Size(size.height, size.width);
+            default:
+                return size;
+        }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    ge</span>tArrowColorStyle(color) {
+<span class="cstat-no" title="statement not covered" >        return { borderTopColor: color };</span>
+    }
+&nbsp;
+    getArrowRotation(placement) {
+        switch (placement) {
+            case PLACEMENT_OPTIONS.BOTTOM:
+                return '180deg';
+            case PLACEMENT_OPTIONS.LEFT:
+                return (this.getPolarity() * -90) + 'deg';
+            case PLACEMENT_OPTIONS.RIGHT:
+                return this.getPolarity() * 90 + 'deg';
+            default:
+                return '0deg';
+        }
+    }
+&nbsp;
+    getArrowDynamicStyle() {
+        var {anchorPoint, popoverOrigin} = this.state;
+        var arrowSize = this.props.arrowSize;
+&nbsp;
+        // Create the arrow from a rectangle with the appropriate borderXWidth set
+        // A rotation is then applied dependending on the placement
+        // Also make it slightly bigger
+        // to fix a visual artifact when the popover is animated with a scale
+        var width = arrowSize.width + 2;
+        var height = arrowSize.height * 2 + 2;
+&nbsp;
+        return {
+            width: width,
+            height: height,
+            borderTopWidth: height / 2,
+            borderRightWidth: width / 2,
+            borderBottomWidth: height / 2,
+            borderLeftWidth: width / 2,
+        }
+    }
+&nbsp;
+    getTranslateOrigin() {
+        const {forcedContentSize, popoverOrigin, anchorPoint} = this.state;
+&nbsp;
+        const popoverCenter = new Point(popoverOrigin.x + (forcedContentSize.width / 2),
+            popoverOrigin.y + (forcedContentSize.height / 2));
+        const shiftHorizantal = anchorPoint.x - popoverCenter.x;
+        const shiftVertical = anchorPoint.y - popoverCenter.y;
+        return new Point(popoverOrigin.x + shiftHorizantal, popoverOrigin.y + shiftVertical);
+    }
+&nbsp;
+    componentDidMount() {
+      <span class="missing-if-branch" title="if path not taken" >I</span>if (this.props.isVisible)
+<span class="cstat-no" title="statement not covered" >        this.setState({requestedContentSize: {}, forcedContentSize: {}, isAwaitingShow: true, visible: true});</span>
+    }
+&nbsp;
+    componentWillReceiveProps(nextProps:any) {
+        var willBeVisible = nextProps.isVisible;
+        var {
+            isVisible,
+            fromRect,
+            displayArea
+        } = this.props;
+&nbsp;
+        if (willBeVisible !== isVisible) {
+            <span class="missing-if-branch" title="else path not taken" >E</span>if (willBeVisible) {
+                // We want to start the show animation only when contentSize is known
+                // so that we can have some logic depending on the geometry
+                this.setState({requestedContentSize: {}, forcedContentSize: {}, isAwaitingShow: true, visible: true});
+            } else {
+<span class="cstat-no" title="statement not covered" >                this.animateOut();</span>
+            }
+        } else <span class="missing-if-branch" title="if path not taken" >I</span>if (willBeVisible &amp;&amp; ((fromRect !== undefined &amp;&amp; <span class="branch-2 cbranch-no" title="branch not covered" >JSON.stringify(nextProps.fromRect) !== JSON.stringify(fromRect))</span> || (displayArea !== undefined &amp;&amp; JSON.stringify(nextProps.displayArea) !== JSON.stringify(displayArea)))) {
+<span class="cstat-no" title="statement not covered" >            this.handleGeomChange(nextProps);</span>
+        }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    ha</span>ndleGeomChange({displayArea, fromRect}) {
+      let { requestedContentSize, forcedContentSize, placement, anchorPoint, popoverOrigin, animatedValues } = <span class="cstat-no" title="statement not covered" >this.state;</span>
+&nbsp;
+      let geom = <span class="cstat-no" title="statement not covered" >this.computeGeometry({requestedContentSize, displayArea, fromRect});</span>
+&nbsp;
+      let newState = <span class="cstat-no" title="statement not covered" >{}</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      if (geom.forcedContentSize !== forcedContentSize)</span>
+<span class="cstat-no" title="statement not covered" >        newState.forcedContentSize = geom.forcedContentSize;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      if (geom.anchorPoint !== anchorPoint)</span>
+<span class="cstat-no" title="statement not covered" >        newState.anchorPoint = geom.anchorPoint;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      if (geom.placement !== placement)</span>
+<span class="cstat-no" title="statement not covered" >        newState.placement = geom.placement;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      this.setState(newState, <span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        if (geom.popoverOrigin !== popoverOrigin) {</span>
+<span class="cstat-no" title="statement not covered" >          this.animateTo({</span>
+            values: animatedValues,
+            fade: 1,
+            scale: 1,
+            translatePoint: new Point(geom.popoverOrigin.x, geom.popoverOrigin.y),
+            easing: Easing.inOut(Easing.quad)
+          })
+        }
+      });
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    an</span>imateOut() {
+<span class="cstat-no" title="statement not covered" >      this.animateTo({</span>
+        values: this.state.animatedValues,
+        fade: 0,
+        scale: 0,
+        translatePoint: this.getTranslateOrigin(),
+        callback: <span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >this.setState({visible: false}, <span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >this.props.doneClosingCallback())</span>,</span>
+        easing: Easing.inOut(Easing.quad)
+      })
+    }
+&nbsp;
+    animateIn() {
+      var values = this.state.animatedValues;
+&nbsp;
+      // Should grow from anchor point
+      let translateStart = this.getTranslateOrigin()
+      translateStart.x += SCREEN_WIDTH // Temp fix for useNativeDriver issue
+      values.translate.setValue(translateStart);
+&nbsp;
+      this.animateTo({
+        values,
+        fade: 1,
+        scale: 1,
+        translatePoint: new Point(this.state.popoverOrigin.x, this.state.popoverOrigin.y),
+        easing: Easing.out(Easing.back())
+      })
+    }
+&nbsp;
+    animateTo({fade, translatePoint, scale, callback, easing, values}) {
+      var commonConfig = {
+          duration: 300,
+          easing,
+          useNativeDriver: true
+      }
+&nbsp;
+      translatePoint.x = translatePoint.x + SCREEN_WIDTH // Temp fix for useNativeDriver issue
+&nbsp;
+      <span class="missing-if-branch" title="if path not taken" >I</span>if (!fade &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >fade !== 0)</span> <span class="cstat-no" title="statement not covered" >console.warn("Popover: Fade value is null")</span>
+      else <span class="missing-if-branch" title="if path not taken" >I</span>if (!translatePoint || (!translatePoint.x &amp;&amp; <span class="branch-2 cbranch-no" title="branch not covered" >translatePoint.x !== 0)</span> &amp;&amp; (<span class="branch-3 cbranch-no" title="branch not covered" >!translatePoint.y !== 0)</span>) <span class="cstat-no" title="statement not covered" >console.warn("Popover: Translate Point value is null")</span>
+      else <span class="missing-if-branch" title="if path not taken" >I</span>if (!scale &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >scale !== 0)</span> <span class="cstat-no" title="statement not covered" >console.warn("Popover: Scale value is null")</span>
+      else {
+        Animated.parallel([
+            Animated.timing(values.fade, {
+                toValue: fade,
+                ...commonConfig,
+            }),
+            Animated.timing(values.translate, {
+                toValue: translatePoint,
+                ...commonConfig,
+            }),
+            Animated.timing(values.scale, {
+                toValue: scale,
+                ...commonConfig,
+            })
+        ]).start(callback);
+      }
+    }
+&nbsp;
+    render() {
+        var {popoverOrigin, placement, forcedHeight, animatedValues, anchorPoint, forcedContentSize} = this.state;
+&nbsp;
+        let arrowScale = animatedValues.scale.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0, 1],
+            extrapolate: 'clamp',
+        })
+&nbsp;
+        var arrowSize = this.props.arrowSize;
+        var arrowWidth = arrowSize.width + 2;
+        var arrowHeight = arrowSize.height * 2 + 2;
+&nbsp;
+        var arrowStyle = {
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: arrowWidth,
+          height: arrowHeight,
+          transform: [
+            {translateX: SCREEN_WIDTH /* Temp fix for useNativeDriver issue */ + anchorPoint.x - arrowWidth / 2},
+            {translateY: anchorPoint.y - arrowHeight / 2},
+            {rotate: this.getArrowRotation(placement)}
+          ]
+        };
+&nbsp;
+        let arrowInnerStyle = [
+          styles.arrow,
+          this.getArrowDynamicStyle(),
+          {
+            borderTopColor: styles.popoverContent.backgroundColor,
+            transform: [
+              {scale: arrowScale},
+            ]
+          }
+        ];
+&nbsp;
+        // Temp fix for useNativeDriver issue
+        let backgroundShift = animatedValues.fade.interpolate({
+          inputRange: [0, 0.0001, 1],
+          outputRange: [0, SCREEN_WIDTH, SCREEN_WIDTH]
+        })
+&nbsp;
+        let backgroundStyle = {
+          ...styles.background,
+          transform: [
+            {translateX: backgroundShift}
+          ]
+        };
+&nbsp;
+        let containerStyle = {
+          ...styles.container,
+          opacity: animatedValues.fade
+        };
+&nbsp;
+        let popoverViewStyle = {
+          transform: [
+              {translateX: animatedValues.translate.x},
+              {translateY: animatedValues.translate.y},
+              {scale: animatedValues.scale},
+              {perspective: 1000}
+          ],
+          ...forcedContentSize,
+          position: 'absolute',
+          ...styles.dropShadow,
+          ...styles.popoverContent
+        };
+&nbsp;
+        let contentView = (
+            &lt;Animated.View style={containerStyle}&gt;
+              &lt;TouchableWithoutFeedback onPress={this.props.onClose}&gt;
+                &lt;Animated.View style={backgroundStyle}/&gt;
+              &lt;/TouchableWithoutFeedback&gt;
+              &lt;View style={{top: 0, left: 0}}&gt;
+                  &lt;Animated.View ref='content' onLayout={<span class="fstat-no" title="function not covered" >ev</span>t =&gt; <span class="cstat-no" title="statement not covered" >this.measureContent(evt)}</span> style={popoverViewStyle}&gt;
+                    {this.props.children}
+                  &lt;/Animated.View&gt;
+                  {this.props.mode === 'popover' &amp;&amp; this.props.fromRect !== undefined &amp;&amp;
+                    &lt;View style={arrowStyle}&gt;
+                      &lt;Animated.View style={arrowInnerStyle}/&gt;
+                    &lt;/View&gt;
+                  }
+              &lt;/View&gt;
+            &lt;/Animated.View&gt;
+        );
+&nbsp;
+        if (this.props.showInModal) {
+            return (
+                &lt;Modal transparent={true} supportedOrientations={['portrait', 'landscape']} hardwareAccelerated={true} visible={this.state.visible} onRequestClose={this.props.onClose}&gt;
+                  {contentView}
+                &lt;/Modal&gt;
+            );
+        } else {
+            return contentView;
+        }
+    }
+}
+&nbsp;
+var styles = {
+    container: {
+        top: 0,
+        bottom: 0,
+        left: -1 * SCREEN_WIDTH,
+        right: 0,
+        position: 'absolute',
+        backgroundColor: 'transparent'
+    },
+    background: {
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: SCREEN_WIDTH,
+        position: 'absolute',
+        backgroundColor: 'rgba(0,0,0,0.5)'
+    },
+    contentContainer: {
+        flexDirection: 'column',
+    },
+    popoverContainer: {
+        position: 'absolute'
+    },
+    popoverContent: {
+        backgroundColor: 'white',
+        borderRadius: 3,
+        borderBottomColor: '#333438',
+        overflow: 'hidden'
+    },
+    selectContainer: {
+        backgroundColor: '#f2f2f2',
+        position: 'absolute'
+    },
+    dropShadow: {
+        shadowColor: 'black',
+        shadowOffset: {width: 0, height: 2},
+        shadowRadius: 2,
+        shadowOpacity: 0.8
+    },
+    arrow: {
+        position: 'absolute',
+        borderTopColor: 'transparent',
+        borderRightColor: 'transparent',
+        borderBottomColor: 'transparent',
+        borderLeftColor: 'transparent'
+    }
+};
+&nbsp;
+Popover.defaultProps = {
+	isVisible: false,
+	displayArea: new Rect(10, 10, SCREEN_WIDTH-20, SCREEN_HEIGHT-20),
+	arrowSize: DEFAULT_ARROW_SIZE,
+	placement: PLACEMENT_OPTIONS.AUTO,
+	onClose: noop,
+	doneClosingCallback: noop,
+	mode: 'popover',
+	showInModal: true,
+  layoutRtl: false
+}
+&nbsp;
+Popover.propTypes = {
+  isVisible: PropTypes.bool,
+  displayArea: PropTypes.objectOf(PropTypes.number),
+  arrowSize: PropTypes.objectOf(PropTypes.number),
+  placement: PropTypes.oneOf([PLACEMENT_OPTIONS.LEFT, PLACEMENT_OPTIONS.RIGHT, PLACEMENT_OPTIONS.TOP, PLACEMENT_OPTIONS.BOTTOM, PLACEMENT_OPTIONS.AUTO]),
+  onClose: PropTypes.func,
+  doneClosingCallback: PropTypes.func,
+  mode: PropTypes.string,
+  showInModal: PropTypes.bool,
+  fromRect: PropTypes.objectOf(PropTypes.number),
+  layoutRtl: PropTypes.bool,
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Tue Dec 19 2017 15:44:05 GMT-0500 (EST)
+</div>
+</div>
+<script src="prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="sorter.js"></script>
+</body>
+</html>
