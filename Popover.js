@@ -19,12 +19,12 @@ const PLACEMENT_OPTIONS = {
     AUTO: 'auto'
 };
 
-export function Point(x, y) {
+function Point(x, y) {
     this.x = x;
     this.y = y;
 }
 
-export function Size(width, height) {
+function Size(width, height) {
     this.width = width;
     this.height = height;
 }
@@ -143,18 +143,6 @@ export default class Popover extends React.Component {
         placement = placement || this.props.placement;
         fromRect = fromRect || this.props.fromRect;
         displayArea = displayArea || this.props.displayArea;
-
-        //check to see if the mode is select
-        //and pass in a dummy arrowSize object
-        var arrowSize;
-        if (this.props.mode === 'select') {
-            arrowSize = {
-                height: 0,
-                width: 0
-            };
-        } else {
-            arrowSize = this.getArrowSize(placement);
-        }
 
         if (displayArea.x === undefined || displayArea.y === undefined) {
             displayArea = new Rect(10, isIOS() ? 20 : 10, displayArea.width - 20, displayArea.height - 30);
@@ -601,14 +589,16 @@ export default class Popover extends React.Component {
 
         let contentView = (
             <Animated.View style={containerStyle}>
-              <TouchableWithoutFeedback onPress={this.props.onClose}>
-                <Animated.View style={backgroundStyle}/>
-              </TouchableWithoutFeedback>
+              {this.props.showBackground &&
+                <TouchableWithoutFeedback onPress={this.props.onClose}>
+                  <Animated.View style={backgroundStyle}/>
+                </TouchableWithoutFeedback>
+              }
               <View style={{top: 0, left: 0}}>
                   <Animated.View ref='content' onLayout={evt => this.measureContent(evt)} style={popoverViewStyle}>
                     {this.props.children}
                   </Animated.View>
-                  {this.props.mode === 'popover' && this.props.fromRect !== undefined &&
+                  {this.props.showArrow && this.props.fromRect !== undefined && this.props.fromRect !== null &&
                     <View style={arrowStyle}>
                       <Animated.View style={arrowInnerStyle}/>
                     </View>
@@ -684,9 +674,10 @@ Popover.defaultProps = {
 	placement: PLACEMENT_OPTIONS.AUTO,
 	onClose: noop,
 	doneClosingCallback: noop,
-	mode: 'popover',
 	showInModal: true,
-  layoutRtl: false
+  layoutRtl: false,
+  showArrow: true,
+  showBackground: true
 }
 
 Popover.propTypes = {
@@ -696,8 +687,9 @@ Popover.propTypes = {
   placement: PropTypes.oneOf([PLACEMENT_OPTIONS.LEFT, PLACEMENT_OPTIONS.RIGHT, PLACEMENT_OPTIONS.TOP, PLACEMENT_OPTIONS.BOTTOM, PLACEMENT_OPTIONS.AUTO]),
   onClose: PropTypes.func,
   doneClosingCallback: PropTypes.func,
-  mode: PropTypes.string,
   showInModal: PropTypes.bool,
   fromRect: PropTypes.objectOf(PropTypes.number),
   layoutRtl: PropTypes.bool,
+  showArrow: PropTypes.bool,
+  showBackground: PropTypes.bool
 }
