@@ -11,7 +11,7 @@ var noop = () => {};
 
 var {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window');
 var DEFAULT_ARROW_SIZE = new Size(16, 8);
-const PLACEMENT_OPTIONS = {
+export const PLACEMENT_OPTIONS = {
     TOP: 'top',
     RIGHT: 'right',
     BOTTOM: 'bottom',
