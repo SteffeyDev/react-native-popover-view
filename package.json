@@ -1,6 +1,6 @@
 {
   "name": "react-native-popover-view",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "A <Popover /> component for react-native",
   "main": "Popover.js",
   "author": "Peter Steffey <steffeydev@icloud.com> (https://github.com/steffeydev)",
@@ -24,7 +24,10 @@
       "enzyme-to-json/serializer"
     ],
     "collectCoverage": true,
-    "coverageFormats": ["json", "html"]
+    "coverageFormats": [
+      "json",
+      "html"
+    ]
   },
   "repository": {
     "type": "git",
