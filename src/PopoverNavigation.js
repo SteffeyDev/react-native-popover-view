@@ -1,6 +1,6 @@
 import Popover, { Rect, PLACEMENT_OPTIONS } from './Popover'
 import React, { Component } from 'react'
-import { View, BackHandler, Dimensions } from 'react-native'
+import { View, BackHandler, Dimensions, Animated } from 'react-native'
 import PropTypes from 'prop-types';
 
 var {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window');
@@ -16,34 +16,32 @@ function addPopoverInstance(instance) {
   return () => popoverDisplayAreaChangeListeners.splice(popoverDisplayAreaChangeListeners.indexOf(instance), 1);
 }
 
-export function navigationTransitionConfig() {
-  return {
-    transitionSpec: {
-      duration: 1,
-      timing: Animated.timing,
-    },
-    screenInterpolator: sceneProps => {
-      const { position, scene } = sceneProps
-      const { index } = scene
+// Transition config needed on tablets for popover to work
+export let popoverTransitionConfig = () => ({
+  transitionSpec: {
+    duration: 1,
+    timing: Animated.timing,
+  },
+  screenInterpolator: sceneProps => {
+    const { position, scene } = sceneProps
+    const { index } = scene
 
-      const translateY = position.interpolate({
-        inputRange: [index - 1, index, index + 1],
-        outputRange: [0, 0, 0],
-      })
+    const translateY = position.interpolate({
+      inputRange: [index - 1, index, index + 1],
+      outputRange: [0, 0, 0],
+    })
 
-      const opacity = position.interpolate({
-        inputRange: [index - 1, index, index + 1],
-        outputRange: [0, 1, 1],
-      })
+    const opacity = position.interpolate({
+      inputRange: [index - 1, index, index + 1],
+      outputRange: [0, 1, 1],
+    })
 
-      return { opacity, transform: [{ translateY }] }
-    },
-  }
-}
+    return { opacity, transform: [{ translateY }] }
+  },
+})
 
 export default class PopoverNavigation extends Component {
-  static navigationOptions = {
-  }
+  static navigationOptions = {}
 
   state = {
     visible: true,
@@ -55,6 +53,7 @@ export default class PopoverNavigation extends Component {
   }
 
   static setDisplayArea(displayArea) {
+    displayAreaStore = displayArea;
     popoverDisplayAreaChangeListeners.forEach(instance => instance.relayout(displayArea));
   }
 
@@ -71,7 +70,10 @@ export default class PopoverNavigation extends Component {
     this.saveStashRect()
   }
 
-  saveStashRect = () => this.stashRect = this.props.children.props.navigation.state.params.calculateRect(this.state.displayArea.width, this.state.displayArea.height);
+  saveStashRect() {
+    if (this.props.children.props.navigation.state.params && this.props.children.props.navigation.state.params.calculateRect)
+      this.stashRect = this.props.children.props.navigation.state.params.calculateRect(this.state.displayArea.width, this.state.displayArea.height);
+  }
 
   relayout({width, height}) {
     if (width !== this.state.width, height !== this.state.height) {
@@ -108,7 +110,8 @@ export default class PopoverNavigation extends Component {
   render() {
     const child = React.cloneElement(this.props.children, {goBack: () => this.goBack()});
     const { preferedWidth, preferedHeight, arrowSize, placement, showInModal, layoutRtl, showArrow } = this.props;
-    const displayArea = { width: this.state.width, height: this.state.height };
+    const { displayArea } = this.state;
+
     if (shouldShowInPopover()) {
       return (
         <Popover
