@@ -158,7 +158,6 @@ export default class Popover extends React.Component {
           var options = {
               displayArea,
               fromRect,
-              arrowSize,
               requestedContentSize
           }
 
@@ -186,8 +185,9 @@ export default class Popover extends React.Component {
         }
     }
 
-    computeTopGeometry({displayArea, fromRect, requestedContentSize, arrowSize}) {
+    computeTopGeometry({displayArea, fromRect, requestedContentSize}) {
         let minY = displayArea.y;
+        const arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.TOP);
         let preferedY = fromRect.y - requestedContentSize.height - arrowSize.height;
 
         let forcedContentSize = {
@@ -218,7 +218,8 @@ export default class Popover extends React.Component {
         }
     }
 
-    computeBottomGeometry({displayArea, fromRect, requestedContentSize, arrowSize}) {
+    computeBottomGeometry({displayArea, fromRect, requestedContentSize}) {
+        const arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.BOTTOM);
         let preferedY = fromRect.y + fromRect.height + arrowSize.height;
 
         let forcedContentSize = {
@@ -253,7 +254,8 @@ export default class Popover extends React.Component {
         return this.props.layoutRtl ? -1 : 1;
     }
 
-    computeLeftGeometry({displayArea, fromRect, requestedContentSize, arrowSize}) {
+    computeLeftGeometry({displayArea, fromRect, requestedContentSize}) {
+        const arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.LEFT);
         let forcedContentSize = {
           height: requestedContentSize.height > displayArea.height ? displayArea.height : requestedContentSize.height,
           width: Math.min(requestedContentSize.width, displayArea.width)
@@ -284,7 +286,8 @@ export default class Popover extends React.Component {
         }
     }
 
-    computeRightGeometry({displayArea, fromRect, requestedContentSize, arrowSize}) {
+    computeRightGeometry({displayArea, fromRect, requestedContentSize}) {
+        const arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.RIGHT);
         let forcedContentSize = {
           height: requestedContentSize.height > displayArea.height ? displayArea.height : requestedContentSize.height,
           width: Math.min(requestedContentSize.width, displayArea.width)
@@ -315,7 +318,8 @@ export default class Popover extends React.Component {
         }
     }
 
-    computeAutoGeometry({displayArea, requestedContentSize, fromRect, arrowSize}) {
+    computeAutoGeometry({displayArea, requestedContentSize, fromRect}) {
+        let arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.LEFT);
         let possiblePlacements = [];
         if (fromRect.x - displayArea.x - arrowSize.width >= requestedContentSize.width) { // We could fit it on the left side
             possiblePlacements.push(PLACEMENT_OPTIONS.LEFT)
@@ -325,6 +329,8 @@ export default class Popover extends React.Component {
             possiblePlacements.push(PLACEMENT_OPTIONS.RIGHT)
 
         }
+
+        arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.TOP);
 
         // Keep same placement if possible
         if (possiblePlacements.length === 2) {
@@ -376,8 +382,8 @@ export default class Popover extends React.Component {
     }
 
     getArrowDynamicStyle() {
-        var {anchorPoint, popoverOrigin} = this.state;
-        var arrowSize = this.props.arrowSize;
+        const { anchorPoint, popoverOrigin, placement } = this.state;
+        const { arrowSize } = this.props;
 
         // Create the arrow from a rectangle with the appropriate borderXWidth set
         // A rotation is then applied dependending on the placement
@@ -669,7 +675,7 @@ var styles = {
 
 Popover.defaultProps = {
 	isVisible: false,
-	displayArea: new Rect(10, 10, SCREEN_WIDTH-20, SCREEN_HEIGHT-20),
+	displayArea: new Rect(10, isIOS() ? 20 : 10, SCREEN_WIDTH-20, SCREEN_HEIGHT-20),
 	arrowSize: DEFAULT_ARROW_SIZE,
 	placement: PLACEMENT_OPTIONS.AUTO,
 	onClose: noop,
