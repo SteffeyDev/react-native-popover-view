@@ -1,7 +1,8 @@
 import Popover, { Rect, PLACEMENT_OPTIONS } from './Popover'
 import React, { Component } from 'react'
-import { View, BackHandler, Dimensions, Animated } from 'react-native'
-import PropTypes from 'prop-types';
+import { View, Platform, BackHandler, Dimensions, Animated, Alert } from 'react-native'
+import PropTypes from 'prop-types'
+import { StackNavigator } from 'react-navigation'
 
 var {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window');
 const defaultDisplayArea = new Rect(10, 10, SCREEN_WIDTH-20, SCREEN_HEIGHT-20);
@@ -39,6 +40,38 @@ export let popoverTransitionConfig = () => ({
     return { opacity, transform: [{ translateY }] }
   },
 })
+
+export let withPopoverNavigationRootWrapper = Comp => props => <View 
+  style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0}}
+  onLayout={evt => {
+    let popoverDispayArea = {
+      x: 10,
+      y: Platform.OS === 'ios' ? 20 : 10,
+      width: evt.nativeEvent.layout.width - 20,
+      height: evt.nativeEvent.layout.height - (Platform.OS === 'ios' ? 30 : 20)
+    }
+    PopoverNavigation.setDisplayArea(popoverDispayArea)
+  }}><Comp {...props} /></View>
+
+export let withPopoverNavigation = (Comp, popoverOptions) => props => <PopoverNavigation {...popoverOptions}><Comp {...props} /></PopoverNavigation>;
+
+export function PopoverStackNavigator(RouteConfigs, StackNavigatorConfig) {
+  let routeKeys = Object.keys(RouteConfigs);
+  let firstRouteKey = routeKeys.splice(0, 1)[0];
+  let newRouteConfigs = {};
+  newRouteConfigs[firstRouteKey] = RouteConfigs[firstRouteKey];
+  routeKeys.forEach(route => newRouteConfigs[route] = Object.assign({}, RouteConfigs[route], { screen: withPopoverNavigation(RouteConfigs[route].screen, RouteConfigs[route].popoverOptions) }));
+
+  let nonPopoverStack = StackNavigator(newRouteConfigs, StackNavigatorConfig);
+  const popoverStackConfig = Object.assign({}, StackNavigatorConfig, {transitionConfig: popoverTransitionConfig, headerMode: 'screen', cardStyle: {backgroundColor: 'transparent'}});
+  let popoverStack = StackNavigator(newRouteConfigs, popoverStackConfig);
+
+  return props => {
+    let Stack = nonPopoverStack;
+    if (shouldShowInPopover()) Stack = popoverStack;
+    return <Stack screenProps={props.screenProps} ref={props.navigatorRef} />;
+  }
+}
 
 export default class PopoverNavigation extends Component {
   static navigationOptions = {}
@@ -109,7 +142,7 @@ export default class PopoverNavigation extends Component {
 
   render() {
     const child = React.cloneElement(this.props.children, {goBack: () => this.goBack()});
-    const { preferedWidth, preferedHeight, arrowSize, placement, showInModal, layoutRtl, showArrow } = this.props;
+    const { preferedWidth, preferedHeight, arrowSize, placement, showInModal, layoutRtl, showArrow, showBackground } = this.props;
     const { displayArea } = this.state;
 
     if (shouldShowInPopover()) {
@@ -120,6 +153,7 @@ export default class PopoverNavigation extends Component {
           showInModal={showInModal}
           layoutRtl={layoutRtl}
           showArrow={showArrow}
+          showBackground={showBackground}
           isVisible={this.state.visible}
           onClose={() => this.goBack()}
           displayArea={displayArea}
@@ -144,4 +178,7 @@ PopoverNavigation.propTypes = {
   showInModal: PropTypes.bool,
   layoutRtl: PropTypes.bool,
   showArrow: PropTypes.bool,
+  showBackground: PropTypes.bool,
+  preferedWidth: PropTypes.number,
+  preferedHeight: PropTypes.number,
 }
