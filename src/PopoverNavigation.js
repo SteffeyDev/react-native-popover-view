@@ -1,6 +1,6 @@
 import Popover, { Rect, PLACEMENT_OPTIONS } from './Popover'
 import React, { Component } from 'react'
-import { View, Platform, BackHandler, Dimensions, Animated, Alert } from 'react-native'
+import { View, Platform, BackHandler, Dimensions, Animated } from 'react-native'
 import PropTypes from 'prop-types'
 import { StackNavigator } from 'react-navigation'
 
@@ -86,8 +86,10 @@ export default class PopoverNavigation extends Component {
   }
 
   static setDisplayArea(displayArea) {
-    displayAreaStore = displayArea;
-    popoverDisplayAreaChangeListeners.forEach(instance => instance.relayout(displayArea));
+    if (displayArea !== displayAreaStore) {
+      displayAreaStore = displayArea;
+      popoverDisplayAreaChangeListeners.forEach(instance => instance.relayout(displayArea));
+    }
   }
 
   goBack() {
@@ -108,24 +110,21 @@ export default class PopoverNavigation extends Component {
       this.stashRect = this.props.children.props.navigation.state.params.calculateRect(this.state.displayArea.width, this.state.displayArea.height);
   }
 
-  relayout({width, height}) {
-    if (width !== this.state.width, height !== this.state.height) {
-      let displayArea = this.state.displayArea;
-      displayArea.width = width;
-      displayArea.height = height;
+  relayout(newDisplayArea) {
+    if (newDisplayArea !== this.state.displayArea) {
 
       // If we are using calculateRect, need to watch for new values and wait to update until after they come in
       if (this.props.children.props.navigation.state.params && this.props.children.props.navigation.state.params.calculateRect) {
         let interval = setInterval(() => {
-          let newRect = this.props.children.props.navigation.state.params.calculateRect(this.state.width, this.state.height);
+          let newRect = this.props.children.props.navigation.state.params.calculateRect(newDisplayArea.width, newDisplayArea.height);
           if (newRect !== this.stashRect) {
-            this.setState({displayArea}, () => this.saveStashRect());
             clearInterval(interval);
+            this.setState({displayArea: newDisplayArea}, () => this.saveStashRect());
           }
         }, 100)
         setTimeout(() => clearInterval(interval), 2000); // Failsafe so that the interval doesn't run forever
       } else {
-        this.setState({displayArea});
+        this.setState({displayArea: newDisplayArea});
       }
     }
   }

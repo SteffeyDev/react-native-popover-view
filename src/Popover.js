@@ -66,17 +66,6 @@ export default class Popover extends React.Component {
         };
 
 		this.measureContent = this.measureContent.bind(this);
-		this.computeGeometry = this.computeGeometry.bind(this);
-		this.computeTopGeometry = this.computeTopGeometry.bind(this);
-		this.computeBottomGeometry = this.computeBottomGeometry.bind(this);
-		this.computeLeftGeometry = this.computeLeftGeometry.bind(this);
-		this.computeRightGeometry = this.computeRightGeometry.bind(this);
-		this.computeAutoGeometry = this.computeAutoGeometry.bind(this);
-		this.getArrowSize = this.getArrowSize.bind(this);
-		this.getArrowColorStyle = this.getArrowColorStyle.bind(this);
-		this.getArrowRotation = this.getArrowRotation.bind(this);
-		this.getArrowDynamicStyle = this.getArrowDynamicStyle.bind(this);
-		this.getTranslateOrigin = this.getTranslateOrigin.bind(this);
 		this.animateIn = this.animateIn.bind(this);
 	}
 
@@ -129,8 +118,9 @@ export default class Popover extends React.Component {
 
             //Debounce to prevent flickering when displaying a popover with content
             //that doesn't show immediately.
-            this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), () => this.animateIn());
-          } else {
+            this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), this.animateIn);
+          } else if (requestedContentSize.width !== this.state.requestedContentSize.width || requestedContentSize.height !== this.state.requestedContentSize.height) {
+            this.handleGeomChange({requestedContentSize});
           }
         }
     }
@@ -441,8 +431,11 @@ export default class Popover extends React.Component {
         }
     }
 
-    handleGeomChange({displayArea, fromRect}) {
-      let { requestedContentSize, forcedContentSize, placement, anchorPoint, popoverOrigin, animatedValues } = this.state;
+    handleGeomChange(newProps) {
+      let { forcedContentSize, placement, anchorPoint, popoverOrigin, animatedValues } = this.state;
+      let requestedContentSize = newProps.requestedContentSize || this.state.requestedContentSize;
+      let displayArea = newProps.displayArea || this.props.displayArea;
+      let fromRect = newProps.fromRect || this.props.fromRect;
 
       let geom = this.computeGeometry({requestedContentSize, displayArea, fromRect});
 
@@ -505,12 +498,18 @@ export default class Popover extends React.Component {
           useNativeDriver: true
       }
 
+      if (this.animating) {
+        setTimeout(() => this.animateTo.apply(this, arguments), 100);
+        return;
+      }
+
       translatePoint.x = translatePoint.x + SCREEN_WIDTH // Temp fix for useNativeDriver issue
 
       if (!fade && fade !== 0) console.warn("Popover: Fade value is null")
       else if (!translatePoint || (!translatePoint.x && translatePoint.x !== 0) && (!translatePoint.y !== 0)) console.warn("Popover: Translate Point value is null")
       else if (!scale && scale !== 0) console.warn("Popover: Scale value is null")
       else {
+        this.animating = true;
         Animated.parallel([
             Animated.timing(values.fade, {
                 toValue: fade,
@@ -524,7 +523,10 @@ export default class Popover extends React.Component {
                 toValue: scale,
                 ...commonConfig,
             })
-        ]).start(callback);
+        ]).start(() => { 
+          this.animating = false;
+          if (callback) callback();
+        });
       }
     }
 
