@@ -123,12 +123,15 @@ export default class Popover extends React.Component {
 
     measureContent(x) {
         var requestedContentSize = x.nativeEvent.layout;
-        if (requestedContentSize.width && requestedContentSize.height && this.state.isAwaitingShow) {
-          var geom = this.computeGeometry({requestedContentSize});
+        if (requestedContentSize.width && requestedContentSize.height) {
+          if (this.state.isAwaitingShow) {
+            var geom = this.computeGeometry({requestedContentSize});
 
-          //Debounce to prevent flickering when displaying a popover with content
-          //that doesn't show immediately.
-          this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), () => this.animateIn());
+            //Debounce to prevent flickering when displaying a popover with content
+            //that doesn't show immediately.
+            this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), () => this.animateIn());
+          } else {
+          }
         }
     }
 
@@ -593,24 +596,33 @@ export default class Popover extends React.Component {
           ...styles.popoverContent
         };
 
+        let testContentView = (
+          <View style={{opacity: 0, position: 'absolute'}} onLayout={this.measureContent}>
+            {this.props.children}
+          </View>
+        );
+
         let contentView = (
-            <Animated.View style={containerStyle}>
-              {this.props.showBackground &&
-                <TouchableWithoutFeedback onPress={this.props.onClose}>
-                  <Animated.View style={backgroundStyle}/>
-                </TouchableWithoutFeedback>
-              }
-              <View style={{top: 0, left: 0}}>
-                  <Animated.View ref='content' onLayout={evt => this.measureContent(evt)} style={popoverViewStyle}>
-                    {this.props.children}
-                  </Animated.View>
-                  {this.props.showArrow && this.props.fromRect !== undefined && this.props.fromRect !== null &&
-                    <View style={arrowStyle}>
-                      <Animated.View style={arrowInnerStyle}/>
-                    </View>
-                  }
-              </View>
-            </Animated.View>
+            <View style={[styles.container, {left: 0}]}>
+              {testContentView}
+              <Animated.View style={containerStyle}>
+                {this.props.showBackground &&
+                  <TouchableWithoutFeedback onPress={this.props.onClose}>
+                    <Animated.View style={backgroundStyle}/>
+                  </TouchableWithoutFeedback>
+                }
+                <View style={{top: 0, left: 0}}>
+                    <Animated.View style={popoverViewStyle}>
+                      {this.props.children}
+                    </Animated.View>
+                    {this.props.showArrow && this.props.fromRect !== undefined && this.props.fromRect !== null &&
+                      <View style={arrowStyle}>
+                        <Animated.View style={arrowInnerStyle}/>
+                      </View>
+                    }
+                </View>
+              </Animated.View>
+            </View>
         );
 
         if (this.props.showInModal) {
