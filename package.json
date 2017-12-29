@@ -34,11 +34,11 @@
     "url": "git@github.com:steffeydev/react-native-popover-view.git"
   },
   "devDependencies": {
-    "babel-jest": "^22.0.0",
-    "enzyme": "^3.2.0",
-    "enzyme-adapter-react-16": "^1.1.0",
+    "babel-jest": "^22.0.4",
+    "enzyme": "^3.3.0",
+    "enzyme-adapter-react-16": "^1.1.1",
     "enzyme-to-json": "^3.3.0",
-    "jest": "^22.0.0",
+    "jest": "^22.0.4",
     "jest-serializer-enzyme": "^1.0.0",
     "react": "16",
     "react-addons-test-utils": "^15.6.2",

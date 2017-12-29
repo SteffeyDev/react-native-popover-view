@@ -2,46 +2,15 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import {StyleSheet, Dimensions, Animated, Text, TouchableWithoutFeedback, View, Modal, Platform, Keyboard, Alert} from 'react-native';
+import { StyleSheet, Dimensions, Animated, Text, TouchableWithoutFeedback, View, Modal, Keyboard, Alert, Easing } from 'react-native';
 import _ from 'lodash';
+import { Rect, Point, Size, isIOS, PLACEMENT_OPTIONS } from './Utility';
 
 var flattenStyle = require('react-native/Libraries/StyleSheet/flattenStyle');
-var Easing = require('react-native/Libraries/Animated/src/Easing');
 var noop = () => {};
 
 var {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window');
 var DEFAULT_ARROW_SIZE = new Size(16, 8);
-export const PLACEMENT_OPTIONS = {
-    TOP: 'top',
-    RIGHT: 'right',
-    BOTTOM: 'bottom',
-    LEFT: 'left',
-    AUTO: 'auto'
-};
-
-function Point(x, y) {
-    this.x = x;
-    this.y = y;
-}
-
-function Size(width, height) {
-    this.width = width;
-    this.height = height;
-}
-
-export function Rect(x, y, width, height) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-}
-
-function isIOS() {
-  return Platform.select({
-    ios: () => { return true },
-    android: () => { return false }
-  })()
-}
 
 export default class Popover extends React.Component {
 

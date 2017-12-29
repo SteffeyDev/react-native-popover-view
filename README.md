@@ -34,11 +34,11 @@ Similar forks exist on Github (such as [react-native-modal-popover](https://gith
 ## <a name="installation"/>Installation
 
 ```shell
-npm i --save react-native-popover-view@latest
+npm i react-native-popover-view
 ```
 or
 ```shell
-yarn add react-native-popover-view@latest
+yarn add react-native-popover-view
 ```
 
 ## <a name="standalone"/>Standalone Usage
