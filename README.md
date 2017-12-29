@@ -21,10 +21,15 @@ Similar forks exist on Github (such as [react-native-modal-popover](https://gith
 ![Demo](https://raw.githubusercontent.com/jeanregisser/react-native-popover/master/Screenshots/animated.gif)
 
 ##### Table of Contents
-[Installation](#installation)
-[Standalone Usage](#standalone)
-[Usage with React Navigation](#rn)
-
+* [Installation](#installation)
+* [Standalone Usage](#standalone)
+  * [Props](#props)
+  * [Example](#standalone-example)
+* [Usage with React Navigation](#rn)
+  * [Setup](#setup)
+  * [Advanced Usage](#advanced)
+  * [Example](#rn-example)
+* [Credits](#credits)
 
 ## <a name="installation"/>Installation
 
@@ -50,7 +55,7 @@ import Popover from 'react-native-popover-view'
   )
 ```
 
-### Props
+### <a name="props"/>Props
 
 Prop              | Type     | Optional | Default     | Description
 ----------------- | -------- | -------- | ----------- | -----------
@@ -66,7 +71,7 @@ showBackground    | bool     | Yes      | true        | Whether the background b
 
 rect is an object with the following properties: `{x: number, y: number, width: number, height: number}`. You can create the object yourself, or `import Popover, { Rect } from 'react-native-popover-view` and create a rect by calling `new Rect(x, y, width, height)`.
 
-### Full Example
+### <a name="standalone-example"/>Full Example
 ```jsx
 import React, { Component } from 'react';
 import Popover from 'react-native-popover-view;
@@ -142,7 +147,7 @@ AppRegistry.registerComponent('PopoverExample', () => PopoverExample);
 
 This can also be integrated with react-navigation's StackNavigator, so that on tablets, views higher up in the stack show in a popover instead of a full-screen modal.
 
-### Basic Setup
+### <a name="setup"/>Basic Setup
 
 #### 1) Add HOC around Root Component
 
@@ -170,8 +175,9 @@ PopoverNavigation.setShouldShowInPopover(() => DeviceInfo.isTablet())
 
 `PopoverStackNavigator` is a drop-in replacement for react-navigation's `StackNavigator`.  It assumes the first view in your `RouteConfigs` is the base view, and every other view should be shown in a Popover when the function you passed to `setShouldShowInPopover` returns `true`.
 You can pass a few per-screen options through your `RouteConfigs`:
-Option      | Type              | Default | Description
-----------------------------------------------------------
+
+Option      | Type              | Default                | Description
+----------- | ----------------- | ---------------------- | --------------
 `placement` | PLACEMENT_OPTIONS | PLACEMENT_OPTIONS.AUTO | Passed through to `Popover`.
 `preferedWidth` | number        | 380                    | The width for the internal view that wraps the `Popover`. (Default 380)
 `preferedWidth` | number        | null (allows view to fill display area vertically) | The height for the internal view that wraps the `Popover`.
@@ -217,7 +223,7 @@ this.props.navigation.navigate('NextView`, {calculateRect: () => new Rect(this.s
 ```
 Now, if your app is put into split-screen mode while the popover is still showing, `calculateRect` will be called again, and the popover will shift to point to the new rect.
 
-### Advanced Usage
+### <a name="advanced"/>Advanced Usage
 
 #### Custumize Display Area used by Popovers
 
@@ -240,7 +246,7 @@ class RootComponent {
 AppRegistry.registerComponent('AppName', () => RootComponent);
 ```
 
-### Full Example
+### <a name="rn-example"/>Full Example
 
 ```jsx
 import React, { Component } from 'react';
@@ -324,7 +330,7 @@ let styles = {
 }
 ```
 
-## Credits
+## <a name="credits"/>Credits
 
 Original codebase created by Jean Regisser <jean.regisser@gmail.com> (https://github.com/jeanregisser) as [react-native-popover](https://github.com/jeanregisser/react-native-popover), which is now gone stale
 The code supporting animations was inspired and adapted from [@brentvatne](https://github.com/brentvatne)'s [Transition.js mixin](https://github.com/brentvatne/react-native-modal/blob/8020a920e7f08a0f1acd6ce897fe888fa39a51bf/Transitions.js).
