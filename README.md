@@ -4,19 +4,29 @@
 [![npm version](http://img.shields.io/npm/dm/react-native-popover-view.svg?style=flat-square)](https://npmjs.org/package/react-native-popover-view "View this project on npm")
 [![npm licence](http://img.shields.io/npm/l/react-native-popover-view.svg?style=flat-square)](https://npmjs.org/package/react-native-popover-view "View this project on npm")
 
-A well-tested, lightweight `<Popover>` component for react-native. Great for use in Tablets; you can put entire views that you would normally show in a modal (on a smaller device) into a popover, optionally give it an anchor point, and have it float on top of all of the other views.
+A well-tested, adaptable, lightweight `<Popover>` component for react-native. Great for use in Tablets; you can put entire views that you would normally show in a modal (on a smaller device) into a popover, optionally give it an anchor point, and have it float on top of all of the other views.
 
 It is written entirely in JavaScript, but uses [React Native's native driver](https://facebook.github.io/react-native/blog/2017/02/14/using-native-driver-for-animated.html) for responsive animations, even when the JS thread is busy.
+
+The `<Popover>` is able to handle dynamic content and adapt to screen size changes while showing, and will move out of the way for on-screen keyboards automatically.
 
 ### A Note on Origins
 
 This is a fork of [react-native-popover](https://github.com/jeanregisser/react-native-popover), originally created by Jean Regisser but since abandoned.
 
+I have rebuilt most of the library from the ground up for improved handling of changing screen sizes on tablets (split-screen mode), and ES6 compatibility.
+
 Similar forks exist on Github (such as [react-native-modal-popover](https://github.com/doomsower/react-native-modal-popover)), but this is the first to be published on NPM as far as I know.
 
 ![Demo](https://raw.githubusercontent.com/jeanregisser/react-native-popover/master/Screenshots/animated.gif)
 
-## Install
+##### Table of Contents
+[Installation](#installation)
+[Standalone Usage](#standalone)
+[Usage with React Navigation](#rn)
+
+
+## <a name="installation"/>Installation
 
 ```shell
 npm i --save react-native-popover-view@latest
@@ -26,7 +36,7 @@ or
 yarn add react-native-popover-view@latest
 ```
 
-## Standalone Usage
+## <a name="standalone"/>Standalone Usage
 
 ```jsx
 import Popover from 'react-native-popover-view'
@@ -128,7 +138,7 @@ var styles = StyleSheet.create({
 AppRegistry.registerComponent('PopoverExample', () => PopoverExample);
 ```
 
-## Usage with React Navigation
+## <a name="rn"/>Usage with React Navigation
 
 This can also be integrated with react-navigation's StackNavigator, so that on tablets, views higher up in the stack show in a popover instead of a full-screen modal.
 
@@ -228,6 +238,90 @@ class RootComponent {
 }
 
 AppRegistry.registerComponent('AppName', () => RootComponent);
+```
+
+### Full Example
+
+```jsx
+import React, { Component } from 'react';
+import { withPopoverNavigationRootWrapper, PopoverStackNavigator } from 'react-native-popover-view';
+import { MoreHeaderView, ExtraInfoView, MoreOptionView } from './myOtherViews';
+import { Colors } from './Colors';
+import DeviceInfo from 'react-native-device-info';
+
+// Note: storing the width globally like this is not a good practice,
+//       and is only used for the sake of simplicity in this example
+let width = 0;
+
+function isTablet() {
+  return DeviceInfo.isTablet() && width > 500;
+}
+
+// Note: This is not exhaustive
+const headerHeight = Platform.OS === 'ios' ? 64 : 54;
+
+PopoverNavigation.setShouldShowInPopover(isTablet);
+
+class MoreView extends Component {
+  buttonPressed(option) {
+    let rect = new Rect(width / 2 - 50, this.buttonLocations[option.key] + headerHeight, 100, 40);
+    this.props.navigate('MoreOptionView', {fromRect: rect, title: option.tite, option});
+  }
+
+  render() {
+    let moreOptions = this.props.options;
+
+    return (
+      <View style={styles.viewStyle} onLayout={evt => width = evt.nativeEvent.layout.width}>
+        <MoreHeaderView />
+        <View>
+          {moreOptions.map(option => (
+            <TouchableHighlight style={styles.buttonStyle} onPress={() => this.buttonPressed(option)}>
+              <Text>{option.title}</Text>
+            </TouchableHighlight>
+          )}
+        </View>
+        <ExtraInfoView />
+      </View>
+    )
+  }
+}
+
+let MoreStack = PopoverStackNavigator({
+  MoreView: {
+    screen: MoreView,
+    navigationOptions: ({navigation}) => ({title: 'More'})
+  },
+  MoreOptionView: {
+    screen: MoreOptionView,
+    navigationOptions: ({navigation}) => Object.assign({}, {title: navigation.state.params.title}, isTablet() ? {header: null} : styles.headerStyle)
+  }
+}, {
+  headerMode: 'screen'
+});
+
+// If this view is included in a larger application, you should put the wrapper as high up as possible
+// It is included here because this is the highest place in this example
+export default withPopoverNavigationRootWrapper(MoreStack);
+
+let styles = {
+  buttonStyle: {
+    width: 100,
+    height: 40
+  },
+  viewStyle: {
+    alignItems: 'center'
+  },
+  headerStyle: {
+    headerStyle: {
+      backgroundColor: Colors.backgroundColor
+    },
+    headerTintColor: Colors.tintColor,
+    headerTitleStyle: {
+      color; Colors.headerTextColor
+    }
+  }
+}
 ```
 
 ## Credits
