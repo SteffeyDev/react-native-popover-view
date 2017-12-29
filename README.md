@@ -14,7 +14,7 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
 
 This is a fork of [react-native-popover](https://github.com/jeanregisser/react-native-popover), originally created by Jean Regisser but since abandoned.
 
-I have rebuilt most of the library from the ground up for improved handling of changing screen sizes on tablets (split-screen mode), and ES6 compatibility.
+I have rebuilt most of the library from the ground up for improved handling of changing screen sizes on tablets (split-screen mode), a redesigned automatic placement algorithm, and ES6 compatibility.
 
 Similar forks exist on Github (such as [react-native-modal-popover](https://github.com/doomsower/react-native-modal-popover)), but this is the first to be published on NPM as far as I know.
 
@@ -74,7 +74,7 @@ rect is an object with the following properties: `{x: number, y: number, width: 
 ### <a name="standalone-example"/>Full Example
 ```jsx
 import React, { Component } from 'react';
-import Popover from 'react-native-popover-view;
+import Popover from 'react-native-popover-view';
 import {
   AppRegistry,
   StyleSheet,
@@ -183,7 +183,7 @@ Option      | Type              | Default                | Description
 `preferedWidth` | number        | null (allows view to fill display area vertically) | The height for the internal view that wraps the `Popover`.
 `showInModal`   | boolean       | true                   | Passed through to `Popover`. If you want to stack multiple `Popover`'s, only the bottom one can be shown in a `Modal` on iOS.
 
-You can also pass some global options in your StackNavigatorConfig, which are all passed through to each `Popover` in the stack: `showArrow`, `showBackground`, `arrowSize`.  See the `Popover` props above for details of these.
+You can also pass some global options in your StackNavigatorConfig, which are all passed through to each `Popover` in the stack: `showArrow`, `showBackground`, and `arrowSize`.  See the `Popover` props above for details of these.
 
 Example:
 ```js
@@ -208,18 +208,20 @@ let stack = PopoverStackNavigator({
 });
 ```
 
-#### 4) (Optional) Update your `navigate` calls with fromRect Information
+#### 4) (Optional) Update your `navigate` calls with `fromRect` Information
 
 If you want certain popovers to show from a rect, you need to pass this in as params to the `navigate()` call.  For Example:
 ```jsx
-import { Rect } from 'react-native-popover-view`;
-this.props.navigation.navigate('NextView`, {fromRect: new Rect(10, 10, 40, 20), ...otherParams});
+import { Rect } from 'react-native-popover-view';
+...
+  this.props.navigation.navigate('NextView', {fromRect: new Rect(10, 10, 40, 20), ...otherParams});
 ```
 
 If the rect uses variables that could change when the display area changes, you should instead use `calculateRect`, and pass in a function that will return the rect.  For example, if your popover originates from a button that is always centered, regardless of screen size, you could use the following:
 ```jsx
-import { Rect } from 'react-native-popover-view`;
-this.props.navigation.navigate('NextView`, {calculateRect: () => new Rect(this.state.width/2 - 20, 50, 40, 20), ...otherParams});
+import { Rect } from 'react-native-popover-view';
+...
+  this.props.navigation.navigate('NextView', {calculateRect: () => new Rect(this.state.width/2 - 20, 50, 40, 20), ...otherParams});
 ```
 Now, if your app is put into split-screen mode while the popover is still showing, `calculateRect` will be called again, and the popover will shift to point to the new rect.
 
@@ -227,7 +229,7 @@ Now, if your app is put into split-screen mode while the popover is still showin
 
 #### Custumize Display Area used by Popovers
 
-If you use `withPopoverNavigationRootWrapper`, the Popovers use a display area of: `{x: 10, y: Platform.OS === 'ios' ? 20 : 10, width: APP_WIDTH - 20, height: APP_HEIGHT - (Platform.OS === 'ios' ? 30 : 20)}`.  If you want to restrict the displayArea of each Popover to a different area, you can set it yourself.  Instead of wrapping your root component with `withPopoverNavigationRootWrapper`, just wrap it instead with a `View`, and in the `onLayout` callback, pass a rect to `PopoverNavigation.setDisplayArea`.  For example:
+If you use `withPopoverNavigationRootWrapper`, the Popovers use a display area of: `{x: 10, y: Platform.OS === 'ios' ? 20 : 10, width: APP_WIDTH - 20, height: APP_HEIGHT - (Platform.OS === 'ios' ? 30 : 20)}`.  If you want to restrict the display area of each `Popover` to a different area, you can set it yourself.  Instead of wrapping your root component with `withPopoverNavigationRootWrapper`, just wrap it instead with a `View`, and in the `onLayout` callback, pass a rect to `PopoverNavigation.setDisplayArea`.  For example:
 
 ```jsx
 import { PopoverNavigation, Rect } from 'react-native-popover-view'
@@ -285,7 +287,7 @@ class MoreView extends Component {
             <TouchableHighlight style={styles.buttonStyle} onPress={() => this.buttonPressed(option)}>
               <Text>{option.title}</Text>
             </TouchableHighlight>
-          )}
+            ))}
         </View>
         <ExtraInfoView />
       </View>
@@ -324,7 +326,7 @@ let styles = {
     },
     headerTintColor: Colors.tintColor,
     headerTitleStyle: {
-      color; Colors.headerTextColor
+      color: Colors.headerTextColor
     }
   }
 }
@@ -332,7 +334,8 @@ let styles = {
 
 ## <a name="credits"/>Credits
 
-Original codebase created by Jean Regisser <jean.regisser@gmail.com> (https://github.com/jeanregisser) as [react-native-popover](https://github.com/jeanregisser/react-native-popover), which is now gone stale
+Original codebase created by Jean Regisser <jean.regisser@gmail.com> (https://github.com/jeanregisser) as [react-native-popover](https://github.com/jeanregisser/react-native-popover), which has been abandoned
+
 The code supporting animations was inspired and adapted from [@brentvatne](https://github.com/brentvatne)'s [Transition.js mixin](https://github.com/brentvatne/react-native-modal/blob/8020a920e7f08a0f1acd6ce897fe888fa39a51bf/Transitions.js).
 
 ---
