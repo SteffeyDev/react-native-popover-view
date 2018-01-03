@@ -10,7 +10,7 @@ export default function PopoverStackNavigator(RouteConfigs, StackNavigatorConfig
   let firstRouteKey = routeKeys.splice(0, 1)[0];
   let newRouteConfigs = {};
   newRouteConfigs[firstRouteKey] = RouteConfigs[firstRouteKey];
-  routeKeys.forEach(route => newRouteConfigs[route] = Object.assign({}, RouteConfigs[route], { screen: withPopoverNavigation(RouteConfigs[route].screen, RouteConfigs[route].popoverOptions) }));
+  routeKeys.forEach(route => newRouteConfigs[route] = Object.assign({}, RouteConfigs[route], { screen: withPopoverNavigation(RouteConfigs[route].screen, Object.assign({}, RouteConfigs[route].popoverOptions, {viewName: route})) }));
 
   let nonPopoverStack = StackNavigator(newRouteConfigs, StackNavigatorConfig);
   const popoverStackConfig = Object.assign({}, StackNavigatorConfig, {transitionConfig: popoverTransitionConfig, headerMode: 'screen', cardStyle: {backgroundColor: 'transparent'}});

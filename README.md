@@ -27,8 +27,8 @@ Similar forks exist on Github (such as [react-native-modal-popover](https://gith
   * [Example](#standalone-example)
 * [Usage with React Navigation](#rn)
   * [Setup](#setup)
-  * [Advanced Usage](#advanced)
   * [Example](#rn-example)
+  * [Advanced Usage](#advanced)
 * [Credits](#credits)
 
 ## <a name="installation"/>Installation
@@ -208,23 +208,125 @@ let stack = PopoverStackNavigator({
 });
 ```
 
-#### 4) (Optional) Update your `navigate` calls with `fromRect` Information
+#### 4) (Optional) Register Refs for Views
 
-If you want certain popovers to show from a rect, you need to pass this in as params to the `navigate()` call.  For Example:
+To make sure the `Popover` shows from the button that triggered it, you can register that button as the source of the `Popover` for a particular route.  Check out this example:
+
+We first register the ref for a view:
 ```jsx
-import { Rect } from 'react-native-popover-view';
+<TouchableHighlight ref={ref => PopoverNavigation.registerRefForView(ref, 'View1')} {...otherProps} />
+```
+Then, if `View1` is a route name in a `PopoverStackNavigator`...
+```jsx
+import View1 from './views/View1';
 ...
-  this.props.navigation.navigate('NextView', {fromRect: new Rect(10, 10, 40, 20), ...otherParams});
+let stack = PopoverStackNavigator({
+  View1: {
+    screen: View1,
+    navigationOptions: navOptions
+  }
+}, options);
 ```
 
-If the rect uses variables that could change when the display area changes, you should instead use `calculateRect`, and pass in a function that will return the rect.  For example, if your popover originates from a button that is always centered, regardless of screen size, you could use the following:
+When we navigate to the view, the `Popover` will originate from the associated `TouchableHighlight`:
 ```jsx
-import { Rect } from 'react-native-popover-view';
-...
-  this.props.navigation.navigate('NextView', {calculateRect: () => new Rect(this.state.width/2 - 20, 50, 40, 20), ...otherParams});
+this.props.navigation.navigate('View1', params);
 ```
-Now, if your app is put into split-screen mode while the popover is still showing, `calculateRect` will be called again, and the popover will shift to point to the new rect.
 
+You can register any type of view, not only a `TouchableHighlight`, and the `Popover` will point to the outside of the bounds of that view.
+
+### <a name="rn-example"/>Full Example
+
+```jsx
+import React, { Component } from 'react';
+import { PopoverNavigation, withPopoverNavigationRootWrapper, PopoverStackNavigator } from 'react-native-popover-view';
+import { MoreHeaderView, ExtraInfoView, MoreOptionView } from './myOtherViews';
+import { Colors } from './Colors';
+import DeviceInfo from 'react-native-device-info';
+
+function isTablet() {
+  return DeviceInfo.isTablet() && width > 500;
+}
+
+PopoverNavigation.setShouldShowInPopover(isTablet);
+
+class MoreView extends Component {
+  render() {
+    return (
+      <View style={styles.viewStyle}>
+        <MoreHeaderView />
+        <View>
+          <TouchableHighlight
+            style={styles.buttonStyle} 
+            ref={touchable => PopoverNavigation.registerRefForView(touchable, 'About')} 
+            onPress={() => this.props.navigation.navigate('About')}>
+            <Text>About the App</Text>
+          </TouchableHighlight>
+          <TouchableHighlight
+            style={styles.buttonStyle} 
+            ref={touchable => PopoverNavigation.registerRefForView(touchable, 'Settings')} 
+            onPress={() => this.props.navigation.navigate('Settings')}>
+            <Text>Content Settings</Text>
+          </TouchableHighlight>
+          <TouchableHighlight
+            style={styles.buttonStyle} 
+            ref={touchable => PopoverNavigation.registerRefForView(touchable, 'Account')} 
+            onPress={() => this.props.navigation.navigate('Account')}>
+            <Text>Account Details</Text>
+          </TouchableHighlight>
+        </View>
+        <ExtraInfoView />
+      </View>
+    )
+  }
+}
+
+// Note: If you don't set {header: null} for a view showing in a Popover, it may look strange
+let MoreStack = PopoverStackNavigator({
+  MoreView: {
+    screen: MoreView,
+    navigationOptions: ({navigation}) => ({title: 'More'})
+  },
+  About: {
+    screen: AboutView,
+    navigationOptions: ({navigation}) => Object.assign({}, {title: 'About'}, isTablet() ? {header: null} : styles.headerStyle)
+  },
+  Settings: {
+    screen: SettingsView,
+    navigationOptions: ({navigation}) => Object.assign({}, {title: 'Settings'}, isTablet() ? {header: null} : styles.headerStyle)
+  },
+  Account: {
+    screen: AccountView,
+    navigationOptions: ({navigation}) => Object.assign({}, {title: 'About'}, isTablet() ? {header: null} : styles.headerStyle)
+  },
+}, {
+  headerMode: 'screen'
+});
+
+// If this view is included in a larger application, you should put the wrapper as high up as possible
+// It is included here because this is the highest place in this example
+export default withPopoverNavigationRootWrapper(MoreStack);
+
+let styles = {
+  buttonStyle: {
+    width: 100,
+    height: 40,
+    marginBottom: 50
+  },
+  viewStyle: {
+    alignItems: 'center'
+  },
+  headerStyle: {
+    headerStyle: {
+      backgroundColor: Colors.backgroundColor
+    },
+    headerTintColor: Colors.tintColor,
+    headerTitleStyle: {
+      color: Colors.headerTextColor
+    }
+  }
+}
+```
 ### <a name="advanced"/>Advanced Usage
 
 #### Custumize Display Area used by Popovers
@@ -248,89 +350,22 @@ class RootComponent {
 AppRegistry.registerComponent('AppName', () => RootComponent);
 ```
 
-### <a name="rn-example"/>Full Example
+#### Show Popover from custom rect
 
+There may be situations in which you want to show a `Popover` with a custom fromRect, not tied to any view.  Instead of using `PopoverNavigation.registerRefForView`, you can pass in a custom `fromRect` as params to the `navigate()` call.  For example:
 ```jsx
-import React, { Component } from 'react';
-import { withPopoverNavigationRootWrapper, PopoverStackNavigator } from 'react-native-popover-view';
-import { MoreHeaderView, ExtraInfoView, MoreOptionView } from './myOtherViews';
-import { Colors } from './Colors';
-import DeviceInfo from 'react-native-device-info';
-
-// Note: storing the width globally like this is not a good practice,
-//       and is only used for the sake of simplicity in this example
-let width = 0;
-
-function isTablet() {
-  return DeviceInfo.isTablet() && width > 500;
-}
-
-// Note: This is not exhaustive
-const headerHeight = Platform.OS === 'ios' ? 64 : 54;
-
-PopoverNavigation.setShouldShowInPopover(isTablet);
-
-class MoreView extends Component {
-  buttonPressed(option) {
-    let rect = new Rect(width / 2 - 50, this.buttonLocations[option.key] + headerHeight, 100, 40);
-    this.props.navigate('MoreOptionView', {fromRect: rect, title: option.tite, option});
-  }
-
-  render() {
-    let moreOptions = this.props.options;
-
-    return (
-      <View style={styles.viewStyle} onLayout={evt => width = evt.nativeEvent.layout.width}>
-        <MoreHeaderView />
-        <View>
-          {moreOptions.map(option => (
-            <TouchableHighlight style={styles.buttonStyle} onPress={() => this.buttonPressed(option)}>
-              <Text>{option.title}</Text>
-            </TouchableHighlight>
-            ))}
-        </View>
-        <ExtraInfoView />
-      </View>
-    )
-  }
-}
-
-let MoreStack = PopoverStackNavigator({
-  MoreView: {
-    screen: MoreView,
-    navigationOptions: ({navigation}) => ({title: 'More'})
-  },
-  MoreOptionView: {
-    screen: MoreOptionView,
-    navigationOptions: ({navigation}) => Object.assign({}, {title: navigation.state.params.title}, isTablet() ? {header: null} : styles.headerStyle)
-  }
-}, {
-  headerMode: 'screen'
-});
-
-// If this view is included in a larger application, you should put the wrapper as high up as possible
-// It is included here because this is the highest place in this example
-export default withPopoverNavigationRootWrapper(MoreStack);
-
-let styles = {
-  buttonStyle: {
-    width: 100,
-    height: 40
-  },
-  viewStyle: {
-    alignItems: 'center'
-  },
-  headerStyle: {
-    headerStyle: {
-      backgroundColor: Colors.backgroundColor
-    },
-    headerTintColor: Colors.tintColor,
-    headerTitleStyle: {
-      color: Colors.headerTextColor
-    }
-  }
-}
+import { Rect } from 'react-native-popover-view';
+...
+  this.props.navigation.navigate('NextView', {fromRect: new Rect(10, 10, 40, 20), ...otherParams});
 ```
+
+If the rect uses variables that could change when the display area changes, you should instead use `calculateRect`, and pass in a function that will return the rect.  For example, if your popover originates from a button that is always centered, regardless of screen size, you could use the following:
+```jsx
+import { Rect } from 'react-native-popover-view';
+...
+  this.props.navigation.navigate('NextView', {calculateRect: () => new Rect(this.state.width/2 - 20, 50, 40, 20), ...otherParams});
+```
+Now, if your app is put into split-screen mode while the popover is still showing, `calculateRect` will be called again, and the popover will shift to point to the new rect.
 
 ## <a name="credits"/>Credits
 
