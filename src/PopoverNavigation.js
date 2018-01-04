@@ -73,13 +73,13 @@ export default class PopoverNavigation extends Component {
     this.removeDisplayAreaChangeListener = PopoverNavigation.addPopoverInstance(this);
     this.saveStashRect()
 
-    if (this.getParam('fromRect') || this.getParam('calculateRect')) {
-      this.setState({visible: true});
-    } else if (this.getParam('showFromView') || popoverRegisteredViews.hasOwnProperty(this.props.viewName)) {
+    if (this.getParam('showFromView') || popoverRegisteredViews.hasOwnProperty(this.props.viewName)) {
       const ref = this.getParam('showFromView') || popoverRegisteredViews[this.props.viewName];
       NativeModules.UIManager.measure(findNodeHandle(ref), (x0, y0, width, height, x, y) => {
         this.setState({visible: true, fromRect: new Rect(x, y, width, height)});
       })
+    } else {
+      this.setState({visible: true});
     }
   }
 

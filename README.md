@@ -208,6 +208,13 @@ let stack = PopoverStackNavigator({
 });
 ```
 
+Note: If you want to get a `ref` of the underlying `StackNavigator`, you will need to pass the function as `navigatorRef`:
+```
+let Stack = PopoverStackNavigator(...);
+...
+  <Stack navigatorRef={ref => this.stackRef = ref} />
+```
+
 #### 4) (Optional) Register Refs for Views
 
 To make sure the `Popover` shows from the button that triggered it, you can register that button as the source of the `Popover` for a particular route.  Check out this example:
@@ -234,6 +241,9 @@ this.props.navigation.navigate('View1', params);
 ```
 
 You can register any type of view, not only a `TouchableHighlight`, and the `Popover` will point to the outside of the bounds of that view.
+
+Note: The map is stored globally, so you cannot register two views with the same name, even if they are in different `PopoverStackNavigator`'s.  
+Note: If need the same `Popover` Route to point to different buttons at different times, see "Show Popover from custom rect" in the Advanced Usage section below.
 
 ### <a name="rn-example"/>Full Example
 

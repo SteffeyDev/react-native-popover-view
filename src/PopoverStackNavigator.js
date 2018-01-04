@@ -17,8 +17,9 @@ export default function PopoverStackNavigator(RouteConfigs, StackNavigatorConfig
   let popoverStack = StackNavigator(newRouteConfigs, popoverStackConfig);
 
   return props => {
+    let { navigatorRef, ...other } = props;
     let Stack = nonPopoverStack;
     if (shouldShowInPopover()) Stack = popoverStack;
-    return <Stack screenProps={props.screenProps} ref={props.navigatorRef} />;
+    return <Stack ref={props.navigatorRef} {...other} />;
   }
 }
