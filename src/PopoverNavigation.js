@@ -1,5 +1,5 @@
 import Popover from './Popover'
-import { popoverTransitionConfig, Rect, PLACEMENT_OPTIONS, isIOS } from './Utility'
+import { popoverTransitionConfig, Rect, PLACEMENT_OPTIONS, isIOS, runAfterChange, waitForNewRect } from './Utility'
 import React, { Component } from 'react'
 import { View, BackHandler, Dimensions, Animated, findNodeHandle, NativeModules, Alert} from 'react-native'
 import PropTypes from 'prop-types'
@@ -91,18 +91,6 @@ export default class PopoverNavigation extends Component {
   relayout(newDisplayArea) {
     if (newDisplayArea !== this.state.displayArea) {
 
-      const runAfterChange = (getFirst, second, func) => {
-        let interval = setInterval(() => {
-          getFirst(first => {
-            if (first !== second) {
-              clearInterval(interval);
-              func();
-            }
-          }, 100)
-        });
-        setTimeout(() => clearInterval(interval), 2000); // Failsafe so that the interval doesn't run forever
-      }
-
       // If we are using calculateRect, need to watch for new values and wait to update until after they come in
       if (this.getParam('calculateRect')) {
         runAfterChange(callback => callback(this.getParam('calculateRect')(newDisplayArea.width, newDisplayArea.height)), this.stashRect, () => {
@@ -110,15 +98,7 @@ export default class PopoverNavigation extends Component {
         });
       } else if (this.getParam('showFromView') || popoverRegisteredViews.hasOwnProperty(this.props.viewName)) {
         const ref = this.getParam('showFromView') || popoverRegisteredViews[this.props.viewName];
-        runAfterChange(callback => {
-          NativeModules.UIManager.measure(findNodeHandle(ref), (x0, y0, width, height, x, y) => {
-            callback(new Rect(x, y, width, height));
-          })
-        }, this.state.fromRect, () => {
-          NativeModules.UIManager.measure(findNodeHandle(ref), (x0, y0, width, height, x, y) => {
-            this.setState({fromRect: new Rect(x, y, width, height), displayArea: newDisplayArea});
-          })
-        });
+        waitForNewRect(ref, this.state.fromRect, fromRect => this.setState({fromRect, displayArea: newDisplayArea}));
       } else {
         this.setState({displayArea: newDisplayArea});
       }

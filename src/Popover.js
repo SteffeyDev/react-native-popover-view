@@ -2,8 +2,8 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import { StyleSheet, Dimensions, Animated, Text, TouchableWithoutFeedback, View, Modal, Keyboard, Alert, Easing } from 'react-native';
-import { Rect, Point, Size, isIOS, PLACEMENT_OPTIONS } from './Utility';
+import { StyleSheet, Dimensions, Animated, Text, TouchableWithoutFeedback, findNodeHandle, NativeModules, View, Modal, Keyboard, Alert, Easing } from 'react-native';
+import { Rect, Point, Size, isIOS, PLACEMENT_OPTIONS, isRect, rectChanged, waitForNewRect } from './Utility';
 
 var flattenStyle = require('react-native/Libraries/StyleSheet/flattenStyle');
 var noop = () => {};
@@ -27,6 +27,7 @@ export default class Popover extends React.Component {
       placement: PLACEMENT_OPTIONS.AUTO,
       isAwaitingShow: true,
       visible: false,
+      fromRect: null,
       animatedValues: {
         scale: new Animated.Value(0),
         translate: new Animated.ValueXY(),
@@ -38,9 +39,6 @@ export default class Popover extends React.Component {
     this.measureContent = this.measureContent.bind(this);
     this.animateIn = this.animateIn.bind(this);
   }
-
-    componentWillMount() {
-    }
 
     keyboardDidShow(e) {
       this.shiftForKeyboard(e.endCoordinates.height);
@@ -70,13 +68,15 @@ export default class Popover extends React.Component {
         this.animateOut()
     }
 
-    measureContent(x) {
-        let requestedContentSize = x.nativeEvent.layout;
+    measureContent(requestedContentSize) {
         if (requestedContentSize.width && requestedContentSize.height) {
           if (this.state.isAwaitingShow) {
-            let geom = this.computeGeometry({requestedContentSize});
-
-            this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), this.animateIn);
+            if (this.props.fromView && !this.state.fromRect) {
+              setTimeout(() => this.measureContent(requestedContentSize), 100);
+            } else {
+              let geom = this.computeGeometry({requestedContentSize});
+              this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), this.animateIn);
+            }
           } else if (requestedContentSize.width !== this.state.requestedContentSize.width || requestedContentSize.height !== this.state.requestedContentSize.height) {
             if (requestedContentSize.width === this.state.forcedContentSize.width) requestedContentSize.width = this.state.requestedContentSize.width;
             if (requestedContentSize.height === this.state.forcedContentSize.height) requestedContentSize.height = this.state.requestedContentSize.height;
@@ -87,10 +87,10 @@ export default class Popover extends React.Component {
 
     computeGeometry({requestedContentSize, placement, fromRect, displayArea}) {
         placement = placement || this.props.placement;
-        fromRect = fromRect || (this.props.fromRect ? Object.assign({}, this.props.fromRect) : null);
+        fromRect = fromRect || Object.assign({}, this.props.fromRect || this.state.fromRect);
         displayArea = displayArea || Object.assign({}, this.getDisplayArea());
 
-        if (fromRect) {
+        if (fromRect && isRect(fromRect)) {
           //check to see if fromRect is outside of displayArea, and adjust if it is
           if (fromRect.x > displayArea.x + displayArea.width) fromRect.x = displayArea.x + displayArea.width;
           if (fromRect.y > displayArea.y + displayArea.height) fromRect.y = displayArea.y + displayArea.height;
@@ -117,8 +117,8 @@ export default class Popover extends React.Component {
           }
         } else {
           return {
-            popoverOrigin: new Point((displayArea.width - requestedContentSize.width)/2, (displayArea.height - requestedContentSize.height)/2),
-            anchorPoint: new Point(displayArea.width/2, displayArea.height/2),
+            popoverOrigin: new Point((displayArea.width - requestedContentSize.width)/2 + displayArea.x, (displayArea.height - requestedContentSize.height)/2 + displayArea.y),
+            anchorPoint: new Point(displayArea.width/2 + displayArea.x, displayArea.height/2 + displayArea.y),
             forcedContentSize: {
               height: requestedContentSize.height >= displayArea.height ? displayArea.height : null,
               width: requestedContentSize.width >= displayArea.width ? displayArea.width : null
@@ -382,20 +382,32 @@ export default class Popover extends React.Component {
 
         if (willBeVisible !== isVisible) {
             if (willBeVisible) {
-                // We want to start the show animation only when contentSize is known
-                // so that we can have some logic depending on the geometry
-                this.setState({isAwaitingShow: true, visible: true});
+                if (this.props.fromView) {
+                  NativeModules.UIManager.measure(findNodeHandle(this.props.fromView), (x0, y0, width, height, x, y) => {
+                    let fromRect = new Rect(x, y, width, height);
+                    this.setState({fromRect, isAwaitingShow: true, visible: true});
+                  });
+                } else {
+                  // We want to start the show animation only when contentSize is known
+                  // so that we can have some logic depending on the geometry
+                  this.setState({isAwaitingShow: true, visible: true});
+                }
             } else {
                 this.animateOut();
             }
         } else if (willBeVisible) {// && ((fromRect !== undefined && JSON.stringify(nextProps.fromRect) !== JSON.stringify(fromRect)) || (displayArea !== undefined && JSON.stringify(nextProps.displayArea) !== JSON.stringify(displayArea)))) {
-            this.handleGeomChange(nextProps);
+
+            // Need to wait for reference view to move before we re-sample
+            if (this.props.fromView && this.state.fromRect && rectChanged(nextProps.displayArea, this.props.displayArea))
+              waitForNewRect(this.props.fromView, this.state.fromRect, fromRect => this.setState({fromRect}, () => this.handleGeomChange(Object.assign(nextProps, {fromRect}))));
+            else
+              this.handleGeomChange(nextProps);
         }
     }
 
     handleGeomChange({displayArea, fromRect, ...newProps}) {
-      let { forcedContentSize, placement, anchorPoint, popoverOrigin, animatedValues } = this.state;
-      let requestedContentSize = newProps.requestedContentSize || Object.assign({}, this.state.requestedContentSize);
+      const { forcedContentSize, placement, anchorPoint, popoverOrigin, animatedValues } = this.state;
+      const requestedContentSize = newProps.requestedContentSize || Object.assign({}, this.state.requestedContentSize);
 
       let geom = this.computeGeometry({requestedContentSize, displayArea, fromRect});
 
@@ -568,11 +580,11 @@ export default class Popover extends React.Component {
                 }
                 <View style={{top: 0, left: 0}}>
                   
-                  <Animated.View style={popoverViewStyle} onLayout={this.measureContent}j>
+                  <Animated.View style={popoverViewStyle} onLayout={evt => this.measureContent(evt.nativeEvent.layout)}>
                     {this.props.children}
                   </Animated.View>
 
-                  {this.props.showArrow && this.props.fromRect !== undefined && this.props.fromRect !== null &&
+                  {this.props.showArrow && (this.props.fromRect || this.state.fromRect) &&
                     <Animated.View style={arrowStyle}>
                       <View style={arrowInnerStyle}/>
                     </Animated.View>
@@ -664,6 +676,7 @@ Popover.propTypes = {
   doneClosingCallback: PropTypes.func,
   showInModal: PropTypes.bool,
   fromRect: PropTypes.objectOf(PropTypes.number),
+  fromView: PropTypes.object,
   layoutRtl: PropTypes.bool,
   showArrow: PropTypes.bool,
   showBackground: PropTypes.bool
