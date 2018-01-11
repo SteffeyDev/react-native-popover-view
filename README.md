@@ -28,9 +28,10 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
 
 ## <a name="features"/>Popover Features
 * Moves to avoid keyboard
-* Ability to show from a rect or float in center of screen
+* Ability to show from a view, from a rect, or float in center of screen
 * Adapts to changing content size
-* Automatically detects best placement on screen (if showing from rect)
+* Automatically detects best placement on screen
+* Moves to stay visible on orientation change or when entering split-screen mode
 * (Optional) Integration with [React Navigation](https://reactnavigation.org)
 
 ### <a name="origins"/>A Note on Origins
