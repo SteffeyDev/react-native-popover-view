@@ -23,6 +23,7 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
   * [Setup](#setup)
   * [Example](#rn-example)
   * [Advanced Usage](#advanced)
+* [Contributing](#contributing)
 * [Credits](#credits)
 
 ## <a name="features"/>Popover Features
@@ -390,6 +391,10 @@ import { Rect } from 'react-native-popover-view';
   this.props.navigation.navigate('NextView', {calculateRect: () => new Rect(this.state.width/2 - 20, 50, 40, 20), ...otherParams});
 ```
 Now, if your app is put into split-screen mode while the popover is still showing, `calculateRect` will be called again, and the popover will shift to point to the new rect.
+
+## <a name="contributing">Contributing
+
+Pull requests are welcome, and if you find that you are having to bend over backwards to make this work for you, feel free to open an issue or PR!  Of course, try to keep the same coding style if possible and I'll try to get back to you as soon as possible.
 
 ## <a name="credits"/>Credits
 
