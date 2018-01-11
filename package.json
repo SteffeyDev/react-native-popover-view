@@ -1,6 +1,6 @@
 {
   "name": "react-native-popover-view",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "A <Popover /> component for react-native",
   "main": "src/index.js",
   "author": "Peter Steffey <steffeydev@icloud.com> (https://github.com/steffeydev)",
@@ -24,7 +24,7 @@
       "enzyme-to-json/serializer"
     ],
     "collectCoverage": true,
-    "coverageFormats": [
+    "coverageReporters": [
       "json",
       "html"
     ]
@@ -46,8 +46,7 @@
     "react-native": "^0.51.0",
     "react-test-renderer": "^16.2.0"
   },
-  "dependencies": {
-    "lodash": "^4.17.4",
-    "react-navigation": "^1.0.0-beta.22"
+  "peerDependencies": {
+    "react-navigation": ">=1.0.0-beta.20"
   }
 }

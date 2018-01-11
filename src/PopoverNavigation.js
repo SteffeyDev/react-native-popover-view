@@ -1,57 +1,14 @@
 import Popover from './Popover'
-import { popoverTransitionConfig, Rect, PLACEMENT_OPTIONS, isIOS, runAfterChange, waitForNewRect } from './Utility'
+import { popoverTransitionConfig, Rect, isIOS } from './Utility'
 import React, { Component } from 'react'
-import { View, BackHandler, Dimensions, Animated, findNodeHandle, NativeModules, Alert} from 'react-native'
+import { View, BackHandler, Animated, findNodeHandle, NativeModules, Alert, Dimensions } from 'react-native'
 import PropTypes from 'prop-types'
-
-var {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window');
-const defaultDisplayArea = new Rect(10, 10, SCREEN_WIDTH-20, SCREEN_HEIGHT-20);
-
-let popoverDisplayAreaChangeListeners = [];
-let popoverRegisteredViews = {};
-let displayAreaStore = null;
-
-export let shouldShowInPopover = () => true;
-
-export let withPopoverNavigationRootWrapper = Comp => props => <View 
-  style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0}}
-  onLayout={evt => {
-    let popoverDispayArea = {
-      x: 10,
-      y: isIOS() ? 20 : 10,
-      width: evt.nativeEvent.layout.width - 20,
-      height: evt.nativeEvent.layout.height - (isIOS() ? 30 : 20)
-    }
-    PopoverNavigation.setDisplayArea(popoverDispayArea)
-  }}><Comp {...props} /></View>
 
 export default class PopoverNavigation extends Component {
   static navigationOptions = {}
 
   state = {
     visible: false,
-    displayArea: displayAreaStore || defaultDisplayArea,
-    fromRect: null
-  }
-
-  static setShouldShowInPopover(func) {
-    shouldShowInPopover = func;
-  }
-
-  static setDisplayArea(displayArea) {
-    if (displayArea !== displayAreaStore) {
-      displayAreaStore = displayArea;
-      popoverDisplayAreaChangeListeners.forEach(instance => instance.relayout(displayArea));
-    }
-  }
-
-  static addPopoverInstance(instance) {
-    popoverDisplayAreaChangeListeners.push(instance);
-    return () => popoverDisplayAreaChangeListeners.splice(popoverDisplayAreaChangeListeners.indexOf(instance), 1);
-  }
-
-  static registerRefForView(ref, viewName) {
-    popoverRegisteredViews[viewName] = ref;
   }
 
   getParam(param:string) {
@@ -62,7 +19,7 @@ export default class PopoverNavigation extends Component {
   }
 
   goBack() {
-    if (shouldShowInPopover())
+    if (this.constructor.shouldShowInPopover())
       this.setState({visible: false});
     else
       this.props.children.props.navigation.goBack();
@@ -70,39 +27,7 @@ export default class PopoverNavigation extends Component {
 
   componentDidMount() {
     BackHandler.addEventListener('hardwareBackPress', this.backButtonPressed);
-    this.removeDisplayAreaChangeListener = PopoverNavigation.addPopoverInstance(this);
-    this.saveStashRect()
-
-    if (this.getParam('showFromView') || popoverRegisteredViews.hasOwnProperty(this.props.viewName)) {
-      const ref = this.getParam('showFromView') || popoverRegisteredViews[this.props.viewName];
-      NativeModules.UIManager.measure(findNodeHandle(ref), (x0, y0, width, height, x, y) => {
-        this.setState({visible: true, fromRect: new Rect(x, y, width, height)});
-      })
-    } else {
-      this.setState({visible: true});
-    }
-  }
-
-  saveStashRect() {
-    if (this.getParam('calculateRect'))
-      this.stashRect = this.getParam('calculateRect')(this.state.displayArea.width, this.state.displayArea.height);
-  }
-
-  relayout(newDisplayArea) {
-    if (newDisplayArea !== this.state.displayArea) {
-
-      // If we are using calculateRect, need to watch for new values and wait to update until after they come in
-      if (this.getParam('calculateRect')) {
-        runAfterChange(callback => callback(this.getParam('calculateRect')(newDisplayArea.width, newDisplayArea.height)), this.stashRect, () => {
-          this.setState({displayArea: newDisplayArea}, () => this.saveStashRect());
-        });
-      } else if (this.getParam('showFromView') || popoverRegisteredViews.hasOwnProperty(this.props.viewName)) {
-        const ref = this.getParam('showFromView') || popoverRegisteredViews[this.props.viewName];
-        waitForNewRect(ref, this.state.fromRect, fromRect => this.setState({fromRect, displayArea: newDisplayArea}));
-      } else {
-        this.setState({displayArea: newDisplayArea});
-      }
-    }
+    this.setState({visible: true});
   }
 
   backButtonPressed = () => {
@@ -112,23 +37,13 @@ export default class PopoverNavigation extends Component {
 
   componentWillUnmount() {
     BackHandler.removeEventListener('hardwareBackPress', this.backButtonPressed);
-    this.removeDisplayAreaChangeListener();
   }
 
   render() {
     const child = React.cloneElement(this.props.children, {goBack: () => this.goBack()});
-    const { preferedWidth, preferedHeight, arrowSize, placement, showInModal, layoutRtl, showArrow, showBackground } = this.props;
-    const { displayArea } = this.state;
+    const { preferedWidth, preferedHeight, arrowSize, placement, showInModal, layoutRtl, showArrow, showBackground, viewName, displayArea } = this.props;
 
-    let fromRect = null;
-    if (this.getParam('fromRect'))
-      fromRect = this.getParam('fromRect');
-    else if (this.getParam('calculateRect'))
-      fromRect = this.getParam('calculateRect')(displayArea.width, displayArea.height);
-    else
-      fromRect = this.state.fromRect;
-
-    if (shouldShowInPopover()) {
+    if (this.constructor.shouldShowInPopover()) {
       return (
         <Popover
           arrowSize={arrowSize}
@@ -139,10 +54,12 @@ export default class PopoverNavigation extends Component {
           showBackground={showBackground}
           isVisible={this.state.visible}
           onClose={() => this.goBack()}
-          displayArea={displayArea}
+          displayArea={displayArea || this.getParam('displayArea')}
           doneClosingCallback={() => this.props.children.props.navigation.goBack()}
-          fromRect={fromRect}>
-          <View style={{width: Math.min(displayArea.width - 100, preferedWidth), height: preferedHeight ? Math.min(displayArea.height - 100, preferedHeight) : null}}>{child}</View>
+          fromView={this.constructor.registeredViews.hasOwnProperty(viewName) ? this.constructor.registeredViews[viewName] : this.getParam('showFromView')}
+          calculateRect={this.getParam('calculateRect')}
+          fromRect={this.getParam('fromRect')}>
+          <View style={{width: preferedWidth, height: preferedHeight}}>{child}</View>
         </Popover>
       )
     } else {
@@ -151,17 +68,25 @@ export default class PopoverNavigation extends Component {
   }
 }
 
+PopoverNavigation.shouldShowInPopover = () => Dimensions.get('window').height / Dimensions.get('window').width < 1.6;
+PopoverNavigation.registeredViews = {};
+PopoverNavigation.registerRefForView = (ref, viewName) => {
+  if (!PopoverNavigation.registeredViews.hasOwnProperty(viewName))
+    PopoverNavigation.registeredViews[viewName] = ref;
+}
+
 PopoverNavigation.defaultProps = {
   preferedWidth: 380
 }
 
 PopoverNavigation.propTypes = {
   arrowSize: PropTypes.objectOf(PropTypes.number),
-  placement: PropTypes.oneOf([PLACEMENT_OPTIONS.LEFT, PLACEMENT_OPTIONS.RIGHT, PLACEMENT_OPTIONS.TOP, PLACEMENT_OPTIONS.BOTTOM, PLACEMENT_OPTIONS.AUTO]),
+  placement: PropTypes.oneOf([Popover.PLACEMENT_OPTIONS.LEFT, Popover.PLACEMENT_OPTIONS.RIGHT, Popover.PLACEMENT_OPTIONS.TOP, Popover.PLACEMENT_OPTIONS.BOTTOM, Popover.PLACEMENT_OPTIONS.AUTO]),
   showInModal: PropTypes.bool,
   layoutRtl: PropTypes.bool,
   showArrow: PropTypes.bool,
   showBackground: PropTypes.bool,
   preferedWidth: PropTypes.number,
   preferedHeight: PropTypes.number,
+  displayArea: PropTypes.objectOf(PropTypes.number),
 }

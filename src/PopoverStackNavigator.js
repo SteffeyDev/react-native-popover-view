@@ -1,7 +1,7 @@
 import React from 'react'
-import { StackNavigator } from 'react-navigation'
+import { StackNavigator } from '../../react-navigation'
 import { popoverTransitionConfig } from './Utility'
-import PopoverNavigation, { shouldShowInPopover } from './PopoverNavigation'
+import PopoverNavigation from './PopoverNavigation'
 
 export let withPopoverNavigation = (Comp, popoverOptions) => props => <PopoverNavigation {...popoverOptions}><Comp {...props} /></PopoverNavigation>;
 
@@ -19,7 +19,7 @@ export default function PopoverStackNavigator(RouteConfigs, StackNavigatorConfig
   return props => {
     let { navigatorRef, ...other } = props;
     let Stack = nonPopoverStack;
-    if (shouldShowInPopover()) Stack = popoverStack;
+    if (PopoverNavigation.shouldShowInPopover()) Stack = popoverStack;
     return <Stack ref={props.navigatorRef} {...other} />;
   }
 }

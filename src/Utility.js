@@ -1,13 +1,5 @@
 import { Platform, Animated, NativeModules, findNodeHandle } from 'react-native'
 
-export const PLACEMENT_OPTIONS = {
-    TOP: 'top',
-    RIGHT: 'right',
-    BOTTOM: 'bottom',
-    LEFT: 'left',
-    AUTO: 'auto'
-};
-
 export function Point(x, y) {
     this.x = x;
     this.y = y;
@@ -57,6 +49,10 @@ export function isRect(rect) {
   return rect && (rect.x || rect.x === 0) && (rect.y || rect.y === 0) && (rect.width || rect.width === 0) && (rect.height || rect.height === 0);
 }
 
+export function isPoint(point) {
+  return point && (point.x || point.x === 0) && point.x !== NaN && (point.y || point.y === 0) && point.y !== NaN;
+}
+
 export function runAfterChange(getFirst, second, func) {
   let interval = setInterval(() => {
     getFirst(first => {
@@ -83,5 +79,5 @@ export function waitForNewRect(ref, initialRect, onFinish) {
 
 export function rectChanged(a, b) {
   if (!isRect(a) || !isRect(b)) return false;
-  return (a.x !== b.x || a.y !== b.y || a.width !== b.width || a.height !== b.height);
+  return (Math.round(a.x) !== Math.round(b.x) || Math.round(a.y) !== Math.round(b.y) || Math.round(a.width) !== Math.round(b.width) || Math.round(a.height) !== Math.round(b.height));
 }
