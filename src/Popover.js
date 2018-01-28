@@ -86,20 +86,24 @@ class Popover extends React.Component {
     }
 
     measureContent(requestedContentSize) {
+      if (!this.state.skipNextMeasure) {
         if (requestedContentSize.width && requestedContentSize.height) {
           if (this.state.isAwaitingShow) {
             if ((this.props.fromView && !this.state.fromRect) || !this.getDisplayArea()) {
               setTimeout(() => this.measureContent(requestedContentSize), 100);
             } else {
               let geom = this.computeGeometry({requestedContentSize});
-              this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), this.animateIn);
+              this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false, skipNextMeasure: geom.forcedContentSize.width || geom.forcedContentSize.height}), this.animateIn);
             }
           } else if (requestedContentSize.width !== this.state.requestedContentSize.width || requestedContentSize.height !== this.state.requestedContentSize.height) {
-            if (Math.round(requestedContentSize.width) === Math.round(this.state.forcedContentSize.width)) requestedContentSize.width = this.state.requestedContentSize.width;
-            if (Math.round(requestedContentSize.height) === Math.round(this.state.forcedContentSize.height)) requestedContentSize.height = this.state.requestedContentSize.height;
+            if (Math.abs(requestedContentSize.width - this.state.forcedContentSize.width) < 1) requestedContentSize.width = this.state.requestedContentSize.width;
+            if (Math.abs(requestedContentSize.height - this.state.forcedContentSize.height) < 1) requestedContentSize.height = this.state.requestedContentSize.height;
             this.handleGeomChange({requestedContentSize});
           }
         }
+      } else {
+        this.setState({skipNextMeasure: true});
+      }
     }
 
     computeGeometry({requestedContentSize, placement, fromRect, displayArea}) {
@@ -432,7 +436,7 @@ class Popover extends React.Component {
       let geom = this.computeGeometry({requestedContentSize, displayArea, fromRect});
 
       this.setState(Object.assign(geom, {requestedContentSize}), () => {
-        if (geom.popoverOrigin !== popoverOrigin) {
+        if (rectChanged(geom.popoverOrigin, popoverOrigin)) {
           this.animateTo({
             values: animatedValues,
             fade: 1,

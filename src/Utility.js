@@ -1,4 +1,4 @@
-import { Platform, Animated, NativeModules, findNodeHandle } from 'react-native'
+import { Platform, Animated, NativeModules, findNodeHandle, Dimensions } from 'react-native'
 
 export function Point(x, y) {
     this.x = x;
@@ -19,6 +19,10 @@ export function Rect(x, y, width, height) {
 
 export function isIOS() {
   return Platform.OS === 'ios';
+}
+
+export function isTablet() {
+  return Dimensions.get('window').height / Dimensions.get('window').width < 1.6;
 }
 
 // Transition config needed on tablets for popover to work

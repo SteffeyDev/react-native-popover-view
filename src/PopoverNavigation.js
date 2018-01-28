@@ -1,7 +1,7 @@
 import Popover from './Popover'
-import { popoverTransitionConfig, Rect, isIOS } from './Utility'
+import { popoverTransitionConfig, Rect, isIOS, isTablet } from './Utility'
 import React, { Component } from 'react'
-import { View, BackHandler, Animated, findNodeHandle, NativeModules, Alert, Dimensions } from 'react-native'
+import { View, BackHandler, Animated, findNodeHandle, NativeModules, Alert } from 'react-native'
 import PropTypes from 'prop-types'
 
 export default class PopoverNavigation extends Component {
@@ -19,7 +19,7 @@ export default class PopoverNavigation extends Component {
   }
 
   goBack() {
-    if (this.constructor.shouldShowInPopover())
+    if (this.props.showInPopover)
       this.setState({visible: false});
     else
       this.props.children.props.navigation.goBack();
@@ -41,9 +41,9 @@ export default class PopoverNavigation extends Component {
 
   render() {
     const child = React.cloneElement(this.props.children, {goBack: () => this.goBack()});
-    const { preferedWidth, preferedHeight, arrowSize, placement, showInModal, layoutRtl, showArrow, showBackground, viewName, displayArea } = this.props;
+    const { contentContainerStyle, arrowSize, placement, showInModal, layoutRtl, showArrow, showBackground, getRegisteredView, displayArea, showInPopover, backgroundColor } = this.props;
 
-    if (this.constructor.shouldShowInPopover()) {
+    if (showInPopover) {
       return (
         <Popover
           arrowSize={arrowSize}
@@ -56,27 +56,23 @@ export default class PopoverNavigation extends Component {
           onClose={() => this.goBack()}
           displayArea={displayArea || this.getParam('displayArea')}
           doneClosingCallback={() => this.props.children.props.navigation.goBack()}
-          fromView={this.constructor.registeredViews.hasOwnProperty(viewName) ? this.constructor.registeredViews[viewName] : this.getParam('showFromView')}
+          fromView={getRegisteredView() || this.getParam('showFromView')}
           calculateRect={this.getParam('calculateRect')}
           fromRect={this.getParam('fromRect')}>
-          <View style={{width: preferedWidth, height: preferedHeight}}>{child}</View>
+          <View style={{backgroundColor, ...contentContainerStyle}}>{child}</View>
         </Popover>
       )
     } else {
-      return child;
+      return <View style={{backgroundColor, flex: 1}}>{child}</View>;
     }
   }
 }
 
-PopoverNavigation.shouldShowInPopover = () => Dimensions.get('window').height / Dimensions.get('window').width < 1.6;
-PopoverNavigation.registeredViews = {};
-PopoverNavigation.registerRefForView = (ref, viewName) => {
-  if (!PopoverNavigation.registeredViews.hasOwnProperty(viewName))
-    PopoverNavigation.registeredViews[viewName] = ref;
-}
+
 
 PopoverNavigation.defaultProps = {
-  preferedWidth: 380
+  preferedWidth: 380,
+  showInPopover: true
 }
 
 PopoverNavigation.propTypes = {
