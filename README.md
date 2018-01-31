@@ -159,21 +159,10 @@ This can also be integrated with react-navigation's StackNavigator, so that on t
 
 ### <a name="setup"/>Basic Setup
 
-#### 1) Define when Popover should be shown
 
-You also need to provide a function that returns when a popover should be used instead of a full-screen modal (which is default for react-navigation).  This is best done in the constructor of your root component or in global space.  Here is an example that uses the isTablet function from react-native-device-info; however, you can provide a function that uses whatever you want to make a distinction.
+#### 1) Change `StackNavigator` to `PopoverStackNavigator`
 
-```jsx
-import DeviceInfo from 'react-native-device-info'
-
-PopoverNavigation.shouldShowInPopover = () => DeviceInfo.isTablet()
-```
-
-The default function is a basic tablet detection: `() => Dimensions.get('window').height / Dimensions.get('window').width < 1.6`
-
-#### 2) Change `StackNavigator` to `PopoverStackNavigator`
-
-`PopoverStackNavigator` is a drop-in replacement for react-navigation's `StackNavigator`.  It assumes the first view in your `RouteConfigs` is the base view, and every other view should be shown in a Popover when the function set as `shouldShowInPopover` returns `true`.
+`PopoverStackNavigator` is a drop-in replacement for react-navigation's `StackNavigator`.  It assumes the first view in your `RouteConfigs` is the base view, and every other view should be shown in a Popover when the `showInPopover` prop is `true` (see step #2).
 You can pass a few (optional) per-screen options through your `RouteConfigs`:
 
 Option      | Type              | Default                | Description
@@ -192,11 +181,11 @@ import Popover, { PopoverStackNavigator } from 'react-native-popover-view';
 let stack = PopoverStackNavigator({
   BaseView: {
     screen: BaseView,
-    navigationOptions: ({navigation}) => {{title: 'BaseView', ...otherOptions}}
+    navigationOptions: ({navigation}) => ({title: 'BaseView', ...otherOptions})
   },
   ModalView: {
     screen: ModalView,
-    navigationOptions: ({navigation}) => {{title: 'ModalView', ...otherOptions}},
+    navigationOptions: ({navigation}) => ({title: 'ModalView', ...otherOptions}),
     popoverOptions: {
       preferedWidth: 500,
       placement: Popover.PLACEMENT_OPTIONS.BOTTOM
@@ -218,6 +207,21 @@ let Stack = PopoverStackNavigator(...);
   <Stack navigatorRef={ref => this.stackRef = ref} />
 ```
 
+#### 2) Define when Popover should be shown
+
+By default, views will be shown in a Popover view on tablets, and normally on phones.  To override this behavior, you can pass the `showInPopover` prop to the class returned by `PopoverStackNavigator`:
+
+```js
+let Stack = PopoverStackNavigator(...);
+...
+  render() {
+    let smallScreen = this.props.width < 500;
+    return <Stack showInPopover={!smallScreen} />;
+  }
+```
+
+This sort of width-based test is needed if your app can be launched in split-screen mode on tablets, because the default value is always `true` on tablets regardless of the actual display width of your app.
+
 #### 3) (Optional) Set Popover Source
 
 There are several ways to make sure the `Popover` shows from the button that triggered it:
@@ -228,7 +232,7 @@ You can register the button as the source of the `Popover` for a particular rout
 
 We first register the ref for a view:
 ```jsx
-<TouchableHighlight ref={ref => PopoverNavigation.registerRefForView(ref, 'View1')} {...otherProps} />
+<TouchableHighlight ref={ref => PopoverStackNavigator.registerRefForView(ref, 'View1')} {...otherProps} />
 ```
 Then, if `View1` is a route name in a `PopoverStackNavigator`...
 ```jsx
@@ -267,40 +271,32 @@ See "Show Popover from custom rect" in the Advanced Usage section below.
 
 ```jsx
 import React, { Component } from 'react';
-import { PopoverNavigation, PopoverStackNavigator } from 'react-native-popover-view';
+import { PopoverStackNavigator } from 'react-native-popover-view';
 import { MoreHeaderView, ExtraInfoView, MoreOptionView } from './myOtherViews';
 import { Colors } from './Colors';
 import DeviceInfo from 'react-native-device-info';
 
-let width = DeviceInfo.getInitialWidth();
-
-function isTablet() {
-  return DeviceInfo.isTablet() && width > 500;
-}
-
-PopoverNavigation.shouldShowInPopover = isTablet;
-
-export default class MoreView extends Component {
+class MoreView extends Component {
   render() {
     return (
-      <View style={styles.viewStyle} onLayout={evt => width = evt.nativeEvent.layout.width}>
+      <View style={styles.viewStyle}>
         <MoreHeaderView />
         <View>
           <TouchableHighlight
             style={styles.buttonStyle} 
-            ref={touchable => PopoverNavigation.registerRefForView(touchable, 'About')} 
+            ref={touchable => PopoverStackNavigator.registerRefForView(touchable, 'About')} 
             onPress={() => this.props.navigation.navigate('About')}>
             <Text>About the App</Text>
           </TouchableHighlight>
           <TouchableHighlight
             style={styles.buttonStyle} 
-            ref={touchable => PopoverNavigation.registerRefForView(touchable, 'Settings')} 
+            ref={touchable => PopoverStackNavigator.registerRefForView(touchable, 'Settings')} 
             onPress={() => this.props.navigation.navigate('Settings')}>
             <Text>Content Settings</Text>
           </TouchableHighlight>
           <TouchableHighlight
             style={styles.buttonStyle} 
-            ref={touchable => PopoverNavigation.registerRefForView(touchable, 'Account')} 
+            ref={touchable => PopoverStackNavigator.registerRefForView(touchable, 'Account')} 
             onPress={() => this.props.navigation.navigate('Account')}>
             <Text>Account Details</Text>
           </TouchableHighlight>
@@ -311,27 +307,39 @@ export default class MoreView extends Component {
   }
 }
 
-// Note: If you don't set {header: null} for a view showing in a Popover, it may look strange
 let MoreStack = PopoverStackNavigator({
   MoreView: {
     screen: MoreView,
-    navigationOptions: ({navigation}) => ({title: 'More'})
+    navigationOptions: {title: 'More'}
   },
   About: {
     screen: AboutView,
-    navigationOptions: ({navigation}) => Object.assign({}, {title: 'About'}, isTablet() ? {header: null} : styles.headerStyle)
+    navigationOptions: {title: 'About', ...styles.headerStyle}
   },
   Settings: {
     screen: SettingsView,
-    navigationOptions: ({navigation}) => Object.assign({}, {title: 'Settings'}, isTablet() ? {header: null} : styles.headerStyle)
+    navigationOptions: {title: 'Settings', ...styles.headerStyle}
   },
   Account: {
     screen: AccountView,
-    navigationOptions: ({navigation}) => Object.assign({}, {title: 'About'}, isTablet() ? {header: null} : styles.headerStyle)
+    navigationOptions: {title: 'About', ...styles.headerStyle}
   },
 }, {
   headerMode: 'screen'
 });
+
+export default class MoreStackWrapper extends Component {
+  state = { width: DeviceInfo.getInitialWidth() }
+  render() {
+    return (
+      <View
+        style={styles.fullScreenViewStyle} 
+        onLayout={evt => this.setState({width: evt.nativeEvent.layout.width})}>
+        <MoreStack showInPopover={DeviceInfo.isTablet() && this.state.width > 500} />
+      </View>
+    );
+  }
+}
 
 let styles = {
   buttonStyle: {
@@ -350,6 +358,13 @@ let styles = {
     headerTitleStyle: {
       color: Colors.headerTextColor
     }
+  },
+  fullScreenViewStyle: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0
   }
 }
 ```
@@ -378,7 +393,7 @@ this.props.navigation.navigate('View1', {displayArea: new Rect(0, 0, 50,50)});
 
 #### Show Popover from custom rect
 
-There may be situations in which you want to show a `Popover` with a custom fromRect, not tied to any view.  Instead of using `PopoverNavigation.registerRefForView`, you can pass in a custom `fromRect` as params to the `navigate()` call.  For example:
+There may be situations in which you want to show a `Popover` with a custom fromRect, not tied to any view.  Instead of using `PopoverStackNavigator.registerRefForView`, you can pass in a custom `fromRect` as params to the `navigate()` call.  For example:
 ```jsx
 import { Rect } from 'react-native-popover-view';
 ...

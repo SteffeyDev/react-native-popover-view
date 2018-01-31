@@ -449,8 +449,8 @@ class Popover extends React.Component {
     }
 
     animateOut() {
-      this.keyboardDidShowListener.remove()
-      this.keyboardDidHideListener.remove()
+      this.keyboardDidShowListener && this.keyboardDidShowListener.remove()
+      this.keyboardDidHideListener && this.keyboardDidHideListener.remove()
       this.setState({shiftedDisplayArea: null})
       this.animateTo({
         values: this.state.animatedValues,
