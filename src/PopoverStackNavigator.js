@@ -63,13 +63,13 @@ const PopoverStackNavigator = (
     height: 0
   };
   let shouldShowInPopover = isTablet();
-  //let shouldShowInPopover = stackConfig.showInPopover;// || isTablet;
   routeKeys.forEach((route, i) => {
     let getRegisteredView = () => PopoverStackNavigator.registeredViews.hasOwnProperty(route) ? PopoverStackNavigator.registeredViews[route] : null;
     newRouteConfigMap[route] = Object.assign({}, 
       routeConfigMap[route], 
       { 
         screen: withPopoverNavigation(routeConfigMap[route].screen, Object.assign({}, 
+          stackConfig.popoverOptions,
           routeConfigMap[route].popoverOptions, 
           {
             showInPopover: i > 0 ? () => shouldShowInPopover : () => false,
@@ -112,7 +112,7 @@ const PopoverStackNavigator = (
         screenProps={{shouldShowInPopover, ...screenProps}}
         headerMode={shouldShowInPopover ? 'screen' : headerMode}
         mode={mode}
-        cardStyle={shouldShowInPopover ? {backgroundColor: 'transparent', ...cardStyle} : cardStyle}
+        cardStyle={shouldShowInPopover ? {...cardStyle, backgroundColor: 'transparent'} : cardStyle}
         transitionConfig={shouldShowInPopover ? popoverTransitionConfig : transitionConfig}
         onTransitionStart={onTransitionStart}
         onTransitionEnd={onTransitionEnd}

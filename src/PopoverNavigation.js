@@ -71,7 +71,7 @@ export default class PopoverNavigation extends Component {
 
 
 PopoverNavigation.defaultProps = {
-  preferedWidth: 380,
+  contentContainerStyle: {width: 380},
   showInPopover: () => true
 }
 
@@ -82,8 +82,7 @@ PopoverNavigation.propTypes = {
   layoutRtl: PropTypes.bool,
   showArrow: PropTypes.bool,
   showBackground: PropTypes.bool,
-  preferedWidth: PropTypes.number,
-  preferedHeight: PropTypes.number,
+  contentContainerStyle: PropTypes.object,
   displayArea: PropTypes.objectOf(PropTypes.number),
   showInPopover: PropTypes.func,
 }

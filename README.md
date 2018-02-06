@@ -163,16 +163,18 @@ This can also be integrated with react-navigation's StackNavigator, so that on t
 #### 1) Change `StackNavigator` to `PopoverStackNavigator`
 
 `PopoverStackNavigator` is a drop-in replacement for react-navigation's `StackNavigator`.  It assumes the first view in your `RouteConfigs` is the base view, and every other view should be shown in a Popover when the `showInPopover` prop is `true` (see step #2).
-You can pass a few (optional) per-screen options through your `RouteConfigs`:
+You can pass a few (optional) per-screen options through your `RouteConfigs` or globally through your StackNavigatorConfig:
 
 Option      | Type              | Default                | Description
 ----------- | ----------------- | ---------------------- | --------------
 `placement` | PLACEMENT_OPTIONS | PLACEMENT_OPTIONS.AUTO | Passed through to `Popover`.
-`preferedWidth` | number        | 380                    | The width for the internal view that wraps the `Popover`. (Default 380)
-`preferedWidth` | number        | null (allows view to fill display area vertically) | The height for the internal view that wraps the `Popover`.
+`contentContainerStyle` | number        | 380                    | The style for the internal view that wraps the `Popover`. (Default {width: 380})
 `showInModal`   | boolean       | true                   | Passed through to `Popover`. If you want to stack multiple `Popover`'s, only the bottom one can be shown in a `Modal` on iOS.
+`showArrow` | boolean           | true                   | Passed through to `Popover`
+`showBackground` | boolean           | true                   | Passed through to `Popover`
+`arrowSize` | Size           | true                   | Passed through to `Popover`
 
-You can also pass some global options in your StackNavigatorConfig, which are all passed through to each `Popover` in the stack: `showArrow`, `showBackground`, and `arrowSize`.  See the `Popover` props above for details of these.
+Note that if you pass a value through the StackNavigatorConfig, and pass the same option for an individual screen, the value passed for the screen overrides.
 
 Example:
 ```js
@@ -181,30 +183,33 @@ import Popover, { PopoverStackNavigator } from 'react-native-popover-view';
 let stack = PopoverStackNavigator({
   BaseView: {
     screen: BaseView,
-    navigationOptions: ({navigation}) => ({title: 'BaseView', ...otherOptions})
+    navigationOptions: {
+      title: 'BaseView',
+      ...otherOptions
+    }
   },
   ModalView: {
     screen: ModalView,
-    navigationOptions: ({navigation}) => ({title: 'ModalView', ...otherOptions}),
+    navigationOptions: {
+      title: 'ModalView',
+      ...otherOptions // You'll probably want to pass in your header style's here
+    },
     popoverOptions: {
-      preferedWidth: 500,
-      placement: Popover.PLACEMENT_OPTIONS.BOTTOM
+      placement: Popover.PLACEMENT_OPTIONS.BOTTOM,
+      showArrow: true // Remember: this overrides the global popoverOptions passed in below
     }
   }
 }, 
 {
   mode: 'modal',
   popoverOptions: {
-    showArrow: false
+    showArrow: false,
+    contentContainerStyle: {
+      width: 500,
+      ...otherStyles // These can be any styles you'd normally apply to a view
+    }
   }
 });
-```
-
-Note: If you want to get a `ref` of the underlying `StackNavigator`, you will need to pass the function as `navigatorRef`:
-```js
-let Stack = PopoverStackNavigator(...);
-...
-  <Stack navigatorRef={ref => this.stackRef = ref} />
 ```
 
 #### 2) Define when Popover should be shown
