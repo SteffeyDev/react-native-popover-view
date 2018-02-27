@@ -97,23 +97,17 @@ class Popover extends React.Component {
     }
 
     measureContent(requestedContentSize) {
-      if (!this.state.skipNextMeasure) {
-        if (requestedContentSize.width && requestedContentSize.height) {
-          if (this.state.isAwaitingShow) {
-            if ((this.props.fromView && !this.state.fromRect) || !this.getDisplayArea() || !this.safeAreaViewReady) {
-              setTimeout(() => this.measureContent(requestedContentSize), 100);
-            } else {
-              let geom = this.computeGeometry({requestedContentSize});
-              this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false, skipNextMeasure: geom.forcedContentSize.width || geom.forcedContentSize.height}), this.animateIn);
-            }
-          } else if (requestedContentSize.width !== this.state.requestedContentSize.width || requestedContentSize.height !== this.state.requestedContentSize.height) {
-            if (Math.abs(requestedContentSize.width - this.state.forcedContentSize.width) < 1) requestedContentSize.width = this.state.requestedContentSize.width;
-            if (Math.abs(requestedContentSize.height - this.state.forcedContentSize.height) < 1) requestedContentSize.height = this.state.requestedContentSize.height;
-            this.handleGeomChange({requestedContentSize});
+      if (requestedContentSize.width && requestedContentSize.height) {
+        if (this.state.isAwaitingShow) {
+          if ((this.props.fromView && !this.state.fromRect) || !this.getDisplayArea() || !this.safeAreaViewReady) {
+            setTimeout(() => this.measureContent(requestedContentSize), 100);
+          } else {
+            let geom = this.computeGeometry({requestedContentSize});
+            this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), this.animateIn);
           }
+        } else if (requestedContentSize.width !== this.state.requestedContentSize.width || requestedContentSize.height !== this.state.requestedContentSize.height) {
+          this.handleGeomChange({requestedContentSize});
         }
-      } else {
-        this.setState({skipNextMeasure: true});
       }
     }
 
@@ -471,8 +465,8 @@ class Popover extends React.Component {
 
       let geom = this.computeGeometry({requestedContentSize, displayArea, fromRect});
 
-      this.setState(Object.assign(geom, {requestedContentSize}), () => {
-        if (pointChanged(geom.popoverOrigin, popoverOrigin)) {
+      if (pointChanged(geom.popoverOrigin, popoverOrigin)) {
+        this.setState(Object.assign(geom, {requestedContentSize}), () => {
           this.animateTo({
             values: animatedValues,
             fade: 1,
@@ -480,14 +474,15 @@ class Popover extends React.Component {
             translatePoint: new Point(geom.popoverOrigin.x, geom.popoverOrigin.y),
             easing: Easing.inOut(Easing.quad)
           });
-        }
-      });
+        });
+      }
     }
 
     animateOut() {
-      this.keyboardDidShowListener && this.keyboardDidShowListener.remove()
-      this.keyboardDidHideListener && this.keyboardDidHideListener.remove()
-      this.setState({shiftedDisplayArea: null})
+      this.keyboardDidShowListener && this.keyboardDidShowListener.remove();
+      this.keyboardDidHideListener && this.keyboardDidHideListener.remove();
+      this.safeAreaViewReady = false;
+      this.setState({shiftedDisplayArea: null});
       this.animateTo({
         values: this.state.animatedValues,
         fade: 0,
@@ -495,7 +490,7 @@ class Popover extends React.Component {
         translatePoint: this.getTranslateOrigin(),
         callback: () => this.setState({visible: false}, () => this.props.doneClosingCallback()),
         easing: Easing.inOut(Easing.quad)
-      })
+      });
     }
 
     animateIn() {
@@ -613,6 +608,8 @@ class Popover extends React.Component {
             {translateX: backgroundShift}
           ]
         };
+        if (this.props.showBackground)
+          backgroundStyle.backgroundColor = 'rgba(0,0,0,0.5)'
 
         let containerStyle = {
           ...styles.container,
@@ -635,16 +632,14 @@ class Popover extends React.Component {
 
         let contentView = (
             <View style={[styles.container, {left: 0}]}>
-              <SafeAreaView style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}>
+              <SafeAreaView pointerEvent="none" style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}>
                 <View style={{flex: 1}} onLayout={evt => this.setDefaultDisplayArea(evt)} />
               </SafeAreaView>
 
               <Animated.View style={containerStyle}>
-                {this.props.showBackground &&
-                  <TouchableWithoutFeedback onPress={this.props.onClose}>
-                    <Animated.View style={backgroundStyle}/>
-                  </TouchableWithoutFeedback>
-                }
+                <TouchableWithoutFeedback pointerEvents={this.props.dismissWithBackgroundTap ? null : "none"} onPress={this.props.dismissWithBackgroundTap ? this.props.onClose : null}>
+                  <Animated.View style={backgroundStyle}/>
+                </TouchableWithoutFeedback>
 
                 <View style={{top: 0, left: 0}}>
                   
@@ -689,7 +684,6 @@ var styles = {
         left: 0,
         right: FIX_SHIFT,
         position: 'absolute',
-        backgroundColor: 'rgba(0,0,0,0.5)'
     },
     contentContainer: {
         flexDirection: 'column',
@@ -733,7 +727,8 @@ Popover.defaultProps = {
 	showInModal: true,
   layoutRtl: false,
   showArrow: true,
-  showBackground: true
+  showBackground: true,
+  dismissWithBackgroundTap: true
 }
 
 Popover.propTypes = {
@@ -749,7 +744,8 @@ Popover.propTypes = {
   calculateRect: PropTypes.func,
   layoutRtl: PropTypes.bool,
   showArrow: PropTypes.bool,
-  showBackground: PropTypes.bool
+  showBackground: PropTypes.bool,
+  dismissWithBackgroundTap: PropTypes.bool
 }
 
 export default Popover;
