@@ -32,20 +32,7 @@ export let popoverTransitionConfig = () => ({
     timing: Animated.timing,
   },
   screenInterpolator: sceneProps => {
-    const { position, scene } = sceneProps
-    const { index } = scene
-
-    const translateY = position.interpolate({
-      inputRange: [index - 1, index, index + 1],
-      outputRange: [0, 0, 0],
-    })
-
-    const opacity = position.interpolate({
-      inputRange: [index - 1, index, index + 1],
-      outputRange: [0, 1, 1],
-    })
-
-    return { opacity, transform: [{ translateY }] }
+    return { opacity: 1, transform: [{ translateY: 0 }] }
   },
 })
 
@@ -84,4 +71,9 @@ export function waitForNewRect(ref, initialRect, onFinish) {
 export function rectChanged(a, b) {
   if (!isRect(a) || !isRect(b)) return false;
   return (Math.round(a.x) !== Math.round(b.x) || Math.round(a.y) !== Math.round(b.y) || Math.round(a.width) !== Math.round(b.width) || Math.round(a.height) !== Math.round(b.height));
+}
+
+export function pointChanged(a, b) {
+  if (!isPoint(a) || !isPoint(b)) return false;
+  return (Math.round(a.x) !== Math.round(b.x) || Math.round(a.y) !== Math.round(b.y));
 }

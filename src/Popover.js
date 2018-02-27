@@ -3,7 +3,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { SafeAreaView, StyleSheet, Dimensions, Animated, Text, TouchableWithoutFeedback, findNodeHandle, NativeModules, View, Modal, Keyboard, Alert, Easing } from 'react-native';
-import { Rect, Point, Size, isIOS, isRect, isPoint, rectChanged, waitForNewRect } from './Utility';
+import { Rect, Point, Size, isIOS, isRect, isPoint, rectChanged, pointChanged, waitForNewRect } from './Utility';
 
 var flattenStyle = require('react-native/Libraries/StyleSheet/flattenStyle');
 var noop = () => {};
@@ -52,9 +52,13 @@ class Popover extends React.Component {
 
   setDefaultDisplayArea(evt) {
 
-    let newDisplayArea = new Rect(evt.nativeEvent.layout.x + 10, evt.nativeEvent.layout.y + 10, evt.nativeEvent.layout.width - 20, evt.nativeEvent.layout.height - 20);
-    if (!this.state.defaultDisplayArea || rectChanged(this.state.defaultDisplayArea, newDisplayArea)) {
-      this.setState({defaultDisplayArea: newDisplayArea});
+    if (this.safeAreaViewReady) {
+      let newDisplayArea = new Rect(evt.nativeEvent.layout.x + 10, evt.nativeEvent.layout.y + 10, evt.nativeEvent.layout.width - 20, evt.nativeEvent.layout.height - 20);
+      if (!this.state.defaultDisplayArea || rectChanged(this.state.defaultDisplayArea, newDisplayArea)) {
+        this.setState({defaultDisplayArea: newDisplayArea});//, () => this.handleGeomChange({displayArea: newDisplayArea}));
+      }
+    } else {
+      this.safeAreaViewReady = true;
     }
   }
 
@@ -80,6 +84,13 @@ class Popover extends React.Component {
       }}, () => this.handleGeomChange({displayArea: this.state.shiftedDisplayArea}));
     }
 
+    componentDidMount() {
+
+      // I found that the RN SafeAreaView doesn't actually tell you the safe area until the second layout,
+      //  so we don't want to rely on it to give us an accurate display area until it's figured that out
+      this.safeAreaViewReady = false;
+    }
+
     componentWillUnmount() {
       if (this.state.visible)
         this.animateOut();
@@ -89,7 +100,7 @@ class Popover extends React.Component {
       if (!this.state.skipNextMeasure) {
         if (requestedContentSize.width && requestedContentSize.height) {
           if (this.state.isAwaitingShow) {
-            if ((this.props.fromView && !this.state.fromRect) || !this.getDisplayArea()) {
+            if ((this.props.fromView && !this.state.fromRect) || !this.getDisplayArea() || !this.safeAreaViewReady) {
               setTimeout(() => this.measureContent(requestedContentSize), 100);
             } else {
               let geom = this.computeGeometry({requestedContentSize});
@@ -370,12 +381,33 @@ class Popover extends React.Component {
         }
     }
 
-    getArrowTranslateLocation() {
-      const arrowSize = this.props.arrowSize;
+    getArrowTranslateLocation(translatePoint = null) {
+      const { anchorPoint, placement, forcedContentSize, requestedContentSize } = this.state;
+      const { arrowSize } = this.props;
       const arrowWidth = arrowSize.width + 2;
       const arrowHeight = arrowSize.height * 2 + 2;
-      const anchorPoint = this.state.anchorPoint;
-      return new Point(FIX_SHIFT /* Temp fix for useNativeDriver issue */ + anchorPoint.x - arrowWidth / 2, anchorPoint.y - arrowHeight / 2);
+      const viewWidth = forcedContentSize.width || requestedContentSize.width || 0;
+      const viewHeight = forcedContentSize.height || requestedContentSize.height || 0;
+
+
+      let arrowX = anchorPoint.x - arrowWidth / 2;
+      let arrowY = anchorPoint.y - arrowHeight / 2;
+
+      // Ensuring that the arrow does not go outside the bounds of the content box during a move
+      if (translatePoint) {
+        if (placement === PLACEMENT_OPTIONS.LEFT || placement === PLACEMENT_OPTIONS.RIGHT) {
+          if (translatePoint.y > (arrowY - 3))
+            arrowY = translatePoint.y + 3
+          else if (viewHeight && translatePoint.y + viewHeight < arrowY + arrowHeight)
+            arrowY = translatePoint.y + viewHeight - arrowHeight - 3
+        } else if (placement === PLACEMENT_OPTIONS.TOP || placement === PLACEMENT_OPTIONS.BOTTOM) {
+          if (translatePoint.x > arrowX - 3)
+            arrowX = translatePoint.x + 3
+          else if (viewWidth && translatePoint.x + viewWidth < arrowX + arrowWidth)
+            arrowX = translatePoint.x + viewWidth - arrowWidth - 3
+        }
+      }
+      return new Point(FIX_SHIFT /* Temp fix for useNativeDriver issue */ + arrowX, arrowY);
     }
 
     getTranslateOrigin() {
@@ -411,7 +443,11 @@ class Popover extends React.Component {
             }
         } else if (willBeVisible) {
           this.calculateRect(nextProps, fromRect => {
-            if (rectChanged(fromRect, this.state.fromRect) || (nextProps.displayArea && !this.props.displayArea) || rectChanged(nextProps.displayArea, this.props.displayArea))
+            if (rectChanged(fromRect, this.state.fromRect)
+                || (nextProps.displayArea && !this.props.displayArea)
+                || rectChanged(nextProps.displayArea, this.props.displayArea)
+                || rectChanged(this.getDisplayArea(), this.displayAreaStore))
+              this.displayAreaStore = this.getDisplayArea();
               this.setState({fromRect}, () => this.handleGeomChange(Object.assign(nextProps, {fromRect})))
           })
         }
@@ -436,7 +472,7 @@ class Popover extends React.Component {
       let geom = this.computeGeometry({requestedContentSize, displayArea, fromRect});
 
       this.setState(Object.assign(geom, {requestedContentSize}), () => {
-        if (rectChanged(geom.popoverOrigin, popoverOrigin)) {
+        if (pointChanged(geom.popoverOrigin, popoverOrigin)) {
           this.animateTo({
             values: animatedValues,
             fade: 1,
@@ -467,18 +503,20 @@ class Popover extends React.Component {
 
       this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', this.keyboardDidShow.bind(this));
       this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', this.keyboardDidHide.bind(this));
+      this.displayAreaStore = this.getDisplayArea();
 
       // Should grow from anchor point
       let translateStart = this.getTranslateOrigin()
       translateStart.x += FIX_SHIFT // Temp fix for useNativeDriver issue
       values.translate.setValue(translateStart);
-      values.translateArrow.setValue(this.getArrowTranslateLocation());
+      const translatePoint = new Point(this.state.popoverOrigin.x, this.state.popoverOrigin.y);
+      values.translateArrow.setValue(this.getArrowTranslateLocation(translatePoint));
 
       this.animateTo({
         values,
         fade: 1,
         scale: 1,
-        translatePoint: new Point(this.state.popoverOrigin.x, this.state.popoverOrigin.y),
+        translatePoint,
         easing: Easing.out(Easing.back())
       })
     }
@@ -494,6 +532,8 @@ class Popover extends React.Component {
         setTimeout(() => this.animateTo.apply(this, arguments), 100);
         return;
       }
+
+      const newArrowLocation = this.getArrowTranslateLocation(translatePoint);
 
       translatePoint.x = translatePoint.x + FIX_SHIFT // Temp fix for useNativeDriver issue
 
@@ -515,7 +555,7 @@ class Popover extends React.Component {
               ...commonConfig,
           }),
           Animated.timing(values.translateArrow, {
-              toValue: this.getArrowTranslateLocation(),
+              toValue: newArrowLocation,
               ...commonConfig,
           })
       ]).start(() => {

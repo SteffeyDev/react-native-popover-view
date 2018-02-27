@@ -5,37 +5,12 @@ import createNavigationContainer from '../../react-navigation/src/createNavigati
 import createNavigator from '../../react-navigation/src/navigators/createNavigator';
 import CardStackTransitioner from '.../../react-navigation/src/views/CardStack/CardStackTransitioner';
 import StackRouter from '../../react-navigation/src/routers/StackRouter';
-import NavigatorTypes from '../../react-navigation/src/navigators/NavigatorTypes';
 import { popoverTransitionConfig, isTablet } from './Utility'
 import PopoverNavigation from './PopoverNavigation'
 
-import type {
-  NavigationRouteConfigMap,
-  stackConfig,
-  NavigationState,
-  NavigationStackScreenOptions,
-  NavigationNavigatorProps,
-} from '../../react-navigation/src/TypeDefinition';
-
-// A stack navigators props are the intersection between
-// the base navigator props (navgiation, screenProps, etc)
-// and the view's props
-type StackNavigatorProps = NavigationNavigatorProps<
-  NavigationStackScreenOptions,
-  NavigationState
-> &
-  React.ElementProps<typeof CardStackTransitioner>;
-
-type PopoverStackNavigatorProps = StackNavigatorProps & {
-  showInPopover: boolean,
-}
-
 export let withPopoverNavigation = (Comp, popoverOptions) => props => <PopoverNavigation {...popoverOptions}><Comp {...props} /></PopoverNavigation>;
 
-const PopoverStackNavigator = (
-  routeConfigMap: NavigationRouteConfigMap,
-  stackConfig: stackConfig = {}
-) => {
+const PopoverStackNavigator = (routeConfigMap, stackConfig = {}) => {
   const {
     initialRouteName,
     initialRouteParams,
@@ -100,9 +75,8 @@ const PopoverStackNavigator = (
   const navigator = createNavigator(
     router,
     routeConfigMap,
-    stackConfig,
-    NavigatorTypes.STACK
-  )((props: PopoverStackNavigatorProps) => {
+    stackConfig
+  )(props => {
     const { showInPopover, screenProps, ...otherProps } = props;
     shouldShowInPopover = showInPopover !== undefined ? showInPopover : isTablet();
 
