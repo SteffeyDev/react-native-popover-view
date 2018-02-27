@@ -34,6 +34,11 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
 * Moves to stay visible on orientation change or when entering split-screen mode
 * (Optional) Integration with [React Navigation](https://reactnavigation.org)
 
+## Demo App
+
+You can play around with the various features using [the Expo test app](https://exp.host/@steffeydev/test-app).
+Source Code: [react-native-popover-view-test-app](https://github.com/SteffeyDev/react-native-popover-view-test-app)
+
 ### <a name="origins"/>A Note on Origins
 
 This is a fork of [react-native-popover](https://github.com/jeanregisser/react-native-popover), originally created by Jean Regisser but since abandoned.
@@ -41,8 +46,6 @@ This is a fork of [react-native-popover](https://github.com/jeanregisser/react-n
 I have rebuilt most of the library from the ground up for improved handling of changing screen sizes on tablets (split-screen mode), a redesigned automatic placement algorithm, and ES6 compatibility.
 
 Similar forks exist on Github (such as [react-native-modal-popover](https://github.com/doomsower/react-native-modal-popover)), but this is the first to be published on NPM as far as I know.
-
-<a name="demo"/>![Demo](https://raw.githubusercontent.com/jeanregisser/react-native-popover/master/Screenshots/animated.gif)
 
 ## <a name="installation"/>Installation
 
