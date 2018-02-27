@@ -637,7 +637,7 @@ class Popover extends React.Component {
               </SafeAreaView>
 
               <Animated.View style={containerStyle}>
-                <TouchableWithoutFeedback pointerEvents={this.props.dismissWithBackgroundTap ? null : "none"} onPress={this.props.dismissWithBackgroundTap ? this.props.onClose : null}>
+                <TouchableWithoutFeedback onPress={this.props.onClose}>
                   <Animated.View style={backgroundStyle}/>
                 </TouchableWithoutFeedback>
 
@@ -728,7 +728,6 @@ Popover.defaultProps = {
   layoutRtl: false,
   showArrow: true,
   showBackground: true,
-  dismissWithBackgroundTap: true
 }
 
 Popover.propTypes = {
@@ -745,7 +744,6 @@ Popover.propTypes = {
   layoutRtl: PropTypes.bool,
   showArrow: PropTypes.bool,
   showBackground: PropTypes.bool,
-  dismissWithBackgroundTap: PropTypes.bool
 }
 
 export default Popover;
