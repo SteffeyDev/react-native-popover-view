@@ -37,7 +37,7 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
 
 ## <a name="upgrading" />Upgrading from 0.5.x
 
-Version 0.6 brought some large changes, increasing efficiency, stability, and flexibility.  For React Navigation users, there is a new required prop, `showInPopover`, that you must pass to `PopoverStackNavigator` if you want to specify when to show stack views in a Popover.  This replaces `PopoverNavigation.shouldShowInPopover`. See the new [setup](#setup) instructions below for details.
+Version 0.6 brought some large changes, increasing efficiency, stability, and flexibility.  For React Navigation users, there is a new prop, `showInPopover`, that you might want to pass to `PopoverStackNavigator` if you want to customize when to show stack views in a Popover.  This replaces `PopoverNavigation.shouldShowInPopover`. See the new [setup](#setup) instructions below for details.
 
 ## <a name="demo"/>Demo App
 
@@ -70,7 +70,7 @@ import Popover from 'react-native-popover-view'
 ...
   render (
     <Popover
-      isVisible={this.state.isVisible} />
+      isVisible={this.state.isVisible}>
       <CustomElement />
     </Popover>
   )
@@ -80,20 +80,23 @@ import Popover from 'react-native-popover-view'
 
 Prop              | Type     | Optional | Default     | Description
 ----------------- | -------- | -------- | ----------- | -----------
-isVisible         | bool     | Yes      | false       | Show/Hide the popover
+isVisible         | bool     | No       | false       | Show/Hide the popover
 fromView          | ref      | Yes      | null        | The `ref` of the view that should anchor the popover.
 fromRect          | rect     | Yes      | null        | Alternative to `fromView`.  Rectangle at which to anchor the popover.
 displayArea       | rect     | Yes      | screen rect | Area where the popover is allowed to be displayed
 placement         | string   | Yes      | 'auto'      | How to position the popover - top &#124; bottom &#124; left &#124; right &#124; auto. When 'auto' is specified, it will determine the ideal placement so that the popover is fully visible within `displayArea`.
-onClose           | function | Yes      |             | Callback to be fired when the user taps the popover
+onClose           | function | Yes      |             | Callback to be fired when the user taps outside the popover
 doneClosingCallback | function | Yes    |             | Callback to be fired when the popover is finished closing (after animation)
-showInModal       | bool     | Yes      | true        | Whether the Popover should be encapsulated in the [Modal view from RN](https://facebook.github.io/react-native/docs/modal.html), which allows it to show above all other content, or just be present in the view hierarchy like a normal view.
-showArrow         | bool     | Yes      | true        | Whether the arrow that points to the rect (passing in as `fromRect`) is shown.  If `fromRect` is null, the arrow will never be shown.
+showInModal       | bool     | Yes      | true        | Whether the popover should be encapsulated in the [Modal view from RN](https://facebook.github.io/react-native/docs/modal.html), which allows it to show above all other content, or just be present in the view hierarchy like a normal view.
+showArrow         | bool     | Yes      | true        | Whether the arrow that points to the rect (passed in as `fromView` or `fromRect`) is shown.  If `fromView` and `fromRect` are null, the arrow will never be shown.
+arrowSize         | size     | Yes      | 16 x 8      | The size of the arrow that points to the rect.
 showBackground    | bool     | Yes      | true        | Whether the background behind the popover darkens when the popover is shown.
 
-If neither fromRect or fromView are provided, the popover will float in the center of the screen.
+If neither `fromRect` or `fromView` are provided, the popover will float in the center of the screen.
 
-rect is an object with the following properties: `{x: number, y: number, width: number, height: number}`. You can create the object yourself, or `import Popover, { Rect } from 'react-native-popover-view` and create a rect by calling `new Rect(x, y, width, height)`.
+`rect` is an object with the following properties: `{x: number, y: number, width: number, height: number}`. You can create the object yourself, or `import Popover, { Rect } from 'react-native-popover-view` and create a rect by calling `new Rect(x, y, width, height)`.
+
+Likewise, `size` is an object with the following properties: `{width: number, height: number}`. You can create the object yourself, or `import Popover, { Size } from 'react-native-popover-view` and create a rect by calling `new Size(width, height)`.
 
 ### <a name="standalone-example"/>Full Example
 ```jsx
@@ -123,14 +126,14 @@ class PopoverExample extends Component {
   render() {
     return (
       <View style={styles.container}>
-        <TouchableHighlight ref={ref => this.touchable = ref} style={styles.button} onPress={this.showPopover}>
-          <Text style={styles.buttonText}>Press me</Text>
+        <TouchableHighlight ref={ref => this.touchable = ref} style={styles.button} onPress={() => this.showPopover()}>
+          <Text>Press me</Text>
         </TouchableHighlight>
 
         <Popover
           isVisible={this.state.isVisible}
           fromView={this.touchable}
-          onClose={this.closePopover}>
+          onClose={() => this.closePopover()}>
           <Text>I'm the content of this popover!</Text>
         </Popover>
       </View>
@@ -153,17 +156,17 @@ var styles = StyleSheet.create({
     backgroundColor: '#ccc',
     borderColor: '#333',
     borderWidth: 1,
-  },
-  buttonText: {
   }
 });
 
 AppRegistry.registerComponent('PopoverExample', () => PopoverExample);
 ```
 
+---
+
 ## <a name="rn"/>Usage with React Navigation
 
-This can also be integrated with react-navigation's StackNavigator, so that on tablets, views higher up in the stack show in a popover instead of a full-screen modal.
+This can also be integrated with react-navigation's StackNavigator, so that on tablets, views higher up in the stack show in a popover instead of in a full-screen modal.
 
 ### <a name="setup"/>Basic Setup
 
@@ -171,21 +174,21 @@ This can also be integrated with react-navigation's StackNavigator, so that on t
 #### 1) Change `StackNavigator` to `PopoverStackNavigator`
 
 `PopoverStackNavigator` is a drop-in replacement for react-navigation's `StackNavigator`.  It assumes the first view in your `RouteConfigs` is the base view, and every other view should be shown in a Popover when the `showInPopover` prop is `true` (see step #2).
-You can pass a few (optional) per-screen options through your `RouteConfigs` or globally through your StackNavigatorConfig:
+You can pass a few (optional) per-screen options through your `RouteConfigs` or globally through your `StackNavigatorConfig`:
 
 Option      | Type              | Default                | Description
 ----------- | ----------------- | ---------------------- | --------------
 `placement` | PLACEMENT_OPTIONS | PLACEMENT_OPTIONS.AUTO | Passed through to `Popover`.
-`contentContainerStyle` | number        | 380                    | The style for the internal view that wraps the `Popover`. (Default {width: 380})
+`contentContainerStyle` | number        | {width: 380}   | The style for the internal view that wraps the `Popover`.
 `showInModal`   | boolean       | true                   | Passed through to `Popover`. If you want to stack multiple `Popover`'s, only the bottom one can be shown in a `Modal` on iOS.
 `showArrow` | boolean           | true                   | Passed through to `Popover`
-`showBackground` | boolean           | true                   | Passed through to `Popover`
+`showBackground` | boolean      | true                   | Passed through to `Popover`
 `arrowSize` | Size           | true                   | Passed through to `Popover`
 
-Note that if you pass a value through the StackNavigatorConfig, and pass the same option for an individual screen, the value passed for the screen overrides.
+Note: If you pass a value through the `StackNavigatorConfig`, and pass the same option for an individual screen, the value passed for the screen overrides.
 
 Example:
-```js
+```jsx
 import Popover, { PopoverStackNavigator } from 'react-native-popover-view';
 
 let stack = PopoverStackNavigator({
@@ -224,7 +227,7 @@ let stack = PopoverStackNavigator({
 
 By default, views will be shown in a Popover view on tablets, and normally on phones.  To override this behavior, you can pass the `showInPopover` prop to the class returned by `PopoverStackNavigator`:
 
-```js
+```jsx
 let Stack = PopoverStackNavigator(...);
 ...
   render() {
@@ -387,7 +390,7 @@ let styles = {
 
 By default, Popover's will query RN's `SafeAreaView` to get the allowed display area on the device, and then add a 10pt padding around all the edges, and set this as the display area.  If you want to inject a custum display area to a specific popover, you can do so either through the `PopoverStackNavigator`'s `RouteConfigs` or through params in the `navigate` call:
 
-```js
+```jsx
 let Stack = PopoverStackNavigator({
   View1: {
     screen: 'View1',
@@ -400,7 +403,7 @@ let Stack = PopoverStackNavigator({
 }, options);
 ```
 OR
-```js
+```jsx
 this.props.navigation.navigate('View1', {displayArea: new Rect(0, 0, 50,50)});
 ```
 
@@ -423,11 +426,11 @@ Now, if your app is put into split-screen mode while the popover is still showin
 
 ## <a name="contributing">Contributing
 
-Pull requests are welcome, and if you find that you are having to bend over backwards to make this work for you, feel free to open an issue or PR!  Of course, try to keep the same coding style if possible and I'll try to get back to you as soon as possible.
+Pull requests are welcome; if you find that you are having to bend over backwards to make this work for you, feel free to open an issue or PR!  Of course, try to keep the same coding style if possible and I'll try to get back to you as soon as I can.
 
 ## <a name="credits"/>Credits
 
-Original codebase created by Jean Regisser <jean.regisser@gmail.com> (https://github.com/jeanregisser) as [react-native-popover](https://github.com/jeanregisser/react-native-popover), which has been abandoned
+Original codebase created by Jean Regisser <jean.regisser@gmail.com> (https://github.com/jeanregisser) as [react-native-popover](https://github.com/jeanregisser/react-native-popover), which has been abandoned.
 
 ---
 
