@@ -13,8 +13,9 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
 
 ##### Table of Contents
 * [Features](#features)
-* [Origins](#origins)
+* [Upgrading](#upgrading)
 * [Demo](#demo)
+* [Origins](#origins)
 * [Installation](#installation)
 * [Standalone Usage](#standalone)
   * [Props](#props)
@@ -34,7 +35,11 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
 * Moves to stay visible on orientation change or when entering split-screen mode
 * (Optional) Integration with [React Navigation](https://reactnavigation.org)
 
-## Demo App
+## <a name="upgrading" />Upgrading from 0.5.x
+
+Version 0.6 brought some large changes, increasing efficiency, stability, and flexibility.  For React Navigation users, there is a new required prop, `showInPopover`, that you must pass to `PopoverStackNavigator` if you want to specify when to show stack views in a Popover.  This replaces `PopoverNavigation.shouldShowInPopover`. See the new [setup](#setup) instructions below for details.
+
+## <a name="demo"/>Demo App
 
 You can play around with the various features using [the Expo test app](https://exp.host/@steffeydev/test-app).
 Source Code: [react-native-popover-view-test-app](https://github.com/SteffeyDev/react-native-popover-view-test-app)
