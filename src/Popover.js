@@ -142,12 +142,17 @@ class Popover extends React.Component {
                 return this.computeAutoGeometry(options);
           }
         } else {
+          const minY = displayArea.y;
+          const minX = displayArea.x;
+          const preferedY = (displayArea.height - requestedContentSize.height)/2 + displayArea.y;
+          const preferedX = (displayArea.width - requestedContentSize.width)/2 + displayArea.x;
+
           return {
-            popoverOrigin: new Point((displayArea.width - requestedContentSize.width)/2 + displayArea.x, (displayArea.height - requestedContentSize.height)/2 + displayArea.y),
+            popoverOrigin: new Point(Math.max(minX, preferedX), Math.max(minY, preferedY)),
             anchorPoint: new Point(displayArea.width/2 + displayArea.x, displayArea.height/2 + displayArea.y),
             forcedContentSize: {
-              height: requestedContentSize.height >= displayArea.height ? displayArea.height : null,
-              width: requestedContentSize.width >= displayArea.width ? displayArea.width : null
+              width: preferedX < minX ? displayArea.width : null,
+              height: preferedY < minY ? displayArea.height : null
             }
           }
         }
