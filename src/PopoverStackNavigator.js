@@ -5,6 +5,7 @@ import createNavigationContainer from '../../react-navigation/src/createNavigati
 import createNavigator from '../../react-navigation/src/navigators/createNavigator';
 import CardStackTransitioner from '.../../react-navigation/src/views/CardStack/CardStackTransitioner';
 import StackRouter from '../../react-navigation/src/routers/StackRouter';
+import NavigationActions from '../../react-navigation/src/NavigationActions';
 import { popoverTransitionConfig, isTablet } from './Utility'
 import PopoverNavigation from './PopoverNavigation'
 
@@ -16,6 +17,7 @@ const PopoverStackNavigator = (routeConfigMap, stackConfig = {}) => {
     initialRouteParams,
     paths,
     headerMode,
+    headerTransitionPreset,
     mode,
     cardStyle,
     transitionConfig,
@@ -85,11 +87,16 @@ const PopoverStackNavigator = (routeConfigMap, stackConfig = {}) => {
         {...otherProps}
         screenProps={{shouldShowInPopover, ...screenProps}}
         headerMode={shouldShowInPopover ? 'screen' : headerMode}
+        headerTransitionPreset={headerTransitionPreset}
         mode={mode}
         cardStyle={shouldShowInPopover ? {...cardStyle, backgroundColor: 'transparent'} : cardStyle}
         transitionConfig={shouldShowInPopover ? popoverTransitionConfig : transitionConfig}
         onTransitionStart={onTransitionStart}
-        onTransitionEnd={onTransitionEnd}
+        onTransitionEnd={(lastTransition, transition) => {
+          const { state, dispatch } = props.navigation;
+          dispatch(NavigationActions.completeTransition({ key: state.key }));
+          onTransitionEnd && onTransitionEnd();
+        }}
       />
     )
   });
