@@ -61,7 +61,7 @@ const PopoverStackNavigator = (routeConfigMap, stackConfig = {}) => {
             else if (typeof userNavigationOptions === "object")
               additionalNavigationOptions = userNavigationOptions;
           }
-          return i > 0 && shouldShowInPopover 
+          return i > 0 && shouldShowInPopover
             ? Object.assign({}, additionalNavigationOptions, {header: null})
             : additionalNavigationOptions;
         }
