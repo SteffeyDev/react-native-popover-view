@@ -41,7 +41,7 @@ Version 0.6 brought some large changes, increasing efficiency, stability, and fl
 
 ## <a name="demo"/>Demo App
 
-You can play around with the various features using [the Expo test app](https://exp.host/@steffeydev/test-app).
+You can play around with the various features using [the Expo test app](https://expo.io/@steffeydev/popover-view-test-app).
 Source Code: [react-native-popover-view-test-app](https://github.com/SteffeyDev/react-native-popover-view-test-app)
 
 ### <a name="origins"/>A Note on Origins
