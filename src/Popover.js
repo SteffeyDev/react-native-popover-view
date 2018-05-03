@@ -51,15 +51,13 @@ class Popover extends React.Component {
   }
 
   setDefaultDisplayArea(evt) {
-
-    if (this.safeAreaViewReady) {
+    if (this.safeAreaViewReady || !isIOS()) {
       let newDisplayArea = new Rect(evt.nativeEvent.layout.x + 10, evt.nativeEvent.layout.y + 10, evt.nativeEvent.layout.width - 20, evt.nativeEvent.layout.height - 20);
       if (!this.state.defaultDisplayArea || rectChanged(this.state.defaultDisplayArea, newDisplayArea)) {
         this.setState({defaultDisplayArea: newDisplayArea});//, () => this.handleGeomChange({displayArea: newDisplayArea}));
       }
-    } else {
-      this.safeAreaViewReady = true;
     }
+    this.safeAreaViewReady = true;
   }
 
     keyboardDidShow(e) {
