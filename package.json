@@ -1,6 +1,6 @@
 {
   "name": "react-native-popover-view",
-  "version": "0.6.5",
+  "version": "0.6.7",
   "description": "A <Popover /> component for react-native",
   "main": "src/index.js",
   "author": "Peter Steffey <steffeydev@icloud.com> (https://github.com/steffeydev)",
@@ -16,7 +16,8 @@
   "license": "MIT",
   "scripts": {
     "start": "node_modules/react-native/packager/packager.sh",
-    "test": "jest"
+    "test": "jest",
+    "postinstall": "node ./check-rn.js"
   },
   "jest": {
     "preset": "react-native",
@@ -48,5 +49,8 @@
   },
   "peerDependencies": {
     "react-navigation": ">=1.0.0-beta.20"
+  },
+  "dependencies": {
+    "fs": "^0.0.1-security"
   }
 }
