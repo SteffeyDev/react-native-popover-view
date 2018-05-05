@@ -491,7 +491,7 @@ class Popover extends React.Component {
         fade: 0,
         scale: 0,
         translatePoint: this.getTranslateOrigin(),
-        callback: () => this.setState({visible: false}, () => this.props.doneClosingCallback()),
+        callback: () => this.setState({visible: false, forcedContentSize: {}}, () => this.props.doneClosingCallback()),
         easing: Easing.inOut(Easing.quad)
       });
     }
