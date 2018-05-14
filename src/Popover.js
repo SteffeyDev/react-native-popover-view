@@ -394,15 +394,15 @@ class Popover extends React.Component {
       // Ensuring that the arrow does not go outside the bounds of the content box during a move
       if (translatePoint) {
         if (placement === PLACEMENT_OPTIONS.LEFT || placement === PLACEMENT_OPTIONS.RIGHT) {
-          if (translatePoint.y > (arrowY - 3))
-            arrowY = translatePoint.y + 3
+          if (translatePoint.y > (arrowY - this.props.borderRadius))
+            arrowY = translatePoint.y + this.props.borderRadius
           else if (viewHeight && translatePoint.y + viewHeight < arrowY + arrowHeight)
-            arrowY = translatePoint.y + viewHeight - arrowHeight - 3
+            arrowY = translatePoint.y + viewHeight - arrowHeight - this.props.borderRadius
         } else if (placement === PLACEMENT_OPTIONS.TOP || placement === PLACEMENT_OPTIONS.BOTTOM) {
-          if (translatePoint.x > arrowX - 3)
-            arrowX = translatePoint.x + 3
+          if (translatePoint.x > arrowX - this.props.borderRadius)
+            arrowX = translatePoint.x + this.props.borderRadius
           else if (viewWidth && translatePoint.x + viewWidth < arrowX + arrowWidth)
-            arrowX = translatePoint.x + viewWidth - arrowWidth - 3
+            arrowX = translatePoint.x + viewWidth - arrowWidth - this.props.borderRadius
         }
       }
       return new Point(FIX_SHIFT /* Temp fix for useNativeDriver issue */ + arrowX, arrowY);
