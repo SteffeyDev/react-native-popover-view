@@ -10,6 +10,7 @@ var noop = () => {};
 
 var {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window');
 var DEFAULT_ARROW_SIZE = new Size(16, 8);
+var DEFAULT_BORDER_RADIUS = 3;
 var FIX_SHIFT = SCREEN_WIDTH * 2;
 
 const PLACEMENT_OPTIONS = Object.freeze({
@@ -233,7 +234,7 @@ class Popover extends React.Component {
         const arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.LEFT);
         let forcedContentSize = {
           height: requestedContentSize.height >= displayArea.height ? displayArea.height : null,
-          width: requestedContentSize.width >= fromRect.x - displayArea.x - arrowSize.width ? fromRect.x - displayArea.x - arrowSize.width : null 
+          width: requestedContentSize.width >= fromRect.x - displayArea.x - arrowSize.width ? fromRect.x - displayArea.x - arrowSize.width : null
         }
 
         let viewWidth = forcedContentSize.width || requestedContentSize.width;
@@ -629,6 +630,7 @@ class Popover extends React.Component {
           maxWidth: forcedContentSize.width,
           maxHeight: forcedContentSize.height,
           position: 'absolute',
+          borderRadius: this.props.borderRadius,
           ...styles.dropShadow,
           ...styles.popoverContent
         };
@@ -645,7 +647,7 @@ class Popover extends React.Component {
                 </TouchableWithoutFeedback>
 
                 <View style={{top: 0, left: 0}}>
-                  
+
                   <Animated.View style={popoverViewStyle} onLayout={evt => this.measureContent(evt.nativeEvent.layout)}>
                     {this.props.children}
                   </Animated.View>
@@ -696,7 +698,6 @@ var styles = {
     },
     popoverContent: {
         backgroundColor: 'white',
-        borderRadius: 3,
         borderBottomColor: '#333438',
         overflow: 'hidden'
     },
@@ -724,6 +725,7 @@ Popover.PLACEMENT_OPTIONS = PLACEMENT_OPTIONS;
 Popover.defaultProps = {
 	isVisible: false,
 	arrowSize: DEFAULT_ARROW_SIZE,
+  borderRadius: DEFAULT_BORDER_RADIUS,
 	placement: PLACEMENT_OPTIONS.AUTO,
 	onClose: noop,
 	doneClosingCallback: noop,
@@ -737,6 +739,7 @@ Popover.propTypes = {
   isVisible: PropTypes.bool,
   displayArea: PropTypes.objectOf(PropTypes.number),
   arrowSize: PropTypes.objectOf(PropTypes.number),
+  borderRadius: PropTypes.objectOf(PropTypes.number),
   placement: PropTypes.oneOf([PLACEMENT_OPTIONS.LEFT, PLACEMENT_OPTIONS.RIGHT, PLACEMENT_OPTIONS.TOP, PLACEMENT_OPTIONS.BOTTOM, PLACEMENT_OPTIONS.AUTO]),
   onClose: PropTypes.func,
   doneClosingCallback: PropTypes.func,
