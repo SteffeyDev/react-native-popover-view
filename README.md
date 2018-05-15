@@ -88,8 +88,8 @@ placement         | string   | Yes      | 'auto'      | How to position the popo
 onClose           | function | Yes      |             | Callback to be fired when the user taps outside the popover
 doneClosingCallback | function | Yes    |             | Callback to be fired when the popover is finished closing (after animation)
 showInModal       | bool     | Yes      | true        | Whether the popover should be encapsulated in the [Modal view from RN](https://facebook.github.io/react-native/docs/modal.html), which allows it to show above all other content, or just be present in the view hierarchy like a normal view.
-showArrow         | bool     | Yes      | true        | Whether the arrow that points to the rect (passed in as `fromView` or `fromRect`) is shown.  If `fromView` and `fromRect` are null, the arrow will never be shown.
-arrowSize         | size     | Yes      | 16 x 8      | The size of the arrow that points to the rect.
+arrowStyle        | object   | Yes      | {}          | The style of the arrow that points to the rect. Supported options are `width`, `height`, and `backgroundColor`. You can use `{backgroundColor: 'transparent'}` to hid the arrow completely.
+popoverStyle      | object   | Yes      | {}          | The style of the popover itself. You can override the `borderRadius`, `backgroundColor`, or any other [`style` prop for a `View`](https://facebook.github.io/react-native/docs/view-style-props.html).
 showBackground    | bool     | Yes      | true        | Whether the background behind the popover darkens when the popover is shown.
 
 If neither `fromRect` or `fromView` are provided, the popover will float in the center of the screen.
@@ -181,9 +181,9 @@ Option      | Type              | Default                | Description
 `placement` | PLACEMENT_OPTIONS | PLACEMENT_OPTIONS.AUTO | Passed through to `Popover`.
 `contentContainerStyle` | number        | {width: 380}   | The style for the internal view that wraps the `Popover`.
 `showInModal`   | boolean       | true                   | Passed through to `Popover`. If you want to stack multiple `Popover`'s, only the bottom one can be shown in a `Modal` on iOS.
-`showArrow` | boolean           | true                   | Passed through to `Popover`
 `showBackground` | boolean      | true                   | Passed through to `Popover`
-`arrowSize` | Size           | true                   | Passed through to `Popover`
+`arrowStyle` | object           | {}                     | Passed through to `Popover`
+`popoverStyle` | object           | {}                     | Passed through to `Popover`
 
 Note: If you pass a value through the `StackNavigatorConfig`, and pass the same option for an individual screen, the value passed for the screen overrides.
 
@@ -207,14 +207,14 @@ let stack = PopoverStackNavigator({
     },
     popoverOptions: {
       placement: Popover.PLACEMENT_OPTIONS.BOTTOM,
-      showArrow: true // Remember: this overrides the global popoverOptions passed in below
+      showBackground: true // Remember: this overrides the global popoverOptions passed in below
     }
   }
 }, 
 {
   mode: 'modal',
   popoverOptions: {
-    showArrow: false,
+    showBackground: false,
     contentContainerStyle: {
       width: 500,
       ...otherStyles // These can be any styles you'd normally apply to a view

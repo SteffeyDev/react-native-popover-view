@@ -5,12 +5,13 @@ import PropTypes from 'prop-types';
 import { SafeAreaView, StyleSheet, Dimensions, Animated, Text, TouchableWithoutFeedback, findNodeHandle, NativeModules, View, Modal, Keyboard, Alert, Easing } from 'react-native';
 import { Rect, Point, Size, isIOS, isRect, isPoint, rectChanged, pointChanged, waitForNewRect } from './Utility';
 
-var flattenStyle = require('react-native/Libraries/StyleSheet/flattenStyle');
-var noop = () => {};
+const flattenStyle = require('react-native/Libraries/StyleSheet/flattenStyle');
+const noop = () => {};
 
-var {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window');
-var DEFAULT_ARROW_SIZE = new Size(16, 8);
-var FIX_SHIFT = SCREEN_WIDTH * 2;
+const {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window');
+const DEFAULT_ARROW_SIZE = new Size(16, 8);
+const DEFAULT_BORDER_RADIUS = 3;
+const FIX_SHIFT = SCREEN_WIDTH * 2;
 
 const PLACEMENT_OPTIONS = Object.freeze({
   TOP: 'top',
@@ -19,7 +20,6 @@ const PLACEMENT_OPTIONS = Object.freeze({
   LEFT: 'left',
   AUTO: 'auto'
 });
-
 
 class Popover extends React.Component {
 
@@ -157,6 +157,7 @@ class Popover extends React.Component {
     }
 
     computeTopGeometry({displayArea, fromRect, requestedContentSize}) {
+        const { popoverStyle } = this.props;
         let minY = displayArea.y;
         const arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.TOP);
         let preferedY = fromRect.y - requestedContentSize.height - arrowSize.height;
@@ -180,8 +181,8 @@ class Popover extends React.Component {
         var anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y);
 
         // Make sure the arrow isn't cut off
-        anchorPoint.x = Math.max(anchorPoint.x, arrowSize.width / 2 + 3);
-        anchorPoint.x = Math.min(anchorPoint.x, displayArea.x + displayArea.width - (arrowSize.width / 2) - 3);
+        anchorPoint.x = Math.max(anchorPoint.x, arrowSize.width / 2 + this.getBorderRadius());
+        anchorPoint.x = Math.min(anchorPoint.x, displayArea.x + displayArea.width - (arrowSize.width / 2) - this.getBorderRadius());
 
         return {
             popoverOrigin,
@@ -192,6 +193,7 @@ class Popover extends React.Component {
     }
 
     computeBottomGeometry({displayArea, fromRect, requestedContentSize}) {
+        const { popoverStyle } = this.props;
         const arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.BOTTOM);
         let preferedY = fromRect.y + fromRect.height + arrowSize.height;
 
@@ -214,8 +216,8 @@ class Popover extends React.Component {
         var anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y + fromRect.height);
 
         // Make sure the arrow isn't cut off
-        anchorPoint.x = Math.max(anchorPoint.x, arrowSize.width / 2 + 3);
-        anchorPoint.x = Math.min(anchorPoint.x, displayArea.x + displayArea.width - (arrowSize.width / 2) - 3);
+        anchorPoint.x = Math.max(anchorPoint.x, arrowSize.width / 2 + this.getBorderRadius());
+        anchorPoint.x = Math.min(anchorPoint.x, displayArea.x + displayArea.width - (arrowSize.width / 2) - this.getBorderRadius());
 
         return {
             popoverOrigin,
@@ -230,10 +232,11 @@ class Popover extends React.Component {
     }
 
     computeLeftGeometry({displayArea, fromRect, requestedContentSize}) {
+        const { popoverStyle } = this.props;
         const arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.LEFT);
         let forcedContentSize = {
           height: requestedContentSize.height >= displayArea.height ? displayArea.height : null,
-          width: requestedContentSize.width >= fromRect.x - displayArea.x - arrowSize.width ? fromRect.x - displayArea.x - arrowSize.width : null 
+          width: requestedContentSize.width >= fromRect.x - displayArea.x - arrowSize.width ? fromRect.x - displayArea.x - arrowSize.width : null
         }
 
         let viewWidth = forcedContentSize.width || requestedContentSize.width;
@@ -253,8 +256,8 @@ class Popover extends React.Component {
         var anchorPoint = new Point(fromRect.x, fromRect.y + fromRect.height / 2.0);
 
         // Make sure the arrow isn't cut off
-        anchorPoint.y = Math.max(anchorPoint.y, arrowSize.height / 2 + 3);
-        anchorPoint.y = Math.min(anchorPoint.y, displayArea.y + displayArea.height - (arrowSize.height / 2) - 3);
+        anchorPoint.y = Math.max(anchorPoint.y, arrowSize.height / 2 + this.getBorderRadius());
+        anchorPoint.y = Math.min(anchorPoint.y, displayArea.y + displayArea.height - (arrowSize.height / 2) - this.getBorderRadius());
 
         return {
             popoverOrigin,
@@ -265,6 +268,7 @@ class Popover extends React.Component {
     }
 
     computeRightGeometry({displayArea, fromRect, requestedContentSize}) {
+        const { popoverStyle } = this.props;
         const arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.RIGHT);
         let horizontalSpace = displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width;
         let forcedContentSize = {
@@ -288,8 +292,8 @@ class Popover extends React.Component {
         var anchorPoint = new Point(fromRect.x + fromRect.width, fromRect.y + fromRect.height / 2.0);
 
         // Make sure the arrow isn't cut off
-        anchorPoint.y = Math.max(anchorPoint.y, arrowSize.height / 2 + 3);
-        anchorPoint.y = Math.min(anchorPoint.y, displayArea.y + displayArea.height - (arrowSize.height / 2) - 3);
+        anchorPoint.y = Math.max(anchorPoint.y, arrowSize.height / 2 + this.getBorderRadius());
+        anchorPoint.y = Math.min(anchorPoint.y, displayArea.y + displayArea.height - (arrowSize.height / 2) - this.getBorderRadius());
 
         return {
             popoverOrigin,
@@ -330,7 +334,7 @@ class Popover extends React.Component {
     }
 
     getArrowSize(placement) {
-        var size = this.props.arrowSize;
+        var size = new Size(this.props.arrowStyle.width || DEFAULT_ARROW_SIZE.width, this.props.arrowStyle.height || DEFAULT_ARROW_SIZE.height);
         switch(placement) {
             case PLACEMENT_OPTIONS.LEFT:
             case PLACEMENT_OPTIONS.RIGHT:
@@ -338,10 +342,6 @@ class Popover extends React.Component {
             default:
                 return size;
         }
-    }
-
-    getArrowColorStyle(color) {
-        return { borderTopColor: color };
     }
 
     getArrowRotation(placement) {
@@ -359,15 +359,12 @@ class Popover extends React.Component {
 
     getArrowDynamicStyle() {
         const { anchorPoint, popoverOrigin, placement } = this.state;
-        const { arrowSize } = this.props;
+        const { arrowWidth: width, arrowHeight: height } = this.getCalculatedArrowDims();
 
         // Create the arrow from a rectangle with the appropriate borderXWidth set
         // A rotation is then applied dependending on the placement
         // Also make it slightly bigger
         // to fix a visual artifact when the popover is animated with a scale
-        var width = arrowSize.width + 2;
-        var height = arrowSize.height * 2 + 2;
-
         return {
             width: width,
             height: height,
@@ -378,14 +375,24 @@ class Popover extends React.Component {
         }
     }
 
+    getCalculatedArrowDims() {
+      const { arrowStyle } = this.props;
+      const arrowWidth = (arrowStyle.width || DEFAULT_ARROW_SIZE.width) + 2;
+      const arrowHeight = (arrowStyle.height || DEFAULT_ARROW_SIZE.height) * 2 + 2;
+      return {arrowWidth, arrowHeight};
+    }
+
+    getBorderRadius() {
+      if (this.props.popoverStyle.borderRadius === 0) return 0;
+      return this.props.popoverStyle.borderRadius || DEFAULT_BORDER_RADIUS;
+    }
+
     getArrowTranslateLocation(translatePoint = null) {
       const { anchorPoint, placement, forcedContentSize, requestedContentSize } = this.state;
-      const { arrowSize } = this.props;
-      const arrowWidth = arrowSize.width + 2;
-      const arrowHeight = arrowSize.height * 2 + 2;
+      const { arrowWidth, arrowHeight } = this.getCalculatedArrowDims();
+      const { popoverStyle } = this.props;
       const viewWidth = forcedContentSize.width || requestedContentSize.width || 0;
       const viewHeight = forcedContentSize.height || requestedContentSize.height || 0;
-
 
       let arrowX = anchorPoint.x - arrowWidth / 2;
       let arrowY = anchorPoint.y - arrowHeight / 2;
@@ -393,15 +400,15 @@ class Popover extends React.Component {
       // Ensuring that the arrow does not go outside the bounds of the content box during a move
       if (translatePoint) {
         if (placement === PLACEMENT_OPTIONS.LEFT || placement === PLACEMENT_OPTIONS.RIGHT) {
-          if (translatePoint.y > (arrowY - 3))
-            arrowY = translatePoint.y + 3
+          if (translatePoint.y > (arrowY - this.getBorderRadius()))
+            arrowY = translatePoint.y + this.getBorderRadius()
           else if (viewHeight && translatePoint.y + viewHeight < arrowY + arrowHeight)
-            arrowY = translatePoint.y + viewHeight - arrowHeight - 3
+            arrowY = translatePoint.y + viewHeight - arrowHeight - this.getBorderRadius()
         } else if (placement === PLACEMENT_OPTIONS.TOP || placement === PLACEMENT_OPTIONS.BOTTOM) {
-          if (translatePoint.x > arrowX - 3)
-            arrowX = translatePoint.x + 3
+          if (translatePoint.x > arrowX - this.getBorderRadius())
+            arrowX = translatePoint.x + this.getBorderRadius()
           else if (viewWidth && translatePoint.x + viewWidth < arrowX + arrowWidth)
-            arrowX = translatePoint.x + viewWidth - arrowWidth - 3
+            arrowX = translatePoint.x + viewWidth - arrowWidth - this.getBorderRadius()
         }
       }
       return new Point(FIX_SHIFT /* Temp fix for useNativeDriver issue */ + arrowX, arrowY);
@@ -563,7 +570,9 @@ class Popover extends React.Component {
     }
 
     render() {
-        var {popoverOrigin, placement, forcedHeight, animatedValues, anchorPoint, forcedContentSize} = this.state;
+        var { popoverOrigin, placement, forcedHeight, animatedValues, anchorPoint, forcedContentSize } = this.state;
+        const { popoverStyle, arrowStyle } = this.props;
+        const { arrowWidth, arrowHeight } = this.getCalculatedArrowDims();
 
         let arrowScale = animatedValues.scale.interpolate({
             inputRange: [0, 1],
@@ -571,11 +580,7 @@ class Popover extends React.Component {
             extrapolate: 'clamp',
         })
 
-        var arrowSize = this.props.arrowSize;
-        var arrowWidth = arrowSize.width + 2;
-        var arrowHeight = arrowSize.height * 2 + 2;
-
-        var arrowStyle = {
+        var arrowViewStyle = {
           position: 'absolute',
           top: 0,
           left: 0,
@@ -592,7 +597,7 @@ class Popover extends React.Component {
           styles.arrow,
           this.getArrowDynamicStyle(),
           {
-            borderTopColor: styles.popoverContent.backgroundColor,
+            borderTopColor: arrowStyle.backgroundColor || popoverStyle.backgroundColor || styles.popoverContent.backgroundColor,
             transform: [
               {rotate: this.getArrowRotation(placement)}
             ]
@@ -619,19 +624,18 @@ class Popover extends React.Component {
           opacity: animatedValues.fade
         };
 
-        let popoverViewStyle = {
+        let popoverViewStyle = Object.assign({
+          maxWidth: forcedContentSize.width,
+          maxHeight: forcedContentSize.height,
+          position: 'absolute',
+        }, styles.dropShadow, styles.popoverContent, popoverStyle, {
           transform: [
               {translateX: animatedValues.translate.x},
               {translateY: animatedValues.translate.y},
               {scale: animatedValues.scale},
               {perspective: 1000}
           ],
-          maxWidth: forcedContentSize.width,
-          maxHeight: forcedContentSize.height,
-          position: 'absolute',
-          ...styles.dropShadow,
-          ...styles.popoverContent
-        };
+        });
 
         let contentView = (
             <View style={[styles.container, {left: 0}]}>
@@ -651,7 +655,7 @@ class Popover extends React.Component {
                   </Animated.View>
 
                   {this.props.showArrow && (this.props.fromRect || this.state.fromRect) &&
-                    <Animated.View style={arrowStyle}>
+                    <Animated.View style={arrowViewStyle}>
                       <View style={arrowInnerStyle}/>
                     </Animated.View>
                   }
@@ -696,8 +700,8 @@ var styles = {
     },
     popoverContent: {
         backgroundColor: 'white',
-        borderRadius: 3,
         borderBottomColor: '#333438',
+        borderRadius: DEFAULT_BORDER_RADIUS,
         overflow: 'hidden'
     },
     selectContainer: {
@@ -722,12 +726,13 @@ var styles = {
 Popover.defaultDisplayArea = {};
 Popover.PLACEMENT_OPTIONS = PLACEMENT_OPTIONS;
 Popover.defaultProps = {
-	isVisible: false,
-	arrowSize: DEFAULT_ARROW_SIZE,
-	placement: PLACEMENT_OPTIONS.AUTO,
-	onClose: noop,
-	doneClosingCallback: noop,
-	showInModal: true,
+  isVisible: false,
+  arrowStyle: {},
+  popoverStyle: {},
+  placement: PLACEMENT_OPTIONS.AUTO,
+  onClose: noop,
+  doneClosingCallback: noop,
+  showInModal: true,
   layoutRtl: false,
   showArrow: true,
   showBackground: true,
@@ -736,7 +741,6 @@ Popover.defaultProps = {
 Popover.propTypes = {
   isVisible: PropTypes.bool,
   displayArea: PropTypes.objectOf(PropTypes.number),
-  arrowSize: PropTypes.objectOf(PropTypes.number),
   placement: PropTypes.oneOf([PLACEMENT_OPTIONS.LEFT, PLACEMENT_OPTIONS.RIGHT, PLACEMENT_OPTIONS.TOP, PLACEMENT_OPTIONS.BOTTOM, PLACEMENT_OPTIONS.AUTO]),
   onClose: PropTypes.func,
   doneClosingCallback: PropTypes.func,
@@ -747,6 +751,8 @@ Popover.propTypes = {
   layoutRtl: PropTypes.bool,
   showArrow: PropTypes.bool,
   showBackground: PropTypes.bool,
+  popoverStyle: PropTypes.object,
+  arrowStyle: PropTypes.object
 }
 
 export default Popover;

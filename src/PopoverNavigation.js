@@ -41,12 +41,13 @@ export default class PopoverNavigation extends Component {
 
   render() {
     const child = React.cloneElement(this.props.children, {goBack: () => this.goBack()});
-    const { contentContainerStyle, arrowSize, placement, showInModal, layoutRtl, showArrow, showBackground, getRegisteredView, displayArea, showInPopover, backgroundColor } = this.props;
+    const { contentContainerStyle, popoverStyle, arrowStyle, placement, showInModal, layoutRtl, showBackground, getRegisteredView, displayArea, showInPopover, backgroundColor } = this.props;
 
     if (showInPopover()) {
       return (
         <Popover
-          arrowSize={arrowSize}
+          arrowStyle={arrowStyle}
+          popoverStyle={popoverStyle}
           placement={placement}
           showInModal={showInModal}
           layoutRtl={layoutRtl}
