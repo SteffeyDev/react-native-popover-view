@@ -654,7 +654,7 @@ class Popover extends React.Component {
                     {this.props.children}
                   </Animated.View>
 
-                  {this.props.showArrow && (this.props.fromRect || this.state.fromRect) &&
+                  {(this.props.fromRect || this.state.fromRect) &&
                     <Animated.View style={arrowViewStyle}>
                       <View style={arrowInnerStyle}/>
                     </Animated.View>
@@ -734,7 +734,6 @@ Popover.defaultProps = {
   doneClosingCallback: noop,
   showInModal: true,
   layoutRtl: false,
-  showArrow: true,
   showBackground: true,
 }
 
@@ -749,7 +748,6 @@ Popover.propTypes = {
   fromView: PropTypes.object,
   calculateRect: PropTypes.func,
   layoutRtl: PropTypes.bool,
-  showArrow: PropTypes.bool,
   showBackground: PropTypes.bool,
   popoverStyle: PropTypes.object,
   arrowStyle: PropTypes.object

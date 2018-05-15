@@ -51,7 +51,6 @@ export default class PopoverNavigation extends Component {
           placement={placement}
           showInModal={showInModal}
           layoutRtl={layoutRtl}
-          showArrow={showArrow}
           showBackground={showBackground}
           isVisible={this.state.visible}
           onClose={() => this.goBack()}
@@ -81,9 +80,10 @@ PopoverNavigation.propTypes = {
   placement: PropTypes.oneOf([Popover.PLACEMENT_OPTIONS.LEFT, Popover.PLACEMENT_OPTIONS.RIGHT, Popover.PLACEMENT_OPTIONS.TOP, Popover.PLACEMENT_OPTIONS.BOTTOM, Popover.PLACEMENT_OPTIONS.AUTO]),
   showInModal: PropTypes.bool,
   layoutRtl: PropTypes.bool,
-  showArrow: PropTypes.bool,
   showBackground: PropTypes.bool,
   contentContainerStyle: PropTypes.object,
   displayArea: PropTypes.objectOf(PropTypes.number),
   showInPopover: PropTypes.func,
+  popoverStyle: PropTypes.object,
+  arrowStyle: PropTypes.object
 }
