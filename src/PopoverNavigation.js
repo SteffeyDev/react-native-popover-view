@@ -19,7 +19,7 @@ export default class PopoverNavigation extends Component {
   }
 
   goBack() {
-    if (this.props.showInPopover())
+    if (this.props.showInPopover)
       this.setState({visible: false});
     else
       this.props.children.props.navigation.goBack();
@@ -43,7 +43,7 @@ export default class PopoverNavigation extends Component {
     const child = React.cloneElement(this.props.children, {goBack: () => this.goBack()});
     const { contentContainerStyle, popoverStyle, arrowStyle, placement, showInModal, layoutRtl, showBackground, getRegisteredView, displayArea, showInPopover, backgroundColor } = this.props;
 
-    if (showInPopover()) {
+    if (showInPopover) {
       return (
         <Popover
           arrowStyle={arrowStyle}
@@ -72,7 +72,7 @@ export default class PopoverNavigation extends Component {
 
 PopoverNavigation.defaultProps = {
   contentContainerStyle: {width: 380},
-  showInPopover: () => true
+  showInPopover: true
 }
 
 PopoverNavigation.propTypes = {
@@ -83,7 +83,7 @@ PopoverNavigation.propTypes = {
   showBackground: PropTypes.bool,
   contentContainerStyle: PropTypes.object,
   displayArea: PropTypes.objectOf(PropTypes.number),
-  showInPopover: PropTypes.func,
+  showInPopover: PropTypes.bool,
   popoverStyle: PropTypes.object,
   arrowStyle: PropTypes.object
 }

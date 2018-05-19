@@ -35,9 +35,15 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
 * Moves to stay visible on orientation change or when entering split-screen mode
 * (Optional) Integration with [React Navigation](https://reactnavigation.org)
 
-## <a name="upgrading" />Upgrading from 0.5.x
+## <a name="upgrading" />Upgrading
 
-Version 0.6 brought some large changes, increasing efficiency, stability, and flexibility.  For React Navigation users, there is a new prop, `showInPopover`, that you might want to pass to `PopoverStackNavigator` if you want to customize when to show stack views in a Popover.  This replaces `PopoverNavigation.shouldShowInPopover`. See the new [setup](#setup) instructions below for details.
+### `0.7` to `1.0`
+
+The only breaking change in version 1.0 was renaming `PopoverStackNavigator` to `createPopoverStackNavigator`, to match the `react-navigation` other navigation functions.
+
+### `0.5` to `0.6`
+
+Version 0.6 brought some large changes, increasing efficiency, stability, and flexibility.  For React Navigation users, there is a new prop, `showInPopover`, that you might want to pass to `createPopoverStackNavigator` if you want to customize when to show stack views in a Popover.  This replaces `PopoverNavigation.shouldShowInPopover`. See the new [setup](#setup) instructions below for details.
 
 ## <a name="demo"/>Demo App
 
@@ -171,9 +177,9 @@ This can also be integrated with react-navigation's StackNavigator, so that on t
 ### <a name="setup"/>Basic Setup
 
 
-#### 1) Change `StackNavigator` to `PopoverStackNavigator`
+#### 1) Change `StackNavigator` to `createPopoverStackNavigator`
 
-`PopoverStackNavigator` is a drop-in replacement for react-navigation's `StackNavigator`.  It assumes the first view in your `RouteConfigs` is the base view, and every other view should be shown in a Popover when the `showInPopover` prop is `true` (see step #2).
+`createPopoverStackNavigator` is a drop-in replacement for react-navigation's `StackNavigator`.  It assumes the first view in your `RouteConfigs` is the base view, and every other view should be shown in a Popover when the `showInPopover` prop is `true` (see step #2).
 You can pass a few (optional) per-screen options through your `RouteConfigs` or globally through your `StackNavigatorConfig`:
 
 Option      | Type              | Default                | Description
@@ -189,9 +195,9 @@ Note: If you pass a value through the `StackNavigatorConfig`, and pass the same 
 
 Example:
 ```jsx
-import Popover, { PopoverStackNavigator } from 'react-native-popover-view';
+import Popover, { createPopoverStackNavigator } from 'react-native-popover-view';
 
-let stack = PopoverStackNavigator({
+let stack = createPopoverStackNavigator({
   BaseView: {
     screen: BaseView,
     navigationOptions: {
@@ -225,10 +231,10 @@ let stack = PopoverStackNavigator({
 
 #### 2) Define when Popover should be shown
 
-By default, views will be shown in a Popover view on tablets, and normally on phones.  To override this behavior, you can pass the `showInPopover` prop to the class returned by `PopoverStackNavigator`:
+By default, views will be shown in a Popover view on tablets, and normally on phones.  To override this behavior, you can pass the `showInPopover` prop to the class returned by `createPopoverStackNavigator`:
 
 ```jsx
-let Stack = PopoverStackNavigator(...);
+let Stack = createPopoverStackNavigator(...);
 ...
   render() {
     let smallScreen = this.props.width < 500;
@@ -248,13 +254,13 @@ You can register the button as the source of the `Popover` for a particular rout
 
 We first register the ref for a view:
 ```jsx
-<TouchableHighlight ref={ref => PopoverStackNavigator.registerRefForView(ref, 'View1')} {...otherProps} />
+<TouchableHighlight ref={ref => createPopoverStackNavigator.registerRefForView(ref, 'View1')} {...otherProps} />
 ```
-Then, if `View1` is a route name in a `PopoverStackNavigator`...
+Then, if `View1` is a route name in a `createPopoverStackNavigator`...
 ```jsx
 import View1 from './views/View1';
 ...
-let stack = PopoverStackNavigator({
+let stack = createPopoverStackNavigator({
   View1: {
     screen: View1,
     navigationOptions: navOptions
@@ -269,7 +275,7 @@ this.props.navigation.navigate('View1', params);
 
 You can register any type of view, not only a `TouchableHighlight`, and the `Popover` will point to the outside of the bounds of that view.
 
-Note: The map is stored statically, so you cannot register two views with the same name, even if they are in different `PopoverStackNavigator`'s.  
+Note: The map is stored statically, so you cannot register two views with the same name, even if they are in different `createPopoverStackNavigator`'s.  
 
 ##### II. Send showFromView
 
@@ -287,7 +293,7 @@ See "Show Popover from custom rect" in the Advanced Usage section below.
 
 ```jsx
 import React, { Component } from 'react';
-import { PopoverStackNavigator } from 'react-native-popover-view';
+import { createPopoverStackNavigator } from 'react-native-popover-view';
 import { MoreHeaderView, ExtraInfoView, MoreOptionView } from './myOtherViews';
 import { Colors } from './Colors';
 import DeviceInfo from 'react-native-device-info';
@@ -300,19 +306,19 @@ class MoreView extends Component {
         <View>
           <TouchableHighlight
             style={styles.buttonStyle} 
-            ref={touchable => PopoverStackNavigator.registerRefForView(touchable, 'About')} 
+            ref={touchable => createPopoverStackNavigator.registerRefForView(touchable, 'About')} 
             onPress={() => this.props.navigation.navigate('About')}>
             <Text>About the App</Text>
           </TouchableHighlight>
           <TouchableHighlight
             style={styles.buttonStyle} 
-            ref={touchable => PopoverStackNavigator.registerRefForView(touchable, 'Settings')} 
+            ref={touchable => createPopoverStackNavigator.registerRefForView(touchable, 'Settings')} 
             onPress={() => this.props.navigation.navigate('Settings')}>
             <Text>Content Settings</Text>
           </TouchableHighlight>
           <TouchableHighlight
             style={styles.buttonStyle} 
-            ref={touchable => PopoverStackNavigator.registerRefForView(touchable, 'Account')} 
+            ref={touchable => createPopoverStackNavigator.registerRefForView(touchable, 'Account')} 
             onPress={() => this.props.navigation.navigate('Account')}>
             <Text>Account Details</Text>
           </TouchableHighlight>
@@ -323,7 +329,7 @@ class MoreView extends Component {
   }
 }
 
-let MoreStack = PopoverStackNavigator({
+let MoreStack = createPopoverStackNavigator({
   MoreView: {
     screen: MoreView,
     navigationOptions: {title: 'More'}
@@ -388,10 +394,10 @@ let styles = {
 
 #### Custumize Display Area used by Popovers
 
-By default, Popover's will query RN's `SafeAreaView` to get the allowed display area on the device, and then add a 10pt padding around all the edges, and set this as the display area.  If you want to inject a custum display area to a specific popover, you can do so either through the `PopoverStackNavigator`'s `RouteConfigs` or through params in the `navigate` call:
+By default, Popover's will query RN's `SafeAreaView` to get the allowed display area on the device, and then add a 10pt padding around all the edges, and set this as the display area.  If you want to inject a custum display area to a specific popover, you can do so either through the `createPopoverStackNavigator`'s `RouteConfigs` or through params in the `navigate` call:
 
 ```jsx
-let Stack = PopoverStackNavigator({
+let Stack = createPopoverStackNavigator({
   View1: {
     screen: 'View1',
     popoverOptions: {
@@ -409,7 +415,7 @@ this.props.navigation.navigate('View1', {displayArea: new Rect(0, 0, 50,50)});
 
 #### Show Popover from custom rect
 
-There may be situations in which you want to show a `Popover` with a custom fromRect, not tied to any view.  Instead of using `PopoverStackNavigator.registerRefForView`, you can pass in a custom `fromRect` as params to the `navigate()` call.  For example:
+There may be situations in which you want to show a `Popover` with a custom fromRect, not tied to any view.  Instead of using `createPopoverStackNavigator.registerRefForView`, you can pass in a custom `fromRect` as params to the `navigate()` call.  For example:
 ```jsx
 import { Rect } from 'react-native-popover-view';
 ...
