@@ -37,11 +37,11 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
 
 ## <a name="upgrading" />Upgrading
 
-### `0.7` to `1.0`
+#### `0.7` to `1.0`
 
 The only breaking change in version 1.0 was renaming `PopoverStackNavigator` to `createPopoverStackNavigator`, to match the `react-navigation` other navigation functions.
 
-### `0.5` to `0.6`
+#### `0.5` to `0.6`
 
 Version 0.6 brought some large changes, increasing efficiency, stability, and flexibility.  For React Navigation users, there is a new prop, `showInPopover`, that you might want to pass to `createPopoverStackNavigator` if you want to customize when to show stack views in a Popover.  This replaces `PopoverNavigation.shouldShowInPopover`. See the new [setup](#setup) instructions below for details.
 
@@ -172,15 +172,15 @@ AppRegistry.registerComponent('PopoverExample', () => PopoverExample);
 
 ## <a name="rn"/>Usage with React Navigation
 
-This can also be integrated with react-navigation's StackNavigator, so that on tablets, views higher up in the stack show in a popover instead of in a full-screen modal.
+This can also be integrated with react-navigation's stack navigator, so that on tablets, views higher up in the stack show in a popover instead of in a full-screen modal.
 
 ### <a name="setup"/>Basic Setup
 
 
-#### 1) Change `StackNavigator` to `createPopoverStackNavigator`
+#### 1) Change `createStackNavigator` to `createPopoverStackNavigator`
 
-`createPopoverStackNavigator` is a drop-in replacement for react-navigation's `StackNavigator`.  It assumes the first view in your `RouteConfigs` is the base view, and every other view should be shown in a Popover when the `showInPopover` prop is `true` (see step #2).
-You can pass a few (optional) per-screen options through your `RouteConfigs` or globally through your `StackNavigatorConfig`:
+`createPopoverStackNavigator` is a drop-in replacement for react-navigation's `createStackNavigator`.  It assumes the first view in your `routeConfigMap` is the base view, and every other view should be shown in a Popover when the `showInPopover` prop is `true` (see step #2).
+You can pass a few (optional) per-screen options through your `routeConfigMap` or globally through your `stackConfig`:
 
 Option      | Type              | Default                | Description
 ----------- | ----------------- | ---------------------- | --------------
@@ -191,7 +191,7 @@ Option      | Type              | Default                | Description
 `arrowStyle` | object           | {}                     | Passed through to `Popover`
 `popoverStyle` | object           | {}                     | Passed through to `Popover`
 
-Note: If you pass a value through the `StackNavigatorConfig`, and pass the same option for an individual screen, the value passed for the screen overrides.
+Note: If you pass a value through the `stackConfig`, and pass the same option for an individual screen, the value passed for the screen overrides.
 
 Example:
 ```jsx
