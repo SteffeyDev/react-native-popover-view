@@ -97,6 +97,7 @@ showInModal       | bool     | Yes      | true        | Whether the popover shou
 arrowStyle        | object   | Yes      | {}          | The style of the arrow that points to the rect. Supported options are `width`, `height`, and `backgroundColor`. You can use `{backgroundColor: 'transparent'}` to hid the arrow completely.
 popoverStyle      | object   | Yes      | {}          | The style of the popover itself. You can override the `borderRadius`, `backgroundColor`, or any other [`style` prop for a `View`](https://facebook.github.io/react-native/docs/view-style-props.html).
 showBackground    | bool     | Yes      | true        | Whether the background behind the popover darkens when the popover is shown.
+animationConfig    | object     | Yes      |          | An object containing any configuration options that can be passed to Animated.timing (e.g. `{ duration: 600, easing: Easing.inOut(Easing.quad) }`).  The configuration options you pass will override the defaults for all animations.
 
 If neither `fromRect` or `fromView` are provided, the popover will float in the center of the screen.
 
@@ -189,7 +190,8 @@ Option      | Type              | Default                | Description
 `showInModal`   | boolean       | true                   | Passed through to `Popover`. If you want to stack multiple `Popover`'s, only the bottom one can be shown in a `Modal` on iOS.
 `showBackground` | boolean      | true                   | Passed through to `Popover`
 `arrowStyle` | object           | {}                     | Passed through to `Popover`
-`popoverStyle` | object           | {}                     | Passed through to `Popover`
+`popoverStyle` | object           | {}                   | Passed through to `Popover`
+`animationConfig` | object           |                   | Passed through to `Popover`
 
 Note: If you pass a value through the `stackConfig`, and pass the same option for an individual screen, the value passed for the screen overrides.
 

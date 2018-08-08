@@ -527,11 +527,11 @@ class Popover extends React.Component {
     }
 
     animateTo({fade, translatePoint, scale, callback, easing, values}) {
-      const commonConfig = {
+      const commonConfig = Object.assign({
           duration: 300,
           easing,
           useNativeDriver: true
-      }
+      }, this.props.animationConfig);
 
       if (this.animating) {
         setTimeout(() => this.animateTo.apply(this, arguments), 100);
@@ -548,20 +548,20 @@ class Popover extends React.Component {
       this.animating = true;
       Animated.parallel([
           Animated.timing(values.fade, {
-              toValue: fade,
               ...commonConfig,
+              toValue: fade
           }),
           Animated.timing(values.translate, {
-              toValue: translatePoint,
               ...commonConfig,
+              toValue: translatePoint
           }),
           Animated.timing(values.scale, {
-              toValue: scale,
               ...commonConfig,
+              toValue: scale
           }),
           Animated.timing(values.translateArrow, {
-              toValue: newArrowLocation,
               ...commonConfig,
+              toValue: newArrowLocation
           })
       ]).start(() => {
         this.animating = false;
@@ -750,7 +750,8 @@ Popover.propTypes = {
   layoutRtl: PropTypes.bool,
   showBackground: PropTypes.bool,
   popoverStyle: PropTypes.object,
-  arrowStyle: PropTypes.object
+  arrowStyle: PropTypes.object,
+  animationConfig: PropTypes.object
 }
 
 export default Popover;
