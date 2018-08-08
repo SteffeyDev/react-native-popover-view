@@ -452,7 +452,7 @@ class Popover extends React.Component {
                 || rectChanged(nextProps.displayArea, this.props.displayArea)
                 || rectChanged(this.getDisplayArea(), this.displayAreaStore))
               this.displayAreaStore = this.getDisplayArea();
-              this.setState({fromRect}, () => this.handleGeomChange(Object.assign(nextProps, {fromRect})))
+              this.setState({fromRect}, () => this.handleGeomChange(Object.assign({}, nextProps, {fromRect})))
           })
         }
     }
