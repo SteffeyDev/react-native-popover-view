@@ -37,11 +37,17 @@ class PopoverStackView extends React.Component {
       <Transitioner
         render={this._render}
         configureTransition={this._configureTransition}
+        screenProps={this.props.screenProps}
         navigation={this.props.navigation}
         descriptors={this.props.descriptors}
-        onTransitionStart={this.props.onTransitionStart}
+        onTransitionStart={
+          this.props.onTransitionStart ||
+          this.props.navigationConfig.onTransitionStart
+        }
         onTransitionEnd={(transition, lastTransition) => {
-          const { onTransitionEnd, navigation } = this.props;
+          const { navigationConfig, navigation } = this.props;
+          const onTransitionEnd =
+            this.props.onTransitionEnd || navigationConfig.onTransitionEnd;
           if (transition.navigation.state.isTransitioning) {
             navigation.dispatch(
               StackActions.completeTransition({
@@ -150,13 +156,12 @@ function createPopoverStackNavigator(routeConfigMap, stackConfig = {}) {
 
   const router = StackRouter(newRouteConfigMap, stackRouterConfig);
 
-  // Create a navigator with StackView as the view
+  // Create a navigator with PopoverStackView as the view
   let Navigator = createNavigator(PopoverStackView, router, stackConfig);
   if (!disableKeyboardHandling) {
-    Navigator = createKeyboardAwareNavigator(Navigator);
+    Navigator = createKeyboardAwareNavigator(Navigator, stackConfig);
   }
 
-  // HOC to provide the navigation prop for the top-level navigator (when the prop is missing)
   return createNavigationContainer(Navigator);
 }
 

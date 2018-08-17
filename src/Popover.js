@@ -87,6 +87,9 @@ class Popover extends React.Component {
       // I found that the RN SafeAreaView doesn't actually tell you the safe area until the second layout,
       //  so we don't want to rely on it to give us an accurate display area until it's figured that out
       this.safeAreaViewReady = false;
+      // Show popover if isVisible is initially true
+      if (this.props.isVisible)
+        setTimeout(() => this.calculateRect(this.props, fromRect => (fromRect || !this.props.fromView) && this.setState({fromRect, isAwaitingShow: true, visible: true})), 0);
     }
 
     componentWillUnmount() {
@@ -450,9 +453,10 @@ class Popover extends React.Component {
             if (rectChanged(fromRect, this.state.fromRect)
                 || (nextProps.displayArea && !this.props.displayArea)
                 || rectChanged(nextProps.displayArea, this.props.displayArea)
-                || rectChanged(this.getDisplayArea(), this.displayAreaStore))
-              this.displayAreaStore = this.getDisplayArea();
-              this.setState({fromRect}, () => this.handleGeomChange(Object.assign({}, nextProps, {fromRect})))
+                || rectChanged(this.getDisplayArea(), this.displayAreaStore)) {
+                this.displayAreaStore = this.getDisplayArea();
+                this.setState({fromRect}, () => this.handleGeomChange(Object.assign({}, nextProps, {fromRect})))
+              }
           })
         }
     }

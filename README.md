@@ -13,7 +13,6 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
 
 ##### Table of Contents
 * [Features](#features)
-* [Upgrading](#upgrading)
 * [Demo](#demo)
 * [Origins](#origins)
 * [Installation](#installation)
@@ -24,6 +23,7 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
   * [Setup](#setup)
   * [Example](#rn-example)
   * [Advanced Usage](#advanced)
+* [Upgrading](#upgrading)
 * [Contributing](#contributing)
 * [Credits](#credits)
 
@@ -34,16 +34,6 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
 * Automatically detects best placement on screen
 * Moves to stay visible on orientation change or when entering split-screen mode
 * (Optional) Integration with [React Navigation](https://reactnavigation.org)
-
-## <a name="upgrading" />Upgrading
-
-#### `0.7` to `1.0`
-
-The only breaking change in version 1.0 was renaming `PopoverStackNavigator` to `createPopoverStackNavigator`, to match the `react-navigation` other navigation functions.
-
-#### `0.5` to `0.6`
-
-Version 0.6 brought some large changes, increasing efficiency, stability, and flexibility.  For React Navigation users, there is a new prop, `showInPopover`, that you might want to pass to `createPopoverStackNavigator` if you want to customize when to show stack views in a Popover.  This replaces `PopoverNavigation.shouldShowInPopover`. See the new [setup](#setup) instructions below for details.
 
 ## <a name="demo"/>Demo App
 
@@ -174,6 +164,13 @@ AppRegistry.registerComponent('PopoverExample', () => PopoverExample);
 ## <a name="rn"/>Usage with React Navigation
 
 This can also be integrated with react-navigation's stack navigator, so that on tablets, views higher up in the stack show in a popover instead of in a full-screen modal.
+
+### Support
+
+* `react-native-popover-view` v1.0.x supports `react-navigation` v2.0.0 - v2.11.2
+* `react-native-popover-view` v1.1.x support `react-navigation` v2.11.3 and forwards
+
+If `react-navigation` changes in a future versions and breaks compatibility with this library, please open an issue.
 
 ### <a name="setup"/>Basic Setup
 
@@ -431,6 +428,16 @@ import { Rect } from 'react-native-popover-view';
   this.props.navigation.navigate('NextView', {calculateRect: () => new Rect(this.state.width/2 - 20, 50, 40, 20), ...otherParams});
 ```
 Now, if your app is put into split-screen mode while the popover is still showing, `calculateRect` will be called again, and the popover will shift to point to the new rect.
+
+## <a name="upgrading" />Upgrading
+
+#### `0.7` to `1.0`
+
+The only breaking change in version 1.0 was renaming `PopoverStackNavigator` to `createPopoverStackNavigator`, to match the `react-navigation` other navigation functions.
+
+#### `0.5` to `0.6`
+
+Version 0.6 brought some large changes, increasing efficiency, stability, and flexibility.  For React Navigation users, there is a new prop, `showInPopover`, that you might want to pass to `createPopoverStackNavigator` if you want to customize when to show stack views in a Popover.  This replaces `PopoverNavigation.shouldShowInPopover`. See the new [setup](#setup) instructions below for details.
 
 ## <a name="contributing">Contributing
 

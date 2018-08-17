@@ -25,3 +25,15 @@ DerivedData
 #
 node_modules/
 npm-debug.log
+
+# image files
+*.gif
+*.jpg
+*.png
+
+# assorted non-permanent files
+*.swp
+coverage/
+
+# lockfile - yarn ignores the lockfile when installing, so there's no need to publish it
+yarn.lock
