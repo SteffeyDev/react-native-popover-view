@@ -1,4 +1,4 @@
-import { Platform, Animated, NativeModules, findNodeHandle, Dimensions, StatusBar } from 'react-native'
+import { Platform, Animated, NativeModules, findNodeHandle, Dimensions } from 'react-native'
 
 export function Point(x, y) {
     this.x = x;
@@ -56,15 +56,14 @@ export function runAfterChange(getFirst, second, func) {
   setTimeout(() => clearInterval(interval), 2000); // Failsafe so that the interval doesn't run forever
 }
 
-export function waitForNewRect(ref, initialRect, onFinish) {
-  let androidOffset = isIOS() ? 0 : StatusBar.currentHeight;
+export function waitForNewRect(ref, initialRect, onFinish, verticalOffset) {
   runAfterChange(callback => {
     NativeModules.UIManager.measure(findNodeHandle(ref), (x0, y0, width, height, x, y) => {
-      callback(new Rect(x, y - androidOffset, width, height));
+      callback(new Rect(x, y + verticalOffset, width, height));
     })
   }, initialRect, () => {
     NativeModules.UIManager.measure(findNodeHandle(ref), (x0, y0, width, height, x, y) => {
-      onFinish(new Rect(x, y - androidOffset, width, height))
+      onFinish(new Rect(x, y + verticalOffset, width, height))
     })
   });
 }

@@ -468,7 +468,7 @@ class Popover extends React.Component {
           callback({fromRect: props.calculateRect(newDisplayArea.width, newDisplayArea.height)});
         });
       else if (props.fromView)
-        waitForNewRect(props.fromView, initialRect, callback);
+        waitForNewRect(props.fromView, initialRect, callback, this.props.verticalOffset);
       else
         callback(props.fromRect);
     }
@@ -739,6 +739,7 @@ Popover.defaultProps = {
   showInModal: true,
   layoutRtl: false,
   showBackground: true,
+  verticalOffset: 0
 }
 
 Popover.propTypes = {
@@ -755,7 +756,8 @@ Popover.propTypes = {
   showBackground: PropTypes.bool,
   popoverStyle: PropTypes.object,
   arrowStyle: PropTypes.object,
-  animationConfig: PropTypes.object
+  animationConfig: PropTypes.object,
+  verticalOffset: PropTypes.number
 }
 
 export default Popover;
