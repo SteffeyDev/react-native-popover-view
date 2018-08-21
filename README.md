@@ -88,6 +88,7 @@ arrowStyle        | object   | Yes      | {}          | The style of the arrow t
 popoverStyle      | object   | Yes      | {}          | The style of the popover itself. You can override the `borderRadius`, `backgroundColor`, or any other [`style` prop for a `View`](https://facebook.github.io/react-native/docs/view-style-props.html).
 showBackground    | bool     | Yes      | true        | Whether the background behind the popover darkens when the popover is shown.
 animationConfig    | object     | Yes      |          | An object containing any configuration options that can be passed to Animated.timing (e.g. `{ duration: 600, easing: Easing.inOut(Easing.quad) }`).  The configuration options you pass will override the defaults for all animations.
+verticalOffset    | number     | Yes      | 0        | The amount to vertically shift the popover on the screen.  In certain Android configurations, you may need to apply a `verticalOffset` of `-StatusBar.currentHeight` for the popover to originate from the correct place.
 
 If neither `fromRect` or `fromView` are provided, the popover will float in the center of the screen.
 
@@ -189,6 +190,7 @@ Option      | Type              | Default                | Description
 `arrowStyle` | object           | {}                     | Passed through to `Popover`
 `popoverStyle` | object           | {}                   | Passed through to `Popover`
 `animationConfig` | object           |                   | Passed through to `Popover`
+`verticalOffset` | number           | 0                 | Passed through to `Popover`
 
 Note: If you pass a value through the `stackConfig`, and pass the same option for an individual screen, the value passed for the screen overrides.
 
