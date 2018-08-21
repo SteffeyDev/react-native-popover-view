@@ -1,6 +1,6 @@
 {
   "name": "react-native-popover-view",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A <Popover /> component for react-native",
   "main": "src/index.js",
   "author": "Peter Steffey <steffeydev@icloud.com> (https://github.com/steffeydev)",

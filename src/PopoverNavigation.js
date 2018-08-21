@@ -41,7 +41,7 @@ export default class PopoverNavigation extends Component {
 
   render() {
     const child = React.cloneElement(this.props.children, {goBack: () => this.goBack()});
-    const { contentContainerStyle, popoverStyle, arrowStyle, placement, showInModal, layoutRtl, showBackground, getRegisteredView, displayArea, showInPopover, backgroundColor, animationConfig } = this.props;
+    const { contentContainerStyle, popoverStyle, arrowStyle, placement, showInModal, layoutRtl, showBackground, getRegisteredView, displayArea, showInPopover, backgroundColor, animationConfig, verticalOffset } = this.props;
 
     if (showInPopover) {
       return (
@@ -57,6 +57,7 @@ export default class PopoverNavigation extends Component {
           onClose={() => this.goBack()}
           displayArea={displayArea || this.getParam('displayArea')}
           doneClosingCallback={() => this.props.children.props.navigation.goBack()}
+          verticalOffset={verticalOffset}
           fromView={getRegisteredView() || this.getParam('showFromView')}
           calculateRect={this.getParam('calculateRect')}
           fromRect={this.getParam('fromRect')}>
@@ -87,5 +88,6 @@ PopoverNavigation.propTypes = {
   showInPopover: PropTypes.bool,
   popoverStyle: PropTypes.object,
   arrowStyle: PropTypes.object,
-  animationConfig: PropTypes.object
+  animationConfig: PropTypes.object,
+  verticalOffset: PropTypes.number
 }

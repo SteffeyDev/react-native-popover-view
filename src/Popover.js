@@ -43,7 +43,8 @@ class Popover extends React.Component {
         translate: new Animated.ValueXY(),
         fade: new Animated.Value(0),
         translateArrow: new Animated.ValueXY()
-      }
+      },
+      viewport: null
     };
 
     this.measureContent = this.measureContent.bind(this);
@@ -60,624 +61,631 @@ class Popover extends React.Component {
     this.safeAreaViewReady = true;
   }
 
-    keyboardDidShow(e) {
-      this.shiftForKeyboard(e.endCoordinates.height);
-    }
+  keyboardDidShow(e) {
+    this.shiftForKeyboard(e.endCoordinates.height);
+  }
 
-    keyboardDidHide() {
-      this.setState({shiftedDisplayArea: null}, () => this.handleGeomChange({displayArea: this.getDisplayArea()}));
-    }
+  keyboardDidHide() {
+    this.setState({shiftedDisplayArea: null}, () => this.handleGeomChange({displayArea: this.getDisplayArea()}));
+  }
 
-    shiftForKeyboard(keyboardHeight) {
-      const displayArea = this.getDisplayArea();
+  shiftForKeyboard(keyboardHeight) {
+    const displayArea = this.getDisplayArea();
 
-      const absoluteVerticalCutoff = Dimensions.get('window').height - keyboardHeight - (isIOS() ? 10 : 40);
-      const combinedY = Math.min(displayArea.height + displayArea.y, absoluteVerticalCutoff);
+    const absoluteVerticalCutoff = Dimensions.get('window').height - keyboardHeight - (isIOS() ? 10 : 40);
+    const combinedY = Math.min(displayArea.height + displayArea.y, absoluteVerticalCutoff);
 
-      this.setState({shiftedDisplayArea: {
-        x: displayArea.x,
-        y: displayArea.y,
-        width: displayArea.width,
-        height: combinedY - displayArea.y
-      }}, () => this.handleGeomChange({displayArea: this.state.shiftedDisplayArea}));
-    }
+    this.setState({shiftedDisplayArea: {
+      x: displayArea.x,
+      y: displayArea.y,
+      width: displayArea.width,
+      height: combinedY - displayArea.y
+    }}, () => this.handleGeomChange({displayArea: this.state.shiftedDisplayArea}));
+  }
 
-    componentDidMount() {
+  componentDidMount() {
 
-      // I found that the RN SafeAreaView doesn't actually tell you the safe area until the second layout,
-      //  so we don't want to rely on it to give us an accurate display area until it's figured that out
-      this.safeAreaViewReady = false;
-      // Show popover if isVisible is initially true
-      if (this.props.isVisible)
-        setTimeout(() => this.calculateRect(this.props, fromRect => (fromRect || !this.props.fromView) && this.setState({fromRect, isAwaitingShow: true, visible: true})), 0);
-    }
+    // I found that the RN SafeAreaView doesn't actually tell you the safe area until the second layout,
+    //  so we don't want to rely on it to give us an accurate display area until it's figured that out
+    this.safeAreaViewReady = false;
 
-    componentWillUnmount() {
-      if (this.state.visible)
-        this.animateOut();
-    }
+    // Show popover if isVisible is initially true
+    if (this.props.isVisible)
+      setTimeout(() => this.calculateRect(this.props, fromRect => (fromRect || !this.props.fromView) && this.setState({fromRect, isAwaitingShow: true, visible: true})), 0);
 
-    measureContent(requestedContentSize) {
-      if (requestedContentSize.width && requestedContentSize.height) {
-        if (this.state.isAwaitingShow) {
-          if ((this.props.fromView && !this.state.fromRect) || !this.getDisplayArea() || !this.safeAreaViewReady) {
-            setTimeout(() => this.measureContent(requestedContentSize), 100);
-          } else {
-            let geom = this.computeGeometry({requestedContentSize});
-            this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), this.animateIn);
-          }
-        } else if (requestedContentSize.width !== this.state.requestedContentSize.width || requestedContentSize.height !== this.state.requestedContentSize.height) {
-          this.handleGeomChange({requestedContentSize});
+    Dimensions.addEventListener('change', this.handleResizeEvent)
+  }
+
+  componentWillUnmount() {
+    if (this.state.visible)
+      this.animateOut();
+
+    Dimensions.removeEventListener('change', this.handleResizeEvent)
+  }
+
+  handleResizeEvent = (event) => this.setState({viewport: event.window});
+
+  measureContent(requestedContentSize) {
+    if (requestedContentSize.width && requestedContentSize.height) {
+      if (this.state.isAwaitingShow) {
+        if ((this.props.fromView && !this.state.fromRect) || !this.getDisplayArea() || !this.safeAreaViewReady) {
+          setTimeout(() => this.measureContent(requestedContentSize), 100);
+        } else {
+          let geom = this.computeGeometry({requestedContentSize});
+          this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), this.animateIn);
         }
+      } else if (requestedContentSize.width !== this.state.requestedContentSize.width || requestedContentSize.height !== this.state.requestedContentSize.height) {
+        this.handleGeomChange({requestedContentSize});
       }
     }
+  }
 
-    computeGeometry({requestedContentSize, placement, fromRect, displayArea}) {
-        placement = placement || this.props.placement;
-        fromRect = fromRect || Object.assign({}, this.props.fromRect || this.state.fromRect);
-        displayArea = displayArea || Object.assign({}, this.getDisplayArea());
+  computeGeometry({requestedContentSize, placement, fromRect, displayArea}) {
+      placement = placement || this.props.placement;
+      fromRect = fromRect || Object.assign({}, this.props.fromRect || this.state.fromRect);
+      displayArea = displayArea || Object.assign({}, this.getDisplayArea());
 
-        if (fromRect && isRect(fromRect)) {
-          //check to see if fromRect is outside of displayArea, and adjust if it is
-          if (fromRect.x > displayArea.x + displayArea.width) fromRect.x = displayArea.x + displayArea.width;
-          if (fromRect.y > displayArea.y + displayArea.height) fromRect.y = displayArea.y + displayArea.height;
-          if (fromRect.x < 0) fromRect.x = -1 * fromRect.width;
-          if (fromRect.y < 0) fromRect.y = -1 * fromRect.height;
+      if (fromRect && isRect(fromRect)) {
+        //check to see if fromRect is outside of displayArea, and adjust if it is
+        if (fromRect.x > displayArea.x + displayArea.width) fromRect.x = displayArea.x + displayArea.width;
+        if (fromRect.y > displayArea.y + displayArea.height) fromRect.y = displayArea.y + displayArea.height;
+        if (fromRect.x < 0) fromRect.x = -1 * fromRect.width;
+        if (fromRect.y < 0) fromRect.y = -1 * fromRect.height;
 
-          var options = {
-              displayArea,
-              fromRect,
-              requestedContentSize
-          }
-
-          switch (placement) {
-            case PLACEMENT_OPTIONS.TOP:
-                return this.computeTopGeometry(options);
-            case PLACEMENT_OPTIONS.BOTTOM:
-                return this.computeBottomGeometry(options);
-            case PLACEMENT_OPTIONS.LEFT:
-                return this.computeLeftGeometry(options);
-            case PLACEMENT_OPTIONS.RIGHT:
-                return this.computeRightGeometry(options);
-            default:
-                return this.computeAutoGeometry(options);
-          }
-        } else {
-          const minY = displayArea.y;
-          const minX = displayArea.x;
-          const preferedY = (displayArea.height - requestedContentSize.height)/2 + displayArea.y;
-          const preferedX = (displayArea.width - requestedContentSize.width)/2 + displayArea.x;
-
-          return {
-            popoverOrigin: new Point(Math.max(minX, preferedX), Math.max(minY, preferedY)),
-            anchorPoint: new Point(displayArea.width/2 + displayArea.x, displayArea.height/2 + displayArea.y),
-            forcedContentSize: {
-              width: preferedX < minX ? displayArea.width : null,
-              height: preferedY < minY ? displayArea.height : null
-            }
-          }
-        }
-    }
-
-    computeTopGeometry({displayArea, fromRect, requestedContentSize}) {
-        const { popoverStyle } = this.props;
-        let minY = displayArea.y;
-        const arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.TOP);
-        let preferedY = fromRect.y - requestedContentSize.height - arrowSize.height;
-
-        let forcedContentSize = {
-          height: preferedY <= minY ? (fromRect.y - arrowSize.height - displayArea.y) : null,
-          width: requestedContentSize.width >= displayArea.width ? displayArea.width : null
+        var options = {
+            displayArea,
+            fromRect,
+            requestedContentSize
         }
 
-        let viewWidth = forcedContentSize.width || requestedContentSize.width;
-
-        let maxX = displayArea.x + displayArea.width - viewWidth;
-        let minX = displayArea.x;
-        let preferedX = fromRect.x + (fromRect.width - viewWidth) / 2;
-
-        var popoverOrigin = new Point(
-            Math.min(maxX, Math.max(minX, preferedX)),
-            Math.max(minY, preferedY)
-        );
-
-        var anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y);
-
-        // Make sure the arrow isn't cut off
-        anchorPoint.x = Math.max(anchorPoint.x, arrowSize.width / 2 + this.getBorderRadius());
-        anchorPoint.x = Math.min(anchorPoint.x, displayArea.x + displayArea.width - (arrowSize.width / 2) - this.getBorderRadius());
-
-        return {
-            popoverOrigin,
-            anchorPoint,
-            placement: PLACEMENT_OPTIONS.TOP,
-            forcedContentSize
-        }
-    }
-
-    computeBottomGeometry({displayArea, fromRect, requestedContentSize}) {
-        const { popoverStyle } = this.props;
-        const arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.BOTTOM);
-        let preferedY = fromRect.y + fromRect.height + arrowSize.height;
-
-        let forcedContentSize = {
-          height: preferedY + requestedContentSize.height >= displayArea.y + displayArea.height ? displayArea.y + displayArea.height - preferedY : null,
-          width: requestedContentSize.width >= displayArea.width ? displayArea.width : null
-        }
-
-        let viewWidth = forcedContentSize.width || requestedContentSize.width;
-
-        let maxX = displayArea.x + displayArea.width - viewWidth;
-        let minX = displayArea.x;
-        let preferedX = fromRect.x + (fromRect.width - viewWidth) / 2;
-
-        var popoverOrigin = new Point(
-            Math.min(maxX, Math.max(minX, preferedX)),
-            preferedY
-        );
-
-        var anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y + fromRect.height);
-
-        // Make sure the arrow isn't cut off
-        anchorPoint.x = Math.max(anchorPoint.x, arrowSize.width / 2 + this.getBorderRadius());
-        anchorPoint.x = Math.min(anchorPoint.x, displayArea.x + displayArea.width - (arrowSize.width / 2) - this.getBorderRadius());
-
-        return {
-            popoverOrigin,
-            anchorPoint,
-            placement: PLACEMENT_OPTIONS.BOTTOM,
-            forcedContentSize
-        }
-    }
-
-    getPolarity () {
-        return this.props.layoutRtl ? -1 : 1;
-    }
-
-    computeLeftGeometry({displayArea, fromRect, requestedContentSize}) {
-        const { popoverStyle } = this.props;
-        const arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.LEFT);
-        let forcedContentSize = {
-          height: requestedContentSize.height >= displayArea.height ? displayArea.height : null,
-          width: requestedContentSize.width >= fromRect.x - displayArea.x - arrowSize.width ? fromRect.x - displayArea.x - arrowSize.width : null
-        }
-
-        let viewWidth = forcedContentSize.width || requestedContentSize.width;
-        let viewHeight = forcedContentSize.height || requestedContentSize.height;
-
-        let preferedX = fromRect.x - viewWidth - arrowSize.width;
-
-        let preferedY = fromRect.y + (fromRect.height - viewHeight) / 2;
-        let minY = displayArea.y;
-        let maxY = (displayArea.height - viewHeight) + displayArea.y;
-
-        var popoverOrigin = new Point(
-            preferedX,
-            Math.min(Math.max(minY, preferedY), maxY)
-        );
-
-        var anchorPoint = new Point(fromRect.x, fromRect.y + fromRect.height / 2.0);
-
-        // Make sure the arrow isn't cut off
-        anchorPoint.y = Math.max(anchorPoint.y, arrowSize.height / 2 + this.getBorderRadius());
-        anchorPoint.y = Math.min(anchorPoint.y, displayArea.y + displayArea.height - (arrowSize.height / 2) - this.getBorderRadius());
-
-        return {
-            popoverOrigin,
-            anchorPoint,
-            placement: PLACEMENT_OPTIONS.LEFT,
-            forcedContentSize
-        }
-    }
-
-    computeRightGeometry({displayArea, fromRect, requestedContentSize}) {
-        const { popoverStyle } = this.props;
-        const arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.RIGHT);
-        let horizontalSpace = displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width;
-        let forcedContentSize = {
-          height: requestedContentSize.height >= displayArea.height ? displayArea.height : null,
-          width: requestedContentSize.width >= horizontalSpace ? horizontalSpace : null
-        }
-
-        let viewHeight = forcedContentSize.height || requestedContentSize.height;
-
-        let preferedX = fromRect.x + fromRect.width + arrowSize.width;
-
-        let preferedY = fromRect.y + (fromRect.height - viewHeight) / 2;
-        let minY = displayArea.y;
-        let maxY = (displayArea.height - viewHeight) + displayArea.y;
-
-        var popoverOrigin = new Point(
-            preferedX,
-            Math.min(Math.max(minY, preferedY), maxY)
-        );
-
-        var anchorPoint = new Point(fromRect.x + fromRect.width, fromRect.y + fromRect.height / 2.0);
-
-        // Make sure the arrow isn't cut off
-        anchorPoint.y = Math.max(anchorPoint.y, arrowSize.height / 2 + this.getBorderRadius());
-        anchorPoint.y = Math.min(anchorPoint.y, displayArea.y + displayArea.height - (arrowSize.height / 2) - this.getBorderRadius());
-
-        return {
-            popoverOrigin,
-            anchorPoint,
-            placement: PLACEMENT_OPTIONS.RIGHT,
-            forcedContentSize
-        }
-    }
-
-    computeAutoGeometry({displayArea, requestedContentSize, fromRect}) {
-        let arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.LEFT);
-        let possiblePlacements = [];
-        if (fromRect.x - displayArea.x - arrowSize.width >= requestedContentSize.width) { // We could fit it on the left side
-            possiblePlacements.push(PLACEMENT_OPTIONS.LEFT)
-            return this.computeGeometry({requestedContentSize, placement: PLACEMENT_OPTIONS.LEFT, fromRect, displayArea});
-        }
-        if (displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width >= requestedContentSize.width) // We could fit it on the right side
-            possiblePlacements.push(PLACEMENT_OPTIONS.RIGHT)
-
-        arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.TOP);
-
-        // Keep same placement if possible
-        if (possiblePlacements.length === 2 && this.state.placement !== PLACEMENT_OPTIONS.AUTO && possiblePlacements.indexOf(this.state.placement) !== -1) {
-            return this.computeGeometry({requestedContentSize, placement: this.state.placement, fromRect, displayArea});
-        } else if (possiblePlacements.length === 1) {
-            return this.computeGeometry({requestedContentSize, placement: possiblePlacements[0], fromRect, displayArea});
-        } else {
-          if (this.state.placement === PLACEMENT_OPTIONS.TOP || this.state.placement === PLACEMENT_OPTIONS.BOTTOM)
-            return this.computeGeometry({requestedContentSize, placement: this.state.placement, fromRect, displayArea});
-
-          // We could fit it on the top or bottom, need to figure out which is better
-          else {
-            let topSpace = fromRect.y - displayArea.y;
-            let bottomSpace = displayArea.y + displayArea.height - (fromRect.y + fromRect.height);
-            return (topSpace - 50) > bottomSpace ? this.computeGeometry({requestedContentSize, placement: PLACEMENT_OPTIONS.TOP, fromRect, displayArea}) : this.computeGeometry({requestedContentSize, placement: PLACEMENT_OPTIONS.BOTTOM, fromRect, displayArea});
-          }
-        }
-    }
-
-    getArrowSize(placement) {
-        var size = new Size(this.props.arrowStyle.width || DEFAULT_ARROW_SIZE.width, this.props.arrowStyle.height || DEFAULT_ARROW_SIZE.height);
-        switch(placement) {
-            case PLACEMENT_OPTIONS.LEFT:
-            case PLACEMENT_OPTIONS.RIGHT:
-                return new Size(size.height, size.width);
-            default:
-                return size;
-        }
-    }
-
-    getArrowRotation(placement) {
         switch (placement) {
-            case PLACEMENT_OPTIONS.BOTTOM:
-                return '180deg';
-            case PLACEMENT_OPTIONS.LEFT:
-                return (this.getPolarity() * -90) + 'deg';
-            case PLACEMENT_OPTIONS.RIGHT:
-                return this.getPolarity() * 90 + 'deg';
-            default:
-                return '0deg';
+          case PLACEMENT_OPTIONS.TOP:
+              return this.computeTopGeometry(options);
+          case PLACEMENT_OPTIONS.BOTTOM:
+              return this.computeBottomGeometry(options);
+          case PLACEMENT_OPTIONS.LEFT:
+              return this.computeLeftGeometry(options);
+          case PLACEMENT_OPTIONS.RIGHT:
+              return this.computeRightGeometry(options);
+          default:
+              return this.computeAutoGeometry(options);
         }
-    }
+      } else {
+        const minY = displayArea.y;
+        const minX = displayArea.x;
+        const preferedY = (displayArea.height - requestedContentSize.height)/2 + displayArea.y;
+        const preferedX = (displayArea.width - requestedContentSize.width)/2 + displayArea.x;
 
-    getArrowDynamicStyle() {
-        const { anchorPoint, popoverOrigin, placement } = this.state;
-        const { arrowWidth: width, arrowHeight: height } = this.getCalculatedArrowDims();
-
-        // Create the arrow from a rectangle with the appropriate borderXWidth set
-        // A rotation is then applied dependending on the placement
-        // Also make it slightly bigger
-        // to fix a visual artifact when the popover is animated with a scale
         return {
-            width: width,
-            height: height,
-            borderTopWidth: height / 2,
-            borderRightWidth: width / 2,
-            borderBottomWidth: height / 2,
-            borderLeftWidth: width / 2,
+          popoverOrigin: new Point(Math.max(minX, preferedX), Math.max(minY, preferedY)),
+          anchorPoint: new Point(displayArea.width/2 + displayArea.x, displayArea.height/2 + displayArea.y),
+          forcedContentSize: {
+            width: preferedX < minX ? displayArea.width : null,
+            height: preferedY < minY ? displayArea.height : null
+          }
         }
-    }
+      }
+  }
 
-    getCalculatedArrowDims() {
-      const { arrowStyle } = this.props;
-      const arrowWidth = (arrowStyle.width || DEFAULT_ARROW_SIZE.width) + 2;
-      const arrowHeight = (arrowStyle.height || DEFAULT_ARROW_SIZE.height) * 2 + 2;
-      return {arrowWidth, arrowHeight};
-    }
-
-    getBorderRadius() {
-      if (this.props.popoverStyle.borderRadius === 0) return 0;
-      return this.props.popoverStyle.borderRadius || DEFAULT_BORDER_RADIUS;
-    }
-
-    getArrowTranslateLocation(translatePoint = null) {
-      const { anchorPoint, placement, forcedContentSize, requestedContentSize } = this.state;
-      const { arrowWidth, arrowHeight } = this.getCalculatedArrowDims();
+  computeTopGeometry({displayArea, fromRect, requestedContentSize}) {
       const { popoverStyle } = this.props;
+      let minY = displayArea.y;
+      const arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.TOP);
+      let preferedY = fromRect.y - requestedContentSize.height - arrowSize.height;
+
+      let forcedContentSize = {
+        height: preferedY <= minY ? (fromRect.y - arrowSize.height - displayArea.y) : null,
+        width: requestedContentSize.width >= displayArea.width ? displayArea.width : null
+      }
+
+      let viewWidth = forcedContentSize.width || requestedContentSize.width;
+
+      let maxX = displayArea.x + displayArea.width - viewWidth;
+      let minX = displayArea.x;
+      let preferedX = fromRect.x + (fromRect.width - viewWidth) / 2;
+
+      var popoverOrigin = new Point(
+          Math.min(maxX, Math.max(minX, preferedX)),
+          Math.max(minY, preferedY)
+      );
+
+      var anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y);
+
+      // Make sure the arrow isn't cut off
+      anchorPoint.x = Math.max(anchorPoint.x, arrowSize.width / 2 + this.getBorderRadius());
+      anchorPoint.x = Math.min(anchorPoint.x, displayArea.x + displayArea.width - (arrowSize.width / 2) - this.getBorderRadius());
+
+      return {
+          popoverOrigin,
+          anchorPoint,
+          placement: PLACEMENT_OPTIONS.TOP,
+          forcedContentSize
+      }
+  }
+
+  computeBottomGeometry({displayArea, fromRect, requestedContentSize}) {
+      const { popoverStyle } = this.props;
+      const arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.BOTTOM);
+      let preferedY = fromRect.y + fromRect.height + arrowSize.height;
+
+      let forcedContentSize = {
+        height: preferedY + requestedContentSize.height >= displayArea.y + displayArea.height ? displayArea.y + displayArea.height - preferedY : null,
+        width: requestedContentSize.width >= displayArea.width ? displayArea.width : null
+      }
+
+      let viewWidth = forcedContentSize.width || requestedContentSize.width;
+
+      let maxX = displayArea.x + displayArea.width - viewWidth;
+      let minX = displayArea.x;
+      let preferedX = fromRect.x + (fromRect.width - viewWidth) / 2;
+
+      var popoverOrigin = new Point(
+          Math.min(maxX, Math.max(minX, preferedX)),
+          preferedY
+      );
+
+      var anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y + fromRect.height);
+
+      // Make sure the arrow isn't cut off
+      anchorPoint.x = Math.max(anchorPoint.x, arrowSize.width / 2 + this.getBorderRadius());
+      anchorPoint.x = Math.min(anchorPoint.x, displayArea.x + displayArea.width - (arrowSize.width / 2) - this.getBorderRadius());
+
+      return {
+          popoverOrigin,
+          anchorPoint,
+          placement: PLACEMENT_OPTIONS.BOTTOM,
+          forcedContentSize
+      }
+  }
+
+  getPolarity () {
+      return this.props.layoutRtl ? -1 : 1;
+  }
+
+  computeLeftGeometry({displayArea, fromRect, requestedContentSize}) {
+      const { popoverStyle } = this.props;
+      const arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.LEFT);
+      let forcedContentSize = {
+        height: requestedContentSize.height >= displayArea.height ? displayArea.height : null,
+        width: requestedContentSize.width >= fromRect.x - displayArea.x - arrowSize.width ? fromRect.x - displayArea.x - arrowSize.width : null
+      }
+
+      let viewWidth = forcedContentSize.width || requestedContentSize.width;
+      let viewHeight = forcedContentSize.height || requestedContentSize.height;
+
+      let preferedX = fromRect.x - viewWidth - arrowSize.width;
+
+      let preferedY = fromRect.y + (fromRect.height - viewHeight) / 2;
+      let minY = displayArea.y;
+      let maxY = (displayArea.height - viewHeight) + displayArea.y;
+
+      var popoverOrigin = new Point(
+          preferedX,
+          Math.min(Math.max(minY, preferedY), maxY)
+      );
+
+      var anchorPoint = new Point(fromRect.x, fromRect.y + fromRect.height / 2.0);
+
+      // Make sure the arrow isn't cut off
+      anchorPoint.y = Math.max(anchorPoint.y, arrowSize.height / 2 + this.getBorderRadius());
+      anchorPoint.y = Math.min(anchorPoint.y, displayArea.y + displayArea.height - (arrowSize.height / 2) - this.getBorderRadius());
+
+      return {
+          popoverOrigin,
+          anchorPoint,
+          placement: PLACEMENT_OPTIONS.LEFT,
+          forcedContentSize
+      }
+  }
+
+  computeRightGeometry({displayArea, fromRect, requestedContentSize}) {
+      const { popoverStyle } = this.props;
+      const arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.RIGHT);
+      let horizontalSpace = displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width;
+      let forcedContentSize = {
+        height: requestedContentSize.height >= displayArea.height ? displayArea.height : null,
+        width: requestedContentSize.width >= horizontalSpace ? horizontalSpace : null
+      }
+
+      let viewHeight = forcedContentSize.height || requestedContentSize.height;
+
+      let preferedX = fromRect.x + fromRect.width + arrowSize.width;
+
+      let preferedY = fromRect.y + (fromRect.height - viewHeight) / 2;
+      let minY = displayArea.y;
+      let maxY = (displayArea.height - viewHeight) + displayArea.y;
+
+      var popoverOrigin = new Point(
+          preferedX,
+          Math.min(Math.max(minY, preferedY), maxY)
+      );
+
+      var anchorPoint = new Point(fromRect.x + fromRect.width, fromRect.y + fromRect.height / 2.0);
+
+      // Make sure the arrow isn't cut off
+      anchorPoint.y = Math.max(anchorPoint.y, arrowSize.height / 2 + this.getBorderRadius());
+      anchorPoint.y = Math.min(anchorPoint.y, displayArea.y + displayArea.height - (arrowSize.height / 2) - this.getBorderRadius());
+
+      return {
+          popoverOrigin,
+          anchorPoint,
+          placement: PLACEMENT_OPTIONS.RIGHT,
+          forcedContentSize
+      }
+  }
+
+  computeAutoGeometry({displayArea, requestedContentSize, fromRect}) {
+      let arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.LEFT);
+      let possiblePlacements = [];
+      if (fromRect.x - displayArea.x - arrowSize.width >= requestedContentSize.width) { // We could fit it on the left side
+          possiblePlacements.push(PLACEMENT_OPTIONS.LEFT)
+          return this.computeGeometry({requestedContentSize, placement: PLACEMENT_OPTIONS.LEFT, fromRect, displayArea});
+      }
+      if (displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width >= requestedContentSize.width) // We could fit it on the right side
+          possiblePlacements.push(PLACEMENT_OPTIONS.RIGHT)
+
+      arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.TOP);
+
+      // Keep same placement if possible
+      if (possiblePlacements.length === 2 && this.state.placement !== PLACEMENT_OPTIONS.AUTO && possiblePlacements.indexOf(this.state.placement) !== -1) {
+          return this.computeGeometry({requestedContentSize, placement: this.state.placement, fromRect, displayArea});
+      } else if (possiblePlacements.length === 1) {
+          return this.computeGeometry({requestedContentSize, placement: possiblePlacements[0], fromRect, displayArea});
+      } else {
+        if (this.state.placement === PLACEMENT_OPTIONS.TOP || this.state.placement === PLACEMENT_OPTIONS.BOTTOM)
+          return this.computeGeometry({requestedContentSize, placement: this.state.placement, fromRect, displayArea});
+
+        // We could fit it on the top or bottom, need to figure out which is better
+        else {
+          let topSpace = fromRect.y - displayArea.y;
+          let bottomSpace = displayArea.y + displayArea.height - (fromRect.y + fromRect.height);
+          return (topSpace - 50) > bottomSpace ? this.computeGeometry({requestedContentSize, placement: PLACEMENT_OPTIONS.TOP, fromRect, displayArea}) : this.computeGeometry({requestedContentSize, placement: PLACEMENT_OPTIONS.BOTTOM, fromRect, displayArea});
+        }
+      }
+  }
+
+  getArrowSize(placement) {
+      var size = new Size(this.props.arrowStyle.width || DEFAULT_ARROW_SIZE.width, this.props.arrowStyle.height || DEFAULT_ARROW_SIZE.height);
+      switch(placement) {
+          case PLACEMENT_OPTIONS.LEFT:
+          case PLACEMENT_OPTIONS.RIGHT:
+              return new Size(size.height, size.width);
+          default:
+              return size;
+      }
+  }
+
+  getArrowRotation(placement) {
+      switch (placement) {
+          case PLACEMENT_OPTIONS.BOTTOM:
+              return '180deg';
+          case PLACEMENT_OPTIONS.LEFT:
+              return (this.getPolarity() * -90) + 'deg';
+          case PLACEMENT_OPTIONS.RIGHT:
+              return this.getPolarity() * 90 + 'deg';
+          default:
+              return '0deg';
+      }
+  }
+
+  getArrowDynamicStyle() {
+      const { anchorPoint, popoverOrigin, placement } = this.state;
+      const { arrowWidth: width, arrowHeight: height } = this.getCalculatedArrowDims();
+
+      // Create the arrow from a rectangle with the appropriate borderXWidth set
+      // A rotation is then applied dependending on the placement
+      // Also make it slightly bigger
+      // to fix a visual artifact when the popover is animated with a scale
+      return {
+          width: width,
+          height: height,
+          borderTopWidth: height / 2,
+          borderRightWidth: width / 2,
+          borderBottomWidth: height / 2,
+          borderLeftWidth: width / 2,
+      }
+  }
+
+  getCalculatedArrowDims() {
+    const { arrowStyle } = this.props;
+    const arrowWidth = (arrowStyle.width || DEFAULT_ARROW_SIZE.width) + 2;
+    const arrowHeight = (arrowStyle.height || DEFAULT_ARROW_SIZE.height) * 2 + 2;
+    return {arrowWidth, arrowHeight};
+  }
+
+  getBorderRadius() {
+    if (this.props.popoverStyle.borderRadius === 0) return 0;
+    return this.props.popoverStyle.borderRadius || DEFAULT_BORDER_RADIUS;
+  }
+
+  getArrowTranslateLocation(translatePoint = null) {
+    const { anchorPoint, placement, forcedContentSize, requestedContentSize } = this.state;
+    const { arrowWidth, arrowHeight } = this.getCalculatedArrowDims();
+    const { popoverStyle } = this.props;
+    const viewWidth = forcedContentSize.width || requestedContentSize.width || 0;
+    const viewHeight = forcedContentSize.height || requestedContentSize.height || 0;
+
+    let arrowX = anchorPoint.x - arrowWidth / 2;
+    let arrowY = anchorPoint.y - arrowHeight / 2;
+
+    // Ensuring that the arrow does not go outside the bounds of the content box during a move
+    if (translatePoint) {
+      if (placement === PLACEMENT_OPTIONS.LEFT || placement === PLACEMENT_OPTIONS.RIGHT) {
+        if (translatePoint.y > (arrowY - this.getBorderRadius()))
+          arrowY = translatePoint.y + this.getBorderRadius()
+        else if (viewHeight && translatePoint.y + viewHeight < arrowY + arrowHeight)
+          arrowY = translatePoint.y + viewHeight - arrowHeight - this.getBorderRadius()
+      } else if (placement === PLACEMENT_OPTIONS.TOP || placement === PLACEMENT_OPTIONS.BOTTOM) {
+        if (translatePoint.x > arrowX - this.getBorderRadius())
+          arrowX = translatePoint.x + this.getBorderRadius()
+        else if (viewWidth && translatePoint.x + viewWidth < arrowX + arrowWidth)
+          arrowX = translatePoint.x + viewWidth - arrowWidth - this.getBorderRadius()
+      }
+    }
+    return new Point(FIX_SHIFT /* Temp fix for useNativeDriver issue */ + arrowX, arrowY);
+  }
+
+  getTranslateOrigin() {
+      const {forcedContentSize, requestedContentSize, popoverOrigin, anchorPoint} = this.state;
+
       const viewWidth = forcedContentSize.width || requestedContentSize.width || 0;
       const viewHeight = forcedContentSize.height || requestedContentSize.height || 0;
+      const popoverCenter = new Point(popoverOrigin.x + (viewWidth / 2),
+          popoverOrigin.y + (viewHeight / 2));
+      const shiftHorizantal = anchorPoint.x - popoverCenter.x;
+      const shiftVertical = anchorPoint.y - popoverCenter.y;
+      return new Point(popoverOrigin.x + shiftHorizantal, popoverOrigin.y + shiftVertical);
+  }
 
-      let arrowX = anchorPoint.x - arrowWidth / 2;
-      let arrowY = anchorPoint.y - arrowHeight / 2;
+  getDisplayArea() {
+    return this.state.shiftedDisplayArea || this.props.displayArea || this.state.defaultDisplayArea;
+  }
 
-      // Ensuring that the arrow does not go outside the bounds of the content box during a move
-      if (translatePoint) {
-        if (placement === PLACEMENT_OPTIONS.LEFT || placement === PLACEMENT_OPTIONS.RIGHT) {
-          if (translatePoint.y > (arrowY - this.getBorderRadius()))
-            arrowY = translatePoint.y + this.getBorderRadius()
-          else if (viewHeight && translatePoint.y + viewHeight < arrowY + arrowHeight)
-            arrowY = translatePoint.y + viewHeight - arrowHeight - this.getBorderRadius()
-        } else if (placement === PLACEMENT_OPTIONS.TOP || placement === PLACEMENT_OPTIONS.BOTTOM) {
-          if (translatePoint.x > arrowX - this.getBorderRadius())
-            arrowX = translatePoint.x + this.getBorderRadius()
-          else if (viewWidth && translatePoint.x + viewWidth < arrowX + arrowWidth)
-            arrowX = translatePoint.x + viewWidth - arrowWidth - this.getBorderRadius()
-        }
-      }
-      return new Point(FIX_SHIFT /* Temp fix for useNativeDriver issue */ + arrowX, arrowY);
-    }
+  componentWillReceiveProps(nextProps:any) {
+      let willBeVisible = nextProps.isVisible;
+      let {
+          isVisible,
+          displayArea
+      } = this.props;
 
-    getTranslateOrigin() {
-        const {forcedContentSize, requestedContentSize, popoverOrigin, anchorPoint} = this.state;
-
-        const viewWidth = forcedContentSize.width || requestedContentSize.width || 0;
-        const viewHeight = forcedContentSize.height || requestedContentSize.height || 0;
-        const popoverCenter = new Point(popoverOrigin.x + (viewWidth / 2),
-            popoverOrigin.y + (viewHeight / 2));
-        const shiftHorizantal = anchorPoint.x - popoverCenter.x;
-        const shiftVertical = anchorPoint.y - popoverCenter.y;
-        return new Point(popoverOrigin.x + shiftHorizantal, popoverOrigin.y + shiftVertical);
-    }
-
-    getDisplayArea() {
-      return this.state.shiftedDisplayArea || this.props.displayArea || this.state.defaultDisplayArea;
-    }
-
-    componentWillReceiveProps(nextProps:any) {
-        let willBeVisible = nextProps.isVisible;
-        let {
-            isVisible,
-            displayArea
-        } = this.props;
-
-        if (willBeVisible !== isVisible) {
-            if (willBeVisible) {
-              // We want to start the show animation only when contentSize is known
-              // so that we can have some logic depending on the geometry
-              this.calculateRect(nextProps, fromRect => this.setState({fromRect, isAwaitingShow: true, visible: true}));
-            } else {
-                this.animateOut();
-            }
-        } else if (willBeVisible) {
-          this.calculateRect(nextProps, fromRect => {
-            if (rectChanged(fromRect, this.state.fromRect)
-                || (nextProps.displayArea && !this.props.displayArea)
-                || rectChanged(nextProps.displayArea, this.props.displayArea)
-                || rectChanged(this.getDisplayArea(), this.displayAreaStore)) {
-                this.displayAreaStore = this.getDisplayArea();
-                this.setState({fromRect}, () => this.handleGeomChange(Object.assign({}, nextProps, {fromRect})))
-              }
-          })
-        }
-    }
-
-    calculateRect(props, callback) {
-      let initialRect = this.state.fromRect || new Rect(0, 0, 0, 0);
-      if (props.calculateRect)
-        runAfterChange(callback_ => callback_(props.calculateRect(newDisplayArea.width, newDisplayArea.height)), initialRect, () => {
-          callback({fromRect: props.calculateRect(newDisplayArea.width, newDisplayArea.height)});
-        });
-      else if (props.fromView)
-        waitForNewRect(props.fromView, initialRect, callback, this.props.verticalOffset);
-      else
-        callback(props.fromRect);
-    }
-
-    handleGeomChange({displayArea, fromRect, requestedContentSize}) {
-      const { forcedContentSize, placement, anchorPoint, popoverOrigin, animatedValues } = this.state;
-      requestedContentSize = requestedContentSize || Object.assign({}, this.state.requestedContentSize);
-
-      let geom = this.computeGeometry({requestedContentSize, displayArea, fromRect});
-
-      if (pointChanged(geom.popoverOrigin, popoverOrigin)) {
-        this.setState(Object.assign(geom, {requestedContentSize}), () => {
-          this.animateTo({
-            values: animatedValues,
-            fade: 1,
-            scale: 1,
-            translatePoint: new Point(geom.popoverOrigin.x, geom.popoverOrigin.y),
-            easing: Easing.inOut(Easing.quad)
-          });
-        });
-      }
-    }
-
-    animateOut() {
-      this.keyboardDidShowListener && this.keyboardDidShowListener.remove();
-      this.keyboardDidHideListener && this.keyboardDidHideListener.remove();
-      this.safeAreaViewReady = false;
-      this.setState({shiftedDisplayArea: null});
-      this.animateTo({
-        values: this.state.animatedValues,
-        fade: 0,
-        scale: 0,
-        translatePoint: this.getTranslateOrigin(),
-        callback: () => this.setState({visible: false, forcedContentSize: {}}, () => this.props.doneClosingCallback()),
-        easing: Easing.inOut(Easing.quad)
-      });
-    }
-
-    animateIn() {
-      var values = this.state.animatedValues;
-
-      this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', this.keyboardDidShow.bind(this));
-      this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', this.keyboardDidHide.bind(this));
-      this.displayAreaStore = this.getDisplayArea();
-
-      // Should grow from anchor point
-      let translateStart = this.getTranslateOrigin()
-      translateStart.x += FIX_SHIFT // Temp fix for useNativeDriver issue
-      values.translate.setValue(translateStart);
-      const translatePoint = new Point(this.state.popoverOrigin.x, this.state.popoverOrigin.y);
-      values.translateArrow.setValue(this.getArrowTranslateLocation(translatePoint));
-
-      this.animateTo({
-        values,
-        fade: 1,
-        scale: 1,
-        translatePoint,
-        easing: Easing.out(Easing.back())
-      })
-    }
-
-    animateTo({fade, translatePoint, scale, callback, easing, values}) {
-      const commonConfig = Object.assign({
-          duration: 300,
-          easing,
-          useNativeDriver: true
-      }, this.props.animationConfig);
-
-      if (this.animating) {
-        setTimeout(() => this.animateTo.apply(this, arguments), 100);
-        return;
-      }
-
-      const newArrowLocation = this.getArrowTranslateLocation(translatePoint);
-
-      translatePoint.x = translatePoint.x + FIX_SHIFT // Temp fix for useNativeDriver issue
-
-      if (!fade && fade !== 0) { console.log("Popover: Fade value is null"); return; }
-      if (!isPoint(translatePoint)) { console.log("Popover: Translate Point value is null"); return; }
-      if (!scale && scale !== 0) { console.log("Popover: Scale value is null"); return; }
-      this.animating = true;
-      Animated.parallel([
-          Animated.timing(values.fade, {
-              ...commonConfig,
-              toValue: fade
-          }),
-          Animated.timing(values.translate, {
-              ...commonConfig,
-              toValue: translatePoint
-          }),
-          Animated.timing(values.scale, {
-              ...commonConfig,
-              toValue: scale
-          }),
-          Animated.timing(values.translateArrow, {
-              ...commonConfig,
-              toValue: newArrowLocation
-          })
-      ]).start(() => {
-        this.animating = false;
-        if (callback) callback();
-      });
-    }
-
-    render() {
-        var { popoverOrigin, placement, forcedHeight, animatedValues, anchorPoint, forcedContentSize } = this.state;
-        const { popoverStyle, arrowStyle } = this.props;
-        const { arrowWidth, arrowHeight } = this.getCalculatedArrowDims();
-
-        let arrowScale = animatedValues.scale.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, 1],
-            extrapolate: 'clamp',
-        })
-
-        var arrowViewStyle = {
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: arrowWidth,
-          height: arrowHeight,
-          transform: [
-            {translateX: animatedValues.translateArrow.x},
-            {translateY: animatedValues.translateArrow.y},
-            {scale: arrowScale},
-          ]
-        };
-
-        let arrowInnerStyle = [
-          styles.arrow,
-          this.getArrowDynamicStyle(),
-          {
-            borderTopColor: arrowStyle.backgroundColor || popoverStyle.backgroundColor || styles.popoverContent.backgroundColor,
-            transform: [
-              {rotate: this.getArrowRotation(placement)}
-            ]
+      if (willBeVisible !== isVisible) {
+          if (willBeVisible) {
+            // We want to start the show animation only when contentSize is known
+            // so that we can have some logic depending on the geometry
+            this.calculateRect(nextProps, fromRect => this.setState({fromRect, isAwaitingShow: true, visible: true}));
+          } else {
+              this.animateOut();
           }
-        ];
-
-        // Temp fix for useNativeDriver issue
-        let backgroundShift = animatedValues.fade.interpolate({
-          inputRange: [0, 0.0001, 1],
-          outputRange: [0, FIX_SHIFT, FIX_SHIFT]
+      } else if (willBeVisible) {
+        this.calculateRect(nextProps, fromRect => {
+          if (rectChanged(fromRect, this.state.fromRect)
+              || (nextProps.displayArea && !this.props.displayArea)
+              || rectChanged(nextProps.displayArea, this.props.displayArea)
+              || rectChanged(this.getDisplayArea(), this.displayAreaStore)) {
+              this.displayAreaStore = this.getDisplayArea();
+              this.setState({fromRect}, () => this.handleGeomChange(Object.assign({}, nextProps, {fromRect})))
+            }
         })
+      }
+  }
 
-        let backgroundStyle = {
-          ...styles.background,
-          transform: [
-            {translateX: backgroundShift}
-          ]
-        };
-        if (this.props.showBackground)
-          backgroundStyle.backgroundColor = 'rgba(0,0,0,0.5)'
+  calculateRect(props, callback) {
+    let initialRect = this.state.fromRect || new Rect(0, 0, 0, 0);
+    if (props.calculateRect)
+      runAfterChange(callback_ => callback_(props.calculateRect(newDisplayArea.width, newDisplayArea.height)), initialRect, () => {
+        callback({fromRect: props.calculateRect(newDisplayArea.width, newDisplayArea.height)});
+      });
+    else if (props.fromView)
+      waitForNewRect(props.fromView, initialRect, callback, this.props.verticalOffset);
+    else
+      callback(props.fromRect);
+  }
 
-        let containerStyle = {
-          ...styles.container,
-          opacity: animatedValues.fade
-        };
+  handleGeomChange({displayArea, fromRect, requestedContentSize}) {
+    const { forcedContentSize, placement, anchorPoint, popoverOrigin, animatedValues } = this.state;
+    requestedContentSize = requestedContentSize || Object.assign({}, this.state.requestedContentSize);
 
-        let popoverViewStyle = Object.assign({
-          maxWidth: forcedContentSize.width,
-          maxHeight: forcedContentSize.height,
-          position: 'absolute',
-        }, styles.dropShadow, styles.popoverContent, popoverStyle, {
-          transform: [
-              {translateX: animatedValues.translate.x},
-              {translateY: animatedValues.translate.y},
-              {scale: animatedValues.scale},
-              {perspective: 1000}
-          ],
+    let geom = this.computeGeometry({requestedContentSize, displayArea, fromRect});
+
+    if (pointChanged(geom.popoverOrigin, popoverOrigin)) {
+      this.setState(Object.assign(geom, {requestedContentSize}), () => {
+        this.animateTo({
+          values: animatedValues,
+          fade: 1,
+          scale: 1,
+          translatePoint: new Point(geom.popoverOrigin.x, geom.popoverOrigin.y),
+          easing: Easing.inOut(Easing.quad)
         });
-
-        let contentView = (
-            <View style={[styles.container, {left: 0}]}>
-              <SafeAreaView pointerEvent="none" style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}>
-                <View style={{flex: 1}} onLayout={evt => this.setDefaultDisplayArea(evt)} />
-              </SafeAreaView>
-
-              <Animated.View style={containerStyle}>
-                <TouchableWithoutFeedback onPress={this.props.onClose}>
-                  <Animated.View style={backgroundStyle}/>
-                </TouchableWithoutFeedback>
-
-                <View style={{top: 0, left: 0}}>
-                  
-                  <Animated.View style={popoverViewStyle} onLayout={evt => this.measureContent(evt.nativeEvent.layout)}>
-                    {this.props.children}
-                  </Animated.View>
-
-                  {(this.props.fromRect || this.state.fromRect) &&
-                    <Animated.View style={arrowViewStyle}>
-                      <View style={arrowInnerStyle}/>
-                    </Animated.View>
-                  }
-                </View>
-              </Animated.View>
-            </View>
-        );
-
-        if (this.props.showInModal) {
-            return (
-                <Modal transparent={true} supportedOrientations={['portrait', 'landscape']} hardwareAccelerated={true} visible={this.state.visible} onRequestClose={this.props.onClose}>
-                  {contentView}
-                </Modal>
-            );
-        } else {
-            return contentView;
-        }
+      });
     }
+  }
+
+  animateOut() {
+    this.keyboardDidShowListener && this.keyboardDidShowListener.remove();
+    this.keyboardDidHideListener && this.keyboardDidHideListener.remove();
+    this.safeAreaViewReady = false;
+    this.setState({shiftedDisplayArea: null});
+    this.animateTo({
+      values: this.state.animatedValues,
+      fade: 0,
+      scale: 0,
+      translatePoint: this.getTranslateOrigin(),
+      callback: () => this.setState({visible: false, forcedContentSize: {}}, () => this.props.doneClosingCallback()),
+      easing: Easing.inOut(Easing.quad)
+    });
+  }
+
+  animateIn() {
+    var values = this.state.animatedValues;
+
+    this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', this.keyboardDidShow.bind(this));
+    this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', this.keyboardDidHide.bind(this));
+    this.displayAreaStore = this.getDisplayArea();
+
+    // Should grow from anchor point
+    let translateStart = this.getTranslateOrigin()
+    translateStart.x += FIX_SHIFT // Temp fix for useNativeDriver issue
+    values.translate.setValue(translateStart);
+    const translatePoint = new Point(this.state.popoverOrigin.x, this.state.popoverOrigin.y);
+    values.translateArrow.setValue(this.getArrowTranslateLocation(translatePoint));
+
+    this.animateTo({
+      values,
+      fade: 1,
+      scale: 1,
+      translatePoint,
+      easing: Easing.out(Easing.back())
+    })
+  }
+
+  animateTo({fade, translatePoint, scale, callback, easing, values}) {
+    const commonConfig = Object.assign({
+        duration: 300,
+        easing,
+        useNativeDriver: true
+    }, this.props.animationConfig);
+
+    if (this.animating) {
+      setTimeout(() => this.animateTo.apply(this, arguments), 100);
+      return;
+    }
+
+    const newArrowLocation = this.getArrowTranslateLocation(translatePoint);
+
+    translatePoint.x = translatePoint.x + FIX_SHIFT // Temp fix for useNativeDriver issue
+
+    if (!fade && fade !== 0) { console.log("Popover: Fade value is null"); return; }
+    if (!isPoint(translatePoint)) { console.log("Popover: Translate Point value is null"); return; }
+    if (!scale && scale !== 0) { console.log("Popover: Scale value is null"); return; }
+    this.animating = true;
+    Animated.parallel([
+        Animated.timing(values.fade, {
+            ...commonConfig,
+            toValue: fade
+        }),
+        Animated.timing(values.translate, {
+            ...commonConfig,
+            toValue: translatePoint
+        }),
+        Animated.timing(values.scale, {
+            ...commonConfig,
+            toValue: scale
+        }),
+        Animated.timing(values.translateArrow, {
+            ...commonConfig,
+            toValue: newArrowLocation
+        })
+    ]).start(() => {
+      this.animating = false;
+      if (callback) callback();
+    });
+  }
+
+  render() {
+      var { popoverOrigin, placement, forcedHeight, animatedValues, anchorPoint, forcedContentSize } = this.state;
+      const { popoverStyle, arrowStyle } = this.props;
+      const { arrowWidth, arrowHeight } = this.getCalculatedArrowDims();
+
+      let arrowScale = animatedValues.scale.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, 1],
+          extrapolate: 'clamp',
+      })
+
+      var arrowViewStyle = {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: arrowWidth,
+        height: arrowHeight,
+        transform: [
+          {translateX: animatedValues.translateArrow.x},
+          {translateY: animatedValues.translateArrow.y},
+          {scale: arrowScale},
+        ]
+      };
+
+      let arrowInnerStyle = [
+        styles.arrow,
+        this.getArrowDynamicStyle(),
+        {
+          borderTopColor: arrowStyle.backgroundColor || popoverStyle.backgroundColor || styles.popoverContent.backgroundColor,
+          transform: [
+            {rotate: this.getArrowRotation(placement)}
+          ]
+        }
+      ];
+
+      // Temp fix for useNativeDriver issue
+      let backgroundShift = animatedValues.fade.interpolate({
+        inputRange: [0, 0.0001, 1],
+        outputRange: [0, FIX_SHIFT, FIX_SHIFT]
+      })
+
+      let backgroundStyle = {
+        ...styles.background,
+        transform: [
+          {translateX: backgroundShift}
+        ]
+      };
+      if (this.props.showBackground)
+        backgroundStyle.backgroundColor = 'rgba(0,0,0,0.5)'
+
+      let containerStyle = {
+        ...styles.container,
+        opacity: animatedValues.fade
+      };
+
+      let popoverViewStyle = Object.assign({
+        maxWidth: forcedContentSize.width,
+        maxHeight: forcedContentSize.height,
+        position: 'absolute',
+      }, styles.dropShadow, styles.popoverContent, popoverStyle, {
+        transform: [
+            {translateX: animatedValues.translate.x},
+            {translateY: animatedValues.translate.y},
+            {scale: animatedValues.scale},
+            {perspective: 1000}
+        ],
+      });
+
+      let contentView = (
+          <View style={[styles.container, {left: 0}]}>
+            <SafeAreaView pointerEvent="none" style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}>
+              <View style={{flex: 1}} onLayout={evt => this.setDefaultDisplayArea(evt)} />
+            </SafeAreaView>
+
+            <Animated.View style={containerStyle}>
+              <TouchableWithoutFeedback onPress={this.props.onClose}>
+                <Animated.View style={backgroundStyle}/>
+              </TouchableWithoutFeedback>
+
+              <View style={{top: 0, left: 0}}>
+                
+                <Animated.View style={popoverViewStyle} onLayout={evt => this.measureContent(evt.nativeEvent.layout)}>
+                  {this.props.children}
+                </Animated.View>
+
+                {(this.props.fromRect || this.state.fromRect) &&
+                  <Animated.View style={arrowViewStyle}>
+                    <View style={arrowInnerStyle}/>
+                  </Animated.View>
+                }
+              </View>
+            </Animated.View>
+          </View>
+      );
+
+      if (this.props.showInModal) {
+          return (
+              <Modal transparent={true} supportedOrientations={['portrait', 'landscape']} hardwareAccelerated={true} visible={this.state.visible} onRequestClose={this.props.onClose}>
+                {contentView}
+              </Modal>
+          );
+      } else {
+          return contentView;
+      }
+  }
 }
 
 var styles = {
