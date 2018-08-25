@@ -25,17 +25,6 @@ export function isTablet() {
   return Dimensions.get('window').height / Dimensions.get('window').width < 1.6;
 }
 
-// Transition config needed on tablets for popover to work
-export let popoverTransitionConfig = () => ({
-  transitionSpec: {
-    duration: 1,
-    timing: Animated.timing,
-  },
-  screenInterpolator: sceneProps => {
-    return { opacity: 1, transform: [{ translateY: 0 }] }
-  },
-})
-
 export function isRect(rect) {
   return rect && (rect.x || rect.x === 0) && (rect.y || rect.y === 0) && (rect.width || rect.width === 0) && (rect.height || rect.height === 0);
 }

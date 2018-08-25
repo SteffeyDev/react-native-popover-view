@@ -13,6 +13,8 @@ const DEFAULT_ARROW_SIZE = new Size(16, 8);
 const DEFAULT_BORDER_RADIUS = 3;
 const FIX_SHIFT = SCREEN_WIDTH * 2;
 
+const DEBUG = true;
+
 const PLACEMENT_OPTIONS = Object.freeze({
   TOP: 'top',
   RIGHT: 'right',
@@ -43,8 +45,7 @@ class Popover extends React.Component {
         translate: new Animated.ValueXY(),
         fade: new Animated.Value(0),
         translateArrow: new Animated.ValueXY()
-      },
-      viewport: null
+      }
     };
 
     this.measureContent = this.measureContent.bind(this);
@@ -52,13 +53,27 @@ class Popover extends React.Component {
   }
 
   setDefaultDisplayArea(evt) {
-    if (this.safeAreaViewReady || !isIOS()) {
-      let newDisplayArea = new Rect(evt.nativeEvent.layout.x + 10, evt.nativeEvent.layout.y + 10, evt.nativeEvent.layout.width - 20, evt.nativeEvent.layout.height - 20);
-      if (!this.state.defaultDisplayArea || rectChanged(this.state.defaultDisplayArea, newDisplayArea)) {
-        this.setState({defaultDisplayArea: newDisplayArea});//, () => this.handleGeomChange({displayArea: newDisplayArea}));
+    let newDisplayArea = new Rect(evt.nativeEvent.layout.x + 10, evt.nativeEvent.layout.y + 10, evt.nativeEvent.layout.width - 20, evt.nativeEvent.layout.height - 20);
+    if (!this.state.defaultDisplayArea || rectChanged(this.state.defaultDisplayArea, newDisplayArea)) {
+      if (DEBUG) console.log("setDefaultDisplayArea - newDisplayArea: " + JSON.stringify(newDisplayArea));
+      if (this.safeAreaViewReady || !isIOS()) {
+        this.setState({defaultDisplayArea: newDisplayArea}, () => {
+          this.calculateRect(this.props, fromRect => {
+            if (rectChanged(fromRect, this.state.fromRect)
+              || rectChanged(this.getDisplayArea(), this.displayAreaStore)) {
+              this.displayAreaStore = this.getDisplayArea();
+              if (DEBUG) console.log("setDefaultDisplayArea (inside calculateRect callback) - fromRect: " + JSON.stringify(fromRect));
+              if (DEBUG) console.log("setDefaultDisplayArea (inside calculateRect callback) - getDisplayArea(): " + JSON.stringify(this.displayAreaStore));
+              this.setState({fromRect}, () => {
+                  this.handleGeomChange();
+                  this.waitForResizeToFinish = false;
+              });
+            }
+          })
+        });
       }
+      this.safeAreaViewReady = true;
     }
-    this.safeAreaViewReady = true;
   }
 
   keyboardDidShow(e) {
@@ -66,7 +81,7 @@ class Popover extends React.Component {
   }
 
   keyboardDidHide() {
-    this.setState({shiftedDisplayArea: null}, () => this.handleGeomChange({displayArea: this.getDisplayArea()}));
+    this.setState({shiftedDisplayArea: null}, () => this.handleGeomChange());
   }
 
   shiftForKeyboard(keyboardHeight) {
@@ -80,7 +95,7 @@ class Popover extends React.Component {
       y: displayArea.y,
       width: displayArea.width,
       height: combinedY - displayArea.y
-    }}, () => this.handleGeomChange({displayArea: this.state.shiftedDisplayArea}));
+    }}, () => this.handleGeomChange());
   }
 
   componentDidMount() {
@@ -88,6 +103,12 @@ class Popover extends React.Component {
     // I found that the RN SafeAreaView doesn't actually tell you the safe area until the second layout,
     //  so we don't want to rely on it to give us an accurate display area until it's figured that out
     this.safeAreaViewReady = false;
+
+    // This is used so that when the device is rotating or the viewport is expanding for any other reason,
+    //  we can suspend updates due to content changes until we are finished calculating the new display
+    //  area and rect for the new viewport size
+    // This makes the recalc on rotation much faster
+    this.waitForResizeToFinish = false;
 
     // Show popover if isVisible is initially true
     if (this.props.isVisible)
@@ -103,10 +124,16 @@ class Popover extends React.Component {
     Dimensions.removeEventListener('change', this.handleResizeEvent)
   }
 
-  handleResizeEvent = (event) => this.setState({viewport: event.window});
+  // First thing called when device rotates
+  handleResizeEvent = (event) => {
+    if (this.props.isVisible) {
+      this.safeAreaViewReady = false;
+      this.waitForResizeToFinish = true;
+    }
+  }
 
   measureContent(requestedContentSize) {
-    if (requestedContentSize.width && requestedContentSize.height) {
+    if (requestedContentSize.width && requestedContentSize.height && !this.waitForResizeToFinish) {
       if (this.state.isAwaitingShow) {
         if ((this.props.fromView && !this.state.fromRect) || !this.getDisplayArea() || !this.safeAreaViewReady) {
           setTimeout(() => this.measureContent(requestedContentSize), 100);
@@ -115,7 +142,8 @@ class Popover extends React.Component {
           this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), this.animateIn);
         }
       } else if (requestedContentSize.width !== this.state.requestedContentSize.width || requestedContentSize.height !== this.state.requestedContentSize.height) {
-        this.handleGeomChange({requestedContentSize});
+        if (DEBUG) console.log("measureContent - requestedContentSize: " + JSON.stringify(requestedContentSize));
+        this.handleGeomChange(requestedContentSize);
       }
     }
   }
@@ -124,6 +152,11 @@ class Popover extends React.Component {
       placement = placement || this.props.placement;
       fromRect = fromRect || Object.assign({}, this.props.fromRect || this.state.fromRect);
       displayArea = displayArea || Object.assign({}, this.getDisplayArea());
+
+      if (DEBUG) {
+        console.log("computeGeometry - displayArea: " + JSON.stringify(displayArea));
+        console.log("computeGeometry - fromRect: " + JSON.stringify(fromRect));
+      }
 
       if (fromRect && isRect(fromRect)) {
         //check to see if fromRect is outside of displayArea, and adjust if it is
@@ -426,47 +459,53 @@ class Popover extends React.Component {
   }
 
   getTranslateOrigin() {
-      const {forcedContentSize, requestedContentSize, popoverOrigin, anchorPoint} = this.state;
+    const {forcedContentSize, requestedContentSize, popoverOrigin, anchorPoint} = this.state;
 
-      const viewWidth = forcedContentSize.width || requestedContentSize.width || 0;
-      const viewHeight = forcedContentSize.height || requestedContentSize.height || 0;
-      const popoverCenter = new Point(popoverOrigin.x + (viewWidth / 2),
-          popoverOrigin.y + (viewHeight / 2));
-      const shiftHorizantal = anchorPoint.x - popoverCenter.x;
-      const shiftVertical = anchorPoint.y - popoverCenter.y;
-      return new Point(popoverOrigin.x + shiftHorizantal, popoverOrigin.y + shiftVertical);
+    const viewWidth = forcedContentSize.width || requestedContentSize.width || 0;
+    const viewHeight = forcedContentSize.height || requestedContentSize.height || 0;
+    const popoverCenter = new Point(popoverOrigin.x + (viewWidth / 2),
+        popoverOrigin.y + (viewHeight / 2));
+    const shiftHorizantal = anchorPoint.x - popoverCenter.x;
+    const shiftVertical = anchorPoint.y - popoverCenter.y;
+    return new Point(popoverOrigin.x + shiftHorizantal, popoverOrigin.y + shiftVertical);
   }
 
   getDisplayArea() {
     return this.state.shiftedDisplayArea || this.props.displayArea || this.state.defaultDisplayArea;
   }
 
-  componentWillReceiveProps(nextProps:any) {
-      let willBeVisible = nextProps.isVisible;
-      let {
-          isVisible,
-          displayArea
-      } = this.props;
+  componentWillReceiveProps(nextProps) {
 
-      if (willBeVisible !== isVisible) {
-          if (willBeVisible) {
-            // We want to start the show animation only when contentSize is known
-            // so that we can have some logic depending on the geometry
-            this.calculateRect(nextProps, fromRect => this.setState({fromRect, isAwaitingShow: true, visible: true}));
-          } else {
-              this.animateOut();
+    // Make sure a value we care about has actually changed
+    let importantProps = ["isVisible", "fromRect", "displayArea", "verticalOffset", "placement"]
+    if (!importantProps.reduce((acc, key) => acc || this.props[key] !== nextProps[key], false))
+      return;
+
+    let willBeVisible = nextProps.isVisible;
+    let {
+        isVisible,
+        displayArea
+    } = this.props;
+
+    if (willBeVisible !== isVisible) {
+        if (willBeVisible) {
+          // We want to start the show animation only when contentSize is known
+          // so that we can have some logic depending on the geometry
+          this.calculateRect(nextProps, fromRect => this.setState({fromRect, isAwaitingShow: true, visible: true}));
+        } else {
+            this.animateOut();
+        }
+    } else if (willBeVisible) {
+      this.calculateRect(nextProps, fromRect => {
+        if (rectChanged(fromRect, this.state.fromRect)
+            || (nextProps.displayArea && !this.props.displayArea)
+            || rectChanged(nextProps.displayArea, this.props.displayArea)
+            || rectChanged(this.getDisplayArea(), this.displayAreaStore)) {
+            this.displayAreaStore = this.getDisplayArea();
+            this.setState({fromRect}, () => this.handleGeomChange());
           }
-      } else if (willBeVisible) {
-        this.calculateRect(nextProps, fromRect => {
-          if (rectChanged(fromRect, this.state.fromRect)
-              || (nextProps.displayArea && !this.props.displayArea)
-              || rectChanged(nextProps.displayArea, this.props.displayArea)
-              || rectChanged(this.getDisplayArea(), this.displayAreaStore)) {
-              this.displayAreaStore = this.getDisplayArea();
-              this.setState({fromRect}, () => this.handleGeomChange(Object.assign({}, nextProps, {fromRect})))
-            }
-        })
-      }
+      })
+    }
   }
 
   calculateRect(props, callback) {
@@ -481,21 +520,32 @@ class Popover extends React.Component {
       callback(props.fromRect);
   }
 
-  handleGeomChange({displayArea, fromRect, requestedContentSize}) {
+  handleGeomChange(requestedContentSize) {
     const { forcedContentSize, placement, anchorPoint, popoverOrigin, animatedValues } = this.state;
     requestedContentSize = requestedContentSize || Object.assign({}, this.state.requestedContentSize);
 
-    let geom = this.computeGeometry({requestedContentSize, displayArea, fromRect});
+    if (DEBUG) console.log("handleGeomChange - requestedContentSize: " + JSON.stringify(requestedContentSize));
 
-    if (pointChanged(geom.popoverOrigin, popoverOrigin)) {
+    // handleGeomChange may be called more than one times before the first has a chance to finish,
+    //  so we use updateCount to make sure that we only trigger an animation on the last one
+    if (!this.updatesCount || this.updatesCount < 0) this.updateCount = 0;
+    this.updateCount++;
+
+    let geom = this.computeGeometry({requestedContentSize});
+
+    if (pointChanged(geom.popoverOrigin, popoverOrigin) || rectChanged(geom.forcedContentSize, forcedContentSize)) {
       this.setState(Object.assign(geom, {requestedContentSize}), () => {
-        this.animateTo({
-          values: animatedValues,
-          fade: 1,
-          scale: 1,
-          translatePoint: new Point(geom.popoverOrigin.x, geom.popoverOrigin.y),
-          easing: Easing.inOut(Easing.quad)
-        });
+        if (this.updateCount <= 1) {
+          this.updateCount--;
+          if (DEBUG) console.log("handleGeomChange - Triggering popover move")
+          this.animateTo({
+            values: animatedValues,
+            fade: 1,
+            scale: 1,
+            translatePoint: new Point(geom.popoverOrigin.x, geom.popoverOrigin.y),
+            easing: Easing.inOut(Easing.quad)
+          });
+        }
       });
     }
   }
@@ -582,109 +632,109 @@ class Popover extends React.Component {
   }
 
   render() {
-      var { popoverOrigin, placement, forcedHeight, animatedValues, anchorPoint, forcedContentSize } = this.state;
-      const { popoverStyle, arrowStyle } = this.props;
-      const { arrowWidth, arrowHeight } = this.getCalculatedArrowDims();
+    var { popoverOrigin, placement, forcedHeight, animatedValues, anchorPoint, forcedContentSize } = this.state;
+    const { popoverStyle, arrowStyle } = this.props;
+    const { arrowWidth, arrowHeight } = this.getCalculatedArrowDims();
 
-      let arrowScale = animatedValues.scale.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0, 1],
-          extrapolate: 'clamp',
-      })
+    let arrowScale = animatedValues.scale.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 1],
+      extrapolate: 'clamp',
+    })
 
-      var arrowViewStyle = {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: arrowWidth,
-        height: arrowHeight,
+    var arrowViewStyle = {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: arrowWidth,
+      height: arrowHeight,
+      transform: [
+        {translateX: animatedValues.translateArrow.x},
+        {translateY: animatedValues.translateArrow.y},
+        {scale: arrowScale},
+      ]
+    };
+
+    let arrowInnerStyle = [
+      styles.arrow,
+      this.getArrowDynamicStyle(),
+      {
+        borderTopColor: arrowStyle.backgroundColor || popoverStyle.backgroundColor || styles.popoverContent.backgroundColor,
         transform: [
-          {translateX: animatedValues.translateArrow.x},
-          {translateY: animatedValues.translateArrow.y},
-          {scale: arrowScale},
+          {rotate: this.getArrowRotation(placement)}
         ]
-      };
-
-      let arrowInnerStyle = [
-        styles.arrow,
-        this.getArrowDynamicStyle(),
-        {
-          borderTopColor: arrowStyle.backgroundColor || popoverStyle.backgroundColor || styles.popoverContent.backgroundColor,
-          transform: [
-            {rotate: this.getArrowRotation(placement)}
-          ]
-        }
-      ];
-
-      // Temp fix for useNativeDriver issue
-      let backgroundShift = animatedValues.fade.interpolate({
-        inputRange: [0, 0.0001, 1],
-        outputRange: [0, FIX_SHIFT, FIX_SHIFT]
-      })
-
-      let backgroundStyle = {
-        ...styles.background,
-        transform: [
-          {translateX: backgroundShift}
-        ]
-      };
-      if (this.props.showBackground)
-        backgroundStyle.backgroundColor = 'rgba(0,0,0,0.5)'
-
-      let containerStyle = {
-        ...styles.container,
-        opacity: animatedValues.fade
-      };
-
-      let popoverViewStyle = Object.assign({
-        maxWidth: forcedContentSize.width,
-        maxHeight: forcedContentSize.height,
-        position: 'absolute',
-      }, styles.dropShadow, styles.popoverContent, popoverStyle, {
-        transform: [
-            {translateX: animatedValues.translate.x},
-            {translateY: animatedValues.translate.y},
-            {scale: animatedValues.scale},
-            {perspective: 1000}
-        ],
-      });
-
-      let contentView = (
-          <View style={[styles.container, {left: 0}]}>
-            <SafeAreaView pointerEvent="none" style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}>
-              <View style={{flex: 1}} onLayout={evt => this.setDefaultDisplayArea(evt)} />
-            </SafeAreaView>
-
-            <Animated.View style={containerStyle}>
-              <TouchableWithoutFeedback onPress={this.props.onClose}>
-                <Animated.View style={backgroundStyle}/>
-              </TouchableWithoutFeedback>
-
-              <View style={{top: 0, left: 0}}>
-                
-                <Animated.View style={popoverViewStyle} onLayout={evt => this.measureContent(evt.nativeEvent.layout)}>
-                  {this.props.children}
-                </Animated.View>
-
-                {(this.props.fromRect || this.state.fromRect) &&
-                  <Animated.View style={arrowViewStyle}>
-                    <View style={arrowInnerStyle}/>
-                  </Animated.View>
-                }
-              </View>
-            </Animated.View>
-          </View>
-      );
-
-      if (this.props.showInModal) {
-          return (
-              <Modal transparent={true} supportedOrientations={['portrait', 'landscape']} hardwareAccelerated={true} visible={this.state.visible} onRequestClose={this.props.onClose}>
-                {contentView}
-              </Modal>
-          );
-      } else {
-          return contentView;
       }
+    ];
+
+    // Temp fix for useNativeDriver issue
+    let backgroundShift = animatedValues.fade.interpolate({
+      inputRange: [0, 0.0001, 1],
+      outputRange: [0, FIX_SHIFT, FIX_SHIFT]
+    })
+
+    let backgroundStyle = {
+      ...styles.background,
+      transform: [
+        {translateX: backgroundShift}
+      ]
+    };
+    if (this.props.showBackground)
+      backgroundStyle.backgroundColor = 'rgba(0,0,0,0.5)'
+
+    let containerStyle = {
+      ...styles.container,
+      opacity: animatedValues.fade
+    };
+
+    let popoverViewStyle = Object.assign({
+      maxWidth: forcedContentSize.width,
+      maxHeight: forcedContentSize.height,
+      position: 'absolute',
+    }, styles.dropShadow, styles.popoverContent, popoverStyle, {
+      transform: [
+        {translateX: animatedValues.translate.x},
+        {translateY: animatedValues.translate.y},
+        {scale: animatedValues.scale},
+        {perspective: 1000}
+      ],
+    });
+
+    let contentView = (
+      <View style={[styles.container, {left: 0}]}>
+        <SafeAreaView pointerEvent="none" style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}>
+          <View style={{flex: 1}} onLayout={evt => this.setDefaultDisplayArea(evt)} />
+        </SafeAreaView>
+
+        <Animated.View style={containerStyle}>
+          <TouchableWithoutFeedback onPress={this.props.onClose}>
+            <Animated.View style={backgroundStyle}/>
+          </TouchableWithoutFeedback>
+
+          <View style={{top: 0, left: 0}}>
+            
+            <Animated.View style={popoverViewStyle} onLayout={evt => this.measureContent(evt.nativeEvent.layout)}>
+              {this.props.children}
+            </Animated.View>
+
+            {(this.props.fromRect || this.state.fromRect) &&
+              <Animated.View style={arrowViewStyle}>
+                <View style={arrowInnerStyle}/>
+              </Animated.View>
+            }
+          </View>
+        </Animated.View>
+      </View>
+    );
+
+    if (this.props.showInModal) {
+      return (
+        <Modal transparent={true} supportedOrientations={['portrait', 'landscape']} hardwareAccelerated={true} visible={this.state.visible} onRequestClose={this.props.onClose}>
+          {contentView}
+        </Modal>
+      );
+    } else {
+      return contentView;
+    }
   }
 }
 
