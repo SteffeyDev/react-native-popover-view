@@ -13,7 +13,7 @@ const DEFAULT_ARROW_SIZE = new Size(16, 8);
 const DEFAULT_BORDER_RADIUS = 3;
 const FIX_SHIFT = SCREEN_WIDTH * 2;
 
-const DEBUG = true;
+const DEBUG = false;
 
 const PLACEMENT_OPTIONS = Object.freeze({
   TOP: 'top',
@@ -59,11 +59,13 @@ class Popover extends React.Component {
       if (this.safeAreaViewReady || !isIOS()) {
         this.setState({defaultDisplayArea: newDisplayArea}, () => {
           this.calculateRect(this.props, fromRect => {
+            if (DEBUG) console.log("setDefaultDisplayArea (inside calculateRect callback) - fromRect: " + JSON.stringify(fromRect));
+            if (DEBUG) console.log("setDefaultDisplayArea (inside calculateRect callback) - getDisplayArea(): " + JSON.stringify(this.getDisplayArea()));
+            if (DEBUG) console.log("setDefaultDisplayArea (inside calculateRect callback) - displayAreaStore: " + JSON.stringify(this.displayAreaStore));
             if (rectChanged(fromRect, this.state.fromRect)
               || rectChanged(this.getDisplayArea(), this.displayAreaStore)) {
               this.displayAreaStore = this.getDisplayArea();
-              if (DEBUG) console.log("setDefaultDisplayArea (inside calculateRect callback) - fromRect: " + JSON.stringify(fromRect));
-              if (DEBUG) console.log("setDefaultDisplayArea (inside calculateRect callback) - getDisplayArea(): " + JSON.stringify(this.displayAreaStore));
+              if (DEBUG) console.log("setDefaultDisplayArea (inside calculateRect callback) - Triggering state update");
               this.setState({fromRect}, () => {
                   this.handleGeomChange();
                   this.waitForResizeToFinish = false;
@@ -77,11 +79,15 @@ class Popover extends React.Component {
   }
 
   keyboardDidShow(e) {
+    if (DEBUG) console.log("keyboardDidShow - keyboard height: " + e.endCoordinates.height);
     this.shiftForKeyboard(e.endCoordinates.height);
   }
 
   keyboardDidHide() {
-    this.setState({shiftedDisplayArea: null}, () => this.handleGeomChange());
+    if (DEBUG) console.log("keyboardDidHide");
+
+    // On android, the keyboard update causes a default display area change, so no need to manually trigger
+    this.setState({shiftedDisplayArea: null}, () => isIOS() && this.handleGeomChange());
   }
 
   shiftForKeyboard(keyboardHeight) {
@@ -136,8 +142,10 @@ class Popover extends React.Component {
     if (requestedContentSize.width && requestedContentSize.height && !this.waitForResizeToFinish) {
       if (this.state.isAwaitingShow) {
         if ((this.props.fromView && !this.state.fromRect) || !this.getDisplayArea() || !this.safeAreaViewReady) {
+          if (DEBUG) console.log("measureContent - Waiting - requestedContentSize: " + JSON.stringify(requestedContentSize));
           setTimeout(() => this.measureContent(requestedContentSize), 100);
         } else {
+          if (DEBUG) console.log("measureContent - Showing Popover - requestedContentSize: " + JSON.stringify(requestedContentSize));
           let geom = this.computeGeometry({requestedContentSize});
           this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), this.animateIn);
         }
@@ -492,8 +500,10 @@ class Popover extends React.Component {
           // We want to start the show animation only when contentSize is known
           // so that we can have some logic depending on the geometry
           this.calculateRect(nextProps, fromRect => this.setState({fromRect, isAwaitingShow: true, visible: true}));
+          if (DEBUG) console.log("componentWillReceiveProps - Awaiting popover show");
         } else {
-            this.animateOut();
+          this.animateOut();
+          if (DEBUG) console.log("componentWillReceiveProps - Hiding popover");
         }
     } else if (willBeVisible) {
       this.calculateRect(nextProps, fromRect => {
@@ -537,12 +547,13 @@ class Popover extends React.Component {
       this.setState(Object.assign(geom, {requestedContentSize}), () => {
         if (this.updateCount <= 1) {
           this.updateCount--;
-          if (DEBUG) console.log("handleGeomChange - Triggering popover move")
+          let moveTo = new Point(geom.popoverOrigin.x, geom.popoverOrigin.y);
+          if (DEBUG) console.log("handleGeomChange - Triggering popover move to: " + JSON.stringify(moveTo))
           this.animateTo({
             values: animatedValues,
             fade: 1,
             scale: 1,
-            translatePoint: new Point(geom.popoverOrigin.x, geom.popoverOrigin.y),
+            translatePoint: moveTo,
             easing: Easing.inOut(Easing.quad)
           });
         }
@@ -553,7 +564,6 @@ class Popover extends React.Component {
   animateOut() {
     this.keyboardDidShowListener && this.keyboardDidShowListener.remove();
     this.keyboardDidHideListener && this.keyboardDidHideListener.remove();
-    this.safeAreaViewReady = false;
     this.setState({shiftedDisplayArea: null});
     this.animateTo({
       values: this.state.animatedValues,

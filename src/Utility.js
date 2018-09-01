@@ -34,15 +34,18 @@ export function isPoint(point) {
 }
 
 export function runAfterChange(getFirst, second, func) {
-  let interval = setInterval(() => {
+  let count = 0; // Failsafe so that the interval doesn't run forever
+  let checkFunc = () => 
     getFirst(first => {
       if (first !== second) {
-        clearInterval(interval);
         func();
+      } else if (count < 20) {
+        count++;
+        setTimeout(checkFunc, 100);
       }
-    }, 100)
-  });
-  setTimeout(() => clearInterval(interval), 2000); // Failsafe so that the interval doesn't run forever
+    });
+
+  checkFunc();
 }
 
 export function waitForNewRect(ref, initialRect, onFinish, verticalOffset) {
