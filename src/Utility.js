@@ -1,4 +1,4 @@
-import { Platform, Animated, NativeModules, findNodeHandle, Dimensions } from 'react-native'
+import { Animated, NativeModules, findNodeHandle, Dimensions } from 'react-native'
 
 export function Point(x, y) {
     this.x = x;
@@ -15,10 +15,6 @@ export function Rect(x, y, width, height) {
     this.y = y;
     this.width = width;
     this.height = height;
-}
-
-export function isIOS() {
-  return Platform.OS === 'ios';
 }
 
 export function isTablet() {

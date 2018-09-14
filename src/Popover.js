@@ -2,8 +2,9 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import { SafeAreaView, StyleSheet, Dimensions, Animated, Text, TouchableWithoutFeedback, findNodeHandle, NativeModules, View, Modal, Keyboard, Alert, Easing } from 'react-native';
-import { Rect, Point, Size, isIOS, isRect, isPoint, rectChanged, pointChanged, waitForNewRect } from './Utility';
+import SafeAreaView from 'react-native-safe-area-view';
+import { Platform, StyleSheet, Dimensions, Animated, Text, TouchableWithoutFeedback, findNodeHandle, NativeModules, View, Modal, Keyboard, Alert, Easing } from 'react-native';
+import { Rect, Point, Size, isRect, isPoint, rectChanged, pointChanged, waitForNewRect } from './Utility';
 
 const flattenStyle = require('react-native/Libraries/StyleSheet/flattenStyle');
 const noop = () => {};
@@ -12,6 +13,10 @@ const {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window');
 const DEFAULT_ARROW_SIZE = new Size(16, 8);
 const DEFAULT_BORDER_RADIUS = 3;
 const FIX_SHIFT = SCREEN_WIDTH * 2;
+
+const majorVersionIOS = parseInt(Platform.Version, 10);
+const isIOS = Platform.OS === 'ios';
+const isLandscape = () => Dimensions.get('screen').width >= Dimensions.get('screen').height;
 
 const DEBUG = false;
 
@@ -56,7 +61,7 @@ class Popover extends React.Component {
     let newDisplayArea = new Rect(evt.nativeEvent.layout.x + 10, evt.nativeEvent.layout.y + 10, evt.nativeEvent.layout.width - 20, evt.nativeEvent.layout.height - 20);
     if (!this.state.defaultDisplayArea || rectChanged(this.state.defaultDisplayArea, newDisplayArea)) {
       if (DEBUG) console.log("setDefaultDisplayArea - newDisplayArea: " + JSON.stringify(newDisplayArea));
-      if (this.safeAreaViewReady || !isIOS()) {
+      if (!this.skipNextDefaultDisplayArea) {
         this.setState({defaultDisplayArea: newDisplayArea}, () => {
           this.calculateRect(this.props, fromRect => {
             if (DEBUG) console.log("setDefaultDisplayArea (inside calculateRect callback) - fromRect: " + JSON.stringify(fromRect));
@@ -74,7 +79,8 @@ class Popover extends React.Component {
           })
         });
       }
-      this.safeAreaViewReady = true;
+      if (DEBUG && this.skipNextDefaultDisplayArea) console.log("setDefaultDisplayArea - Skipping first because isLandscape");
+      this.skipNextDefaultDisplayArea = false;
     }
   }
 
@@ -87,13 +93,13 @@ class Popover extends React.Component {
     if (DEBUG) console.log("keyboardDidHide");
 
     // On android, the keyboard update causes a default display area change, so no need to manually trigger
-    this.setState({shiftedDisplayArea: null}, () => isIOS() && this.handleGeomChange());
+    this.setState({shiftedDisplayArea: null}, () => isIOS && this.handleGeomChange());
   }
 
   shiftForKeyboard(keyboardHeight) {
     const displayArea = this.getDisplayArea();
 
-    const absoluteVerticalCutoff = Dimensions.get('window').height - keyboardHeight - (isIOS() ? 10 : 40);
+    const absoluteVerticalCutoff = Dimensions.get('window').height - keyboardHeight - (isIOS ? 10 : 40);
     const combinedY = Math.min(displayArea.height + displayArea.y, absoluteVerticalCutoff);
 
     this.setState({shiftedDisplayArea: {
@@ -105,10 +111,6 @@ class Popover extends React.Component {
   }
 
   componentDidMount() {
-
-    // I found that the RN SafeAreaView doesn't actually tell you the safe area until the second layout,
-    //  so we don't want to rely on it to give us an accurate display area until it's figured that out
-    this.safeAreaViewReady = false;
 
     // This is used so that when the device is rotating or the viewport is expanding for any other reason,
     //  we can suspend updates due to content changes until we are finished calculating the new display
@@ -133,7 +135,6 @@ class Popover extends React.Component {
   // First thing called when device rotates
   handleResizeEvent = (event) => {
     if (this.props.isVisible) {
-      this.safeAreaViewReady = false;
       this.waitForResizeToFinish = true;
     }
   }
@@ -141,8 +142,8 @@ class Popover extends React.Component {
   measureContent(requestedContentSize) {
     if (requestedContentSize.width && requestedContentSize.height && !this.waitForResizeToFinish) {
       if (this.state.isAwaitingShow) {
-        if ((this.props.fromView && !this.state.fromRect) || !this.getDisplayArea() || !this.safeAreaViewReady) {
-          if (DEBUG) console.log("measureContent - Waiting - requestedContentSize: " + JSON.stringify(requestedContentSize));
+        if ((this.props.fromView && !this.state.fromRect) || !this.getDisplayArea()) {
+          if (DEBUG) console.log("measureContent - Waiting " + (this.getDisplayArea() ? "for Rect" : "for Display Area") + " - requestedContentSize: " + JSON.stringify(requestedContentSize));
           setTimeout(() => this.measureContent(requestedContentSize), 100);
         } else {
           if (DEBUG) console.log("measureContent - Showing Popover - requestedContentSize: " + JSON.stringify(requestedContentSize));
@@ -499,6 +500,7 @@ class Popover extends React.Component {
         if (willBeVisible) {
           // We want to start the show animation only when contentSize is known
           // so that we can have some logic depending on the geometry
+          if (isLandscape() && isIOS) this.skipNextDefaultDisplayArea = true;
           this.calculateRect(nextProps, fromRect => this.setState({fromRect, isAwaitingShow: true, visible: true}));
           if (DEBUG) console.log("componentWillReceiveProps - Awaiting popover show");
         } else {
