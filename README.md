@@ -84,8 +84,9 @@ showInModal       | bool     | Yes      | true        | Whether the popover shou
 arrowStyle        | object   | Yes      | {}          | The style of the arrow that points to the rect. Supported options are `width`, `height`, and `backgroundColor`. You can use `{backgroundColor: 'transparent'}` to hid the arrow completely.
 popoverStyle      | object   | Yes      | {}          | The style of the popover itself. You can override the `borderRadius`, `backgroundColor`, or any other [`style` prop for a `View`](https://facebook.github.io/react-native/docs/view-style-props.html).
 showBackground    | bool     | Yes      | true        | Whether the background behind the popover darkens when the popover is shown.
-animationConfig    | object     | Yes      |          | An object containing any configuration options that can be passed to Animated.timing (e.g. `{ duration: 600, easing: Easing.inOut(Easing.quad) }`).  The configuration options you pass will override the defaults for all animations.
-verticalOffset    | number     | Yes      | 0        | The amount to vertically shift the popover on the screen.  In certain Android configurations, you may need to apply a `verticalOffset` of `-StatusBar.currentHeight` for the popover to originate from the correct place.
+animationConfig   | object     | Yes      |           | An object containing any configuration options that can be passed to Animated.timing (e.g. `{ duration: 600, easing: Easing.inOut(Easing.quad) }`).  The configuration options you pass will override the defaults for all animations.
+verticalOffset    | number     | Yes      | 0         | The amount to vertically shift the popover on the screen.  In certain Android configurations, you may need to apply a `verticalOffset` of `-StatusBar.currentHeight` for the popover to originate from the correct place.
+debug             | bool       | Yes      | false     | Set this to `true` to turn on debug logging to the console.  This is useful for figuring out why a Popover isn't showing.
 
 If neither `fromRect` or `fromView` are provided, the popover will float in the center of the screen.
 
