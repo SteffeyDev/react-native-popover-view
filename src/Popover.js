@@ -19,6 +19,7 @@ const isIOS = Platform.OS === 'ios';
 const isLandscape = () => Dimensions.get('screen').width >= Dimensions.get('screen').height;
 
 const DEBUG = false;
+const MULTIPLE_POPOVER_WARNING = "Popover Warning - Can't Show - Attempted to show a Popover while another one was already showing.  You can only show one Popover at a time, and must wait for one to close completely before showing a different one.  You can use the doneClosingCallback prop to detect when a Popover has finished closing.  To show multiple Popovers simultaneously, all but one should have showInModal={false}.  Once you disable showInModal, you can show as many Popovers as you want, but you are responsible for keeping them above other views."
 
 const PLACEMENT_OPTIONS = Object.freeze({
   TOP: 'top',
@@ -57,20 +58,25 @@ class Popover extends React.Component {
     this.animateIn = this.animateIn.bind(this);
   }
 
+  debug(line) {
+    if (DEBUG || this.props.debug)
+      console.log(line);
+  }
+
   setDefaultDisplayArea(evt) {
     let newDisplayArea = new Rect(evt.nativeEvent.layout.x + 10, evt.nativeEvent.layout.y + 10, evt.nativeEvent.layout.width - 20, evt.nativeEvent.layout.height - 20);
     if (!this.state.defaultDisplayArea || rectChanged(this.state.defaultDisplayArea, newDisplayArea)) {
-      if (DEBUG) console.log("setDefaultDisplayArea - newDisplayArea: " + JSON.stringify(newDisplayArea));
+      this.debug("setDefaultDisplayArea - newDisplayArea: " + JSON.stringify(newDisplayArea));
       if (!this.skipNextDefaultDisplayArea) {
         this.setState({defaultDisplayArea: newDisplayArea}, () => {
           this.calculateRect(this.props, fromRect => {
-            if (DEBUG) console.log("setDefaultDisplayArea (inside calculateRect callback) - fromRect: " + JSON.stringify(fromRect));
-            if (DEBUG) console.log("setDefaultDisplayArea (inside calculateRect callback) - getDisplayArea(): " + JSON.stringify(this.getDisplayArea()));
-            if (DEBUG) console.log("setDefaultDisplayArea (inside calculateRect callback) - displayAreaStore: " + JSON.stringify(this.displayAreaStore));
+            this.debug("setDefaultDisplayArea (inside calculateRect callback) - fromRect: " + JSON.stringify(fromRect));
+            this.debug("setDefaultDisplayArea (inside calculateRect callback) - getDisplayArea(): " + JSON.stringify(this.getDisplayArea()));
+            this.debug("setDefaultDisplayArea (inside calculateRect callback) - displayAreaStore: " + JSON.stringify(this.displayAreaStore));
             if (rectChanged(fromRect, this.state.fromRect)
               || rectChanged(this.getDisplayArea(), this.displayAreaStore)) {
               this.displayAreaStore = this.getDisplayArea();
-              if (DEBUG) console.log("setDefaultDisplayArea (inside calculateRect callback) - Triggering state update");
+              this.debug("setDefaultDisplayArea (inside calculateRect callback) - Triggering state update");
               this.setState({fromRect}, () => {
                   this.handleGeomChange();
                   this.waitForResizeToFinish = false;
@@ -79,18 +85,18 @@ class Popover extends React.Component {
           })
         });
       }
-      if (DEBUG && this.skipNextDefaultDisplayArea) console.log("setDefaultDisplayArea - Skipping first because isLandscape");
+      if (this.skipNextDefaultDisplayArea) this.debug("setDefaultDisplayArea - Skipping first because isLandscape");
       this.skipNextDefaultDisplayArea = false;
     }
   }
 
   keyboardDidShow(e) {
-    if (DEBUG) console.log("keyboardDidShow - keyboard height: " + e.endCoordinates.height);
+    this.debug("keyboardDidShow - keyboard height: " + e.endCoordinates.height);
     this.shiftForKeyboard(e.endCoordinates.height);
   }
 
   keyboardDidHide() {
-    if (DEBUG) console.log("keyboardDidHide");
+    this.debug("keyboardDidHide");
 
     // On android, the keyboard update causes a default display area change, so no need to manually trigger
     this.setState({shiftedDisplayArea: null}, () => isIOS && this.handleGeomChange());
@@ -119,8 +125,14 @@ class Popover extends React.Component {
     this.waitForResizeToFinish = false;
 
     // Show popover if isVisible is initially true
-    if (this.props.isVisible)
-      setTimeout(() => this.calculateRect(this.props, fromRect => (fromRect || !this.props.fromView) && this.setState({fromRect, isAwaitingShow: true, visible: true})), 0);
+    if (this.props.isVisible) {
+      if (!Popover.isShowingInModal) {
+        setTimeout(() => this.calculateRect(this.props, fromRect => (fromRect || !this.props.fromView) && this.setState({fromRect, isAwaitingShow: true, visible: true})), 0);
+        if (this.props.showInModal) Popover.isShowingInModal = true;
+      } else {
+        console.warn(MULTIPLE_POPOVER_WARNING);
+      }
+    }
 
     Dimensions.addEventListener('change', this.handleResizeEvent)
   }
@@ -140,18 +152,21 @@ class Popover extends React.Component {
   }
 
   measureContent(requestedContentSize) {
+    if (!requestedContentSize.width) console.warn("Popover Warning - Can't Show - The Popover content has a width of 0, so there is nothing to present.");
+    if (!requestedContentSize.height) console.warn("Popover Warning - Can't Show - The Popover content has a height of 0, so there is nothing to present.");
+    if (this.waitForResizeToFinish) this.debug("measureContent - Waiting for resize to finish");
     if (requestedContentSize.width && requestedContentSize.height && !this.waitForResizeToFinish) {
       if (this.state.isAwaitingShow) {
         if ((this.props.fromView && !this.state.fromRect) || !this.getDisplayArea()) {
-          if (DEBUG) console.log("measureContent - Waiting " + (this.getDisplayArea() ? "for Rect" : "for Display Area") + " - requestedContentSize: " + JSON.stringify(requestedContentSize));
+          this.debug("measureContent - Waiting " + (this.getDisplayArea() ? "for Rect" : "for Display Area") + " - requestedContentSize: " + JSON.stringify(requestedContentSize));
           setTimeout(() => this.measureContent(requestedContentSize), 100);
         } else {
-          if (DEBUG) console.log("measureContent - Showing Popover - requestedContentSize: " + JSON.stringify(requestedContentSize));
+          this.debug("measureContent - Showing Popover - requestedContentSize: " + JSON.stringify(requestedContentSize));
           let geom = this.computeGeometry({requestedContentSize});
           this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), this.animateIn);
         }
       } else if (requestedContentSize.width !== this.state.requestedContentSize.width || requestedContentSize.height !== this.state.requestedContentSize.height) {
-        if (DEBUG) console.log("measureContent - requestedContentSize: " + JSON.stringify(requestedContentSize));
+        this.debug("measureContent - requestedContentSize: " + JSON.stringify(requestedContentSize));
         this.handleGeomChange(requestedContentSize);
       }
     }
@@ -162,10 +177,8 @@ class Popover extends React.Component {
       fromRect = fromRect || Object.assign({}, this.props.fromRect || this.state.fromRect);
       displayArea = displayArea || Object.assign({}, this.getDisplayArea());
 
-      if (DEBUG) {
-        console.log("computeGeometry - displayArea: " + JSON.stringify(displayArea));
-        console.log("computeGeometry - fromRect: " + JSON.stringify(fromRect));
-      }
+      this.debug("computeGeometry - displayArea: " + JSON.stringify(displayArea));
+      this.debug("computeGeometry - fromRect: " + JSON.stringify(fromRect));
 
       if (fromRect && isRect(fromRect)) {
         //check to see if fromRect is outside of displayArea, and adjust if it is
@@ -493,7 +506,8 @@ class Popover extends React.Component {
     let willBeVisible = nextProps.isVisible;
     let {
         isVisible,
-        displayArea
+        displayArea,
+        showInModal
     } = this.props;
 
     if (willBeVisible !== isVisible) {
@@ -501,11 +515,16 @@ class Popover extends React.Component {
           // We want to start the show animation only when contentSize is known
           // so that we can have some logic depending on the geometry
           if (isLandscape() && isIOS) this.skipNextDefaultDisplayArea = true;
-          this.calculateRect(nextProps, fromRect => this.setState({fromRect, isAwaitingShow: true, visible: true}));
-          if (DEBUG) console.log("componentWillReceiveProps - Awaiting popover show");
+          if (!Popover.isShowingInModal) {
+            this.calculateRect(nextProps, fromRect => this.setState({fromRect, isAwaitingShow: true, visible: true}));
+            if (showInModal) Popover.isShowingInModal = true;
+          } else {
+            console.warn(MULTIPLE_POPOVER_WARNING);
+          }
+          this.debug("componentWillReceiveProps - Awaiting popover show");
         } else {
           this.animateOut();
-          if (DEBUG) console.log("componentWillReceiveProps - Hiding popover");
+          this.debug("componentWillReceiveProps - Hiding popover");
         }
     } else if (willBeVisible) {
       this.calculateRect(nextProps, fromRect => {
@@ -536,7 +555,7 @@ class Popover extends React.Component {
     const { forcedContentSize, placement, anchorPoint, popoverOrigin, animatedValues } = this.state;
     requestedContentSize = requestedContentSize || Object.assign({}, this.state.requestedContentSize);
 
-    if (DEBUG) console.log("handleGeomChange - requestedContentSize: " + JSON.stringify(requestedContentSize));
+    this.debug("handleGeomChange - requestedContentSize: " + JSON.stringify(requestedContentSize));
 
     // handleGeomChange may be called more than one times before the first has a chance to finish,
     //  so we use updateCount to make sure that we only trigger an animation on the last one
@@ -550,7 +569,7 @@ class Popover extends React.Component {
         if (this.updateCount <= 1) {
           this.updateCount--;
           let moveTo = new Point(geom.popoverOrigin.x, geom.popoverOrigin.y);
-          if (DEBUG) console.log("handleGeomChange - Triggering popover move to: " + JSON.stringify(moveTo))
+          this.debug("handleGeomChange - Triggering popover move to: " + JSON.stringify(moveTo))
           this.animateTo({
             values: animatedValues,
             fade: 1,
@@ -572,7 +591,10 @@ class Popover extends React.Component {
       fade: 0,
       scale: 0,
       translatePoint: this.getTranslateOrigin(),
-      callback: () => this.setState({visible: false, forcedContentSize: {}}, () => this.props.doneClosingCallback()),
+      callback: () => this.setState({visible: false, forcedContentSize: {}}, () => {
+        if (this.props.showInModal) Popover.isShowingInModal = false;
+        this.props.doneClosingCallback();
+      }),
       easing: Easing.inOut(Easing.quad)
     });
   }
@@ -744,8 +766,10 @@ class Popover extends React.Component {
           {contentView}
         </Modal>
       );
-    } else {
+    } else if (this.state.visible) {
       return contentView;
+    } else {
+      return null;
     }
   }
 }
@@ -809,7 +833,8 @@ Popover.defaultProps = {
   showInModal: true,
   layoutRtl: false,
   showBackground: true,
-  verticalOffset: 0
+  verticalOffset: 0,
+  debug: false
 }
 
 Popover.propTypes = {
@@ -827,7 +852,8 @@ Popover.propTypes = {
   popoverStyle: PropTypes.object,
   arrowStyle: PropTypes.object,
   animationConfig: PropTypes.object,
-  verticalOffset: PropTypes.number
+  verticalOffset: PropTypes.number,
+  debug: PropTypes.bool
 }
 
 export default Popover;
