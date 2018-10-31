@@ -37,6 +37,10 @@ class Popover extends React.Component {
     this.state = {
       requestedContentSize: {},
       forcedContentSize: {},
+      viewLargerThanDisplayArea: {
+        width: false,
+        height: false
+      },
       anchorPoint: new Point(0, 0),
       popoverOrigin: {},
       forcedHeight: null,
@@ -163,10 +167,17 @@ class Popover extends React.Component {
         } else {
           this.debug("measureContent - Showing Popover - requestedContentSize: " + JSON.stringify(requestedContentSize));
           let geom = this.computeGeometry({requestedContentSize});
-          this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false, firstTimeForcedContentSize: false}), this.animateIn);
+          this.debug("measureContent - Showing Popover - geom: " + JSON.stringify(geom));
+
+          // If the view initially overflowed the display area, wait one more render cycle to test-render it within the display area to get
+          //  final calculations for popoverOrigin before show
+          if (geom.viewLargerThanDisplayArea.width || geom.viewLargerThanDisplayArea.height)
+            this.setState(Object.assign(geom, {requestedContentSize}));
+          else
+            this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), this.animateIn);
         }
       } else if (requestedContentSize.width !== this.state.requestedContentSize.width || requestedContentSize.height !== this.state.requestedContentSize.height) {
-        this.debug("measureContent - requestedContentSize: " + JSON.stringify(requestedContentSize));
+        this.debug("measureContent - new requestedContentSize: " + JSON.stringify(requestedContentSize) + " (used to be " + JSON.stringify(this.state.requestedContentSize) + ")");
         this.handleGeomChange(requestedContentSize);
       }
     }
@@ -215,8 +226,8 @@ class Popover extends React.Component {
           popoverOrigin: new Point(Math.max(minX, preferedX), Math.max(minY, preferedY)),
           anchorPoint: new Point(displayArea.width/2 + displayArea.x, displayArea.height/2 + displayArea.y),
           forcedContentSize: {
-            width: preferedX < minX ? displayArea.width : null,
-            height: preferedY < minY ? displayArea.height : null
+            width: displayArea.width,
+            height: displayArea.height
           },
           viewLargerThanDisplayArea: {
             width: preferedX < minX,
@@ -238,8 +249,8 @@ class Popover extends React.Component {
       }
 
       let viewLargerThanDisplayArea = {
-        height: preferedY <= minY,
-        width: requestedContentSize.width >= displayArea.width
+        height: preferedY < minY,
+        width: requestedContentSize.width > displayArea.width
       }
 
       let viewWidth = viewLargerThanDisplayArea.width ? forcedContentSize.width : requestedContentSize.width;
@@ -279,8 +290,8 @@ class Popover extends React.Component {
       }
 
       let viewLargerThanDisplayArea = {
-        height: preferedY + requestedContentSize.height >= displayArea.y + displayArea.height,
-        width: requestedContentSize.width >= displayArea.width
+        height: preferedY + requestedContentSize.height > displayArea.y + displayArea.height,
+        width: requestedContentSize.width > displayArea.width
       }
 
       let viewWidth = viewLargerThanDisplayArea.width ? forcedContentSize.width : requestedContentSize.width;
@@ -323,8 +334,8 @@ class Popover extends React.Component {
       }
 
       let viewLargerThanDisplayArea = {
-        height: requestedContentSize.height >= displayArea.height,
-        width: requestedContentSize.width >= fromRect.x - displayArea.x - arrowSize.width
+        height: requestedContentSize.height > displayArea.height,
+        width: requestedContentSize.width > fromRect.x - displayArea.x - arrowSize.width
       }
 
       let viewWidth = viewLargerThanDisplayArea.width ? forcedContentSize.width : requestedContentSize.width;
@@ -367,8 +378,8 @@ class Popover extends React.Component {
       }
 
       let viewLargerThanDisplayArea = {
-        height: requestedContentSize.height >= displayArea.height,
-        width: requestedContentSize.width >= horizontalSpace
+        height: requestedContentSize.height > displayArea.height,
+        width: requestedContentSize.width > horizontalSpace
       }
 
       let viewHeight = viewLargerThanDisplayArea.height ? forcedContentSize.height : requestedContentSize.height;
