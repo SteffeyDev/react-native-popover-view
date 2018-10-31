@@ -163,7 +163,18 @@ class Popover extends React.Component {
         } else {
           this.debug("measureContent - Showing Popover - requestedContentSize: " + JSON.stringify(requestedContentSize));
           let geom = this.computeGeometry({requestedContentSize});
-          this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), this.animateIn);
+          if (this.state.firstTimeForcedContentSize) {
+            this.debug("measureContent - Maintaining forcedContentSize: " + JSON.stringify(this.state.forcedContentSize));
+            geom.forcedContentSize = this.state.forcedContentSize;
+          }
+
+          // If we have to restrict the content view size, on a re-render the size may be underneath what we restrict it to.
+          // If this is the case, the desired popoverOrigin may be different, so let's nail this down before we show.
+          // The firstTimeForcedContentSize is simple a flag that is turned on here and turned off the next time this method is called
+          if (!this.state.firstTimeForcedContentSize && geom.forcedContentSize && (geom.forcedContentSize.width || geom.forcedContentSize.height))
+            this.setState(Object.assign(geom, {requestedContentSize, firstTimeForcedContentSize: true}));
+          else
+            this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false, firstTimeForcedContentSize: false}), this.animateIn);
         }
       } else if (requestedContentSize.width !== this.state.requestedContentSize.width || requestedContentSize.height !== this.state.requestedContentSize.height) {
         this.debug("measureContent - requestedContentSize: " + JSON.stringify(requestedContentSize));
