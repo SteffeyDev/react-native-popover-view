@@ -20,6 +20,7 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
   * [Props](#props)
   * [Example](#standalone-example)
 * [Usage with React Navigation](#rn)
+* [Troubleshooting](#troubleshooting)
 * [Upgrading](#upgrading)
 * [Contributing](#contributing)
 * [Credits](#credits)
@@ -163,6 +164,20 @@ AppRegistry.registerComponent('PopoverExample', () => PopoverExample);
 ## <a name="rn"/>Usage with React Navigation
 
 To use this library with React Navigation for deep integration, see [react-navigation-popover](https://github.com/SteffeyDev/react-navigation-popover).
+
+## <a name="troubleshooting" />Troubleshooting
+
+In all cases, start by passing the `debug={true}` prop to the Popover, to see if the debug output can help you figure out the issue.
+
+#### Show `fromView` not working
+
+First, make sure that the `ref` is defined prior to showing the Popover.  If you set the Popover's `isVisible` prop to `true` while the variable passed into `fromoView` is undefined, the Popover will show centered on the screen.
+
+If you pass in a `fromView` prop, but the Popover still shows centered on the screen on an **Android device**, try adding these props to the component whose `ref` you passed in to `fromView`:
+* `renderToHardwareTextureAndroid={true}`
+* `collapsable={false}`
+
+See https://github.com/facebook/react-native/issues/3282 and https://github.com/SteffeyDev/react-native-popover-view/issues/28 for more info.
 
 ## <a name="upgrading" />Upgrading
 
