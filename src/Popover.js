@@ -230,8 +230,8 @@ class Popover extends React.Component {
             height: displayArea.height
           },
           viewLargerThanDisplayArea: {
-            width: preferedX < minX,
-            height: preferedY < minY
+            width: preferedX < minX - 1,
+            height: preferedY < minY - 1
           }
         }
       }
@@ -249,8 +249,8 @@ class Popover extends React.Component {
       }
 
       let viewLargerThanDisplayArea = {
-        height: preferedY < minY,
-        width: requestedContentSize.width > displayArea.width
+        height: preferedY < minY - 1,
+        width: requestedContentSize.width > Math.ceil(displayArea.width)
       }
 
       let viewWidth = viewLargerThanDisplayArea.width ? forcedContentSize.width : requestedContentSize.width;
@@ -290,8 +290,8 @@ class Popover extends React.Component {
       }
 
       let viewLargerThanDisplayArea = {
-        height: preferedY + requestedContentSize.height > displayArea.y + displayArea.height,
-        width: requestedContentSize.width > displayArea.width
+        height: preferedY + requestedContentSize.height > Math.ceil(displayArea.y + displayArea.height),
+        width: requestedContentSize.width > Math.ceil(displayArea.width)
       }
 
       let viewWidth = viewLargerThanDisplayArea.width ? forcedContentSize.width : requestedContentSize.width;
@@ -334,8 +334,8 @@ class Popover extends React.Component {
       }
 
       let viewLargerThanDisplayArea = {
-        height: requestedContentSize.height > displayArea.height,
-        width: requestedContentSize.width > fromRect.x - displayArea.x - arrowSize.width
+        height: requestedContentSize.height > Math.ceil(displayArea.height),
+        width: requestedContentSize.width > Math.ceil(fromRect.x - displayArea.x - arrowSize.width)
       }
 
       let viewWidth = viewLargerThanDisplayArea.width ? forcedContentSize.width : requestedContentSize.width;
@@ -378,8 +378,8 @@ class Popover extends React.Component {
       }
 
       let viewLargerThanDisplayArea = {
-        height: requestedContentSize.height > displayArea.height,
-        width: requestedContentSize.width > horizontalSpace
+        height: requestedContentSize.height > Math.ceil(displayArea.height),
+        width: requestedContentSize.width > Math.ceil(horizontalSpace)
       }
 
       let viewHeight = viewLargerThanDisplayArea.height ? forcedContentSize.height : requestedContentSize.height;

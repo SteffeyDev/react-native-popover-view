@@ -44,7 +44,7 @@ export function runAfterChange(getFirst, second, func) {
   checkFunc();
 }
 
-export function waitForNewRect(ref, initialRect, onFinish, verticalOffset) {
+export function waitForNewRect(ref, initialRect, onFinish, verticalOffset = 0) {
   runAfterChange(callback => {
     NativeModules.UIManager.measure(findNodeHandle(ref), (x0, y0, width, height, x, y) => {
       callback(new Rect(x, y + verticalOffset, width, height));
