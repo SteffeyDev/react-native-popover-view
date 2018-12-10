@@ -171,7 +171,7 @@ In all cases, start by passing the `debug={true}` prop to the Popover, to see if
 
 #### Show `fromView` not working
 
-First, make sure that the `ref` is defined prior to showing the Popover.  If you set the Popover's `isVisible` prop to `true` while the variable passed into `fromoView` is undefined, the Popover will show centered on the screen.
+First, make sure that the `ref` is defined prior to showing the Popover.  If you set the Popover's `isVisible` prop to `true` while the variable passed into `fromView` is undefined, the Popover will show centered on the screen.
 
 If you pass in a `fromView` prop, but the Popover still shows centered on the screen on an **Android device**, try adding these props to the component whose `ref` you passed in to `fromView`:
 * `renderToHardwareTextureAndroid={true}`
