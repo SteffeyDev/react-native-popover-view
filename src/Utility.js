@@ -1,20 +1,20 @@
-import { Animated, NativeModules, findNodeHandle, Dimensions } from 'react-native'
+import { NativeModules, findNodeHandle, Dimensions } from 'react-native'
 
 export function Point(x, y) {
-    this.x = x;
-    this.y = y;
+  this.x = x;
+  this.y = y;
 }
 
 export function Size(width, height) {
-    this.width = width;
-    this.height = height;
+  this.width = width;
+  this.height = height;
 }
 
 export function Rect(x, y, width, height) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
+  this.x = x;
+  this.y = y;
+  this.width = width;
+  this.height = height;
 }
 
 export function isTablet() {
@@ -26,7 +26,7 @@ export function isRect(rect) {
 }
 
 export function isPoint(point) {
-  return point && (point.x || point.x === 0) && point.x !== NaN && (point.y || point.y === 0) && point.y !== NaN;
+  return point && (point.x || point.x === 0) && !isNaN(point.x) && (point.y || point.y === 0) && !isNaN(point.y);
 }
 
 export function runAfterChange(getFirst, second, func) {
