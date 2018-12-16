@@ -169,10 +169,13 @@ class Popover extends React.Component {
 
           // If the view initially overflowed the display area, wait one more render cycle to test-render it within the display area to get
           //  final calculations for popoverOrigin before show
-          if (geom.viewLargerThanDisplayArea.width || geom.viewLargerThanDisplayArea.height)
+          if (geom.viewLargerThanDisplayArea.width || geom.viewLargerThanDisplayArea.height) {
+            this.debug("measureContent - Delaying showing popover because viewLargerThanDisplayArea");
             this.setState(Object.assign(geom, {requestedContentSize}));
-          else
+          } else {
+            this.debug("measureContent - Showing Popover - Animating In");
             this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), this.animateIn);
+          }
         }
       } else if (requestedContentSize.width !== this.state.requestedContentSize.width || requestedContentSize.height !== this.state.requestedContentSize.height) {
         this.debug("measureContent - new requestedContentSize: " + JSON.stringify(requestedContentSize) + " (used to be " + JSON.stringify(this.state.requestedContentSize) + ")");
@@ -247,7 +250,7 @@ class Popover extends React.Component {
 
     let viewLargerThanDisplayArea = {
       height: preferedY < minY - 1,
-      width: requestedContentSize.width > Math.ceil(displayArea.width)
+      width: requestedContentSize.width > displayArea.width + 1
     }
 
     let viewWidth = viewLargerThanDisplayArea.width ? forcedContentSize.width : requestedContentSize.width;
@@ -286,8 +289,8 @@ class Popover extends React.Component {
     }
 
     let viewLargerThanDisplayArea = {
-      height: preferedY + requestedContentSize.height > Math.ceil(displayArea.y + displayArea.height),
-      width: requestedContentSize.width > Math.ceil(displayArea.width)
+      height: preferedY + requestedContentSize.height > displayArea.y + displayArea.height + 1,
+      width: requestedContentSize.width > displayArea.width + 1
     }
 
     let viewWidth = viewLargerThanDisplayArea.width ? forcedContentSize.width : requestedContentSize.width;
@@ -329,8 +332,8 @@ class Popover extends React.Component {
     }
 
     let viewLargerThanDisplayArea = {
-      height: requestedContentSize.height > Math.ceil(displayArea.height),
-      width: requestedContentSize.width > Math.ceil(fromRect.x - displayArea.x - arrowSize.width)
+      height: requestedContentSize.height > displayArea.height + 1,
+      width: requestedContentSize.width > fromRect.x - displayArea.x - arrowSize.width + 1
     }
 
     let viewWidth = viewLargerThanDisplayArea.width ? forcedContentSize.width : requestedContentSize.width;
@@ -372,8 +375,8 @@ class Popover extends React.Component {
     }
 
     let viewLargerThanDisplayArea = {
-      height: requestedContentSize.height > Math.ceil(displayArea.height),
-      width: requestedContentSize.width > Math.ceil(horizontalSpace)
+      height: requestedContentSize.height > displayArea.height + 1,
+      width: requestedContentSize.width > horizontalSpace + 1
     }
 
     let viewHeight = viewLargerThanDisplayArea.height ? forcedContentSize.height : requestedContentSize.height;
@@ -550,7 +553,6 @@ class Popover extends React.Component {
       if (willBeVisible) {
         // We want to start the show animation only when contentSize is known
         // so that we can have some logic depending on the geometry
-        if (isLandscape() && isIOS && !Platform.isPad) this.skipNextDefaultDisplayArea = true;
         if (!Popover.isShowingInModal) {
           this.calculateRect(nextProps, fromRect => this.setState({fromRect, isAwaitingShow: true, visible: true}));
           if (showInModal) Popover.isShowingInModal = true;
