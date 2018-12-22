@@ -46,7 +46,8 @@ class Popover extends React.Component {
       defaultDisplayArea: null,
       placement: PLACEMENT_OPTIONS.AUTO,
       isAwaitingShow: true,
-      visible: false,
+      visible: false, // Modal
+      showing: false, // Popover itself
       fromRect: null,
       animatedValues: {
         scale: new Animated.Value(0),
@@ -561,7 +562,10 @@ class Popover extends React.Component {
         }
         this.debug("componentWillReceiveProps - Awaiting popover show");
       } else {
-        this.animateOut();
+        if (this.state.showing)
+          this.animateOut();
+        else
+          this.props.doneClosingCallback();
         this.debug("componentWillReceiveProps - Hiding popover");
       }
     } else if (willBeVisible) {
@@ -624,16 +628,18 @@ class Popover extends React.Component {
   animateOut() {
     this.keyboardDidShowListener && this.keyboardDidShowListener.remove();
     this.keyboardDidHideListener && this.keyboardDidHideListener.remove();
-    this.setState({shiftedDisplayArea: null});
+
+    // Animation callback may or may not get called if animation is cut short, so calling this a bit early for safety
+    if (this.props.showInModal) Popover.isShowingInModal = false;
+
+    this.setState({shiftedDisplayArea: null, showing: false});
+
     this.animateTo({
       values: this.state.animatedValues,
       fade: 0,
       scale: 0,
       translatePoint: this.getTranslateOrigin(),
-      callback: () => this.setState({visible: false, forcedContentSize: {}}, () => {
-        if (this.props.showInModal) Popover.isShowingInModal = false;
-        this.props.doneClosingCallback();
-      }),
+      callback: () => this.setState({visible: false, forcedContentSize: {}}, () => this.props.doneClosingCallback()),
       easing: Easing.inOut(Easing.quad)
     });
   }
@@ -657,7 +663,8 @@ class Popover extends React.Component {
       fade: 1,
       scale: 1,
       translatePoint,
-      easing: Easing.out(Easing.back())
+      easing: Easing.out(Easing.back()),
+      callback: () => this.setState({showing: true})
     })
   }
 
@@ -775,7 +782,7 @@ class Popover extends React.Component {
     let contentView = (
       <View style={[styles.container, {left: 0}]}>
         <SafeAreaView pointerEvent="none" style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}>
-          <View style={{flex: 1}} onLayout={evt => this.setDefaultDisplayArea(evt)} />
+          <TouchableWithoutFeedback onPress={this.props.onClose} style={{flex: 1}} onLayout={evt => this.setDefaultDisplayArea(evt)}><View style={{flex: 1}} /></TouchableWithoutFeedback>
         </SafeAreaView>
 
         <Animated.View style={containerStyle}>
