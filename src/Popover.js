@@ -61,21 +61,21 @@ class Popover extends React.Component {
     this.animateIn = this.animateIn.bind(this);
   }
 
-  debug(line) {
+  debug(line, obj) {
     if (DEBUG || this.props.debug)
-      console.log(line);
+      console.log(line + (obj ? ": " + JSON.stringify(obj) : ''));
   }
 
   setDefaultDisplayArea(evt) {
     let newDisplayArea = new Rect(evt.nativeEvent.layout.x + 10, evt.nativeEvent.layout.y + 10, evt.nativeEvent.layout.width - 20, evt.nativeEvent.layout.height - 20);
     if (!this.state.defaultDisplayArea || rectChanged(this.state.defaultDisplayArea, newDisplayArea)) {
-      this.debug("setDefaultDisplayArea - newDisplayArea: " + JSON.stringify(newDisplayArea));
+      this.debug("setDefaultDisplayArea - newDisplayArea", newDisplayArea);
       if (!this.skipNextDefaultDisplayArea) {
         this.setState({defaultDisplayArea: newDisplayArea}, () => {
           this.calculateRect(this.props, fromRect => {
-            this.debug("setDefaultDisplayArea (inside calculateRect callback) - fromRect: " + JSON.stringify(fromRect));
-            this.debug("setDefaultDisplayArea (inside calculateRect callback) - getDisplayArea(): " + JSON.stringify(this.getDisplayArea()));
-            this.debug("setDefaultDisplayArea (inside calculateRect callback) - displayAreaStore: " + JSON.stringify(this.displayAreaStore));
+            this.debug("setDefaultDisplayArea (inside calculateRect callback) - fromRect", fromRect);
+            this.debug("setDefaultDisplayArea (inside calculateRect callback) - getDisplayArea()", this.getDisplayArea());
+            this.debug("setDefaultDisplayArea (inside calculateRect callback) - displayAreaStore", this.displayAreaStore);
             if (rectChanged(fromRect, this.state.fromRect)
               || rectChanged(this.getDisplayArea(), this.displayAreaStore)) {
               this.displayAreaStore = this.getDisplayArea();
@@ -159,14 +159,15 @@ class Popover extends React.Component {
     if (!requestedContentSize.height) console.warn("Popover Warning - Can't Show - The Popover content has a height of 0, so there is nothing to present.");
     if (this.waitForResizeToFinish) this.debug("measureContent - Waiting for resize to finish");
     if (requestedContentSize.width && requestedContentSize.height && !this.waitForResizeToFinish) {
+
       if (this.state.isAwaitingShow) {
         if ((this.props.fromView && !this.state.fromRect) || !this.getDisplayArea()) {
-          this.debug("measureContent - Waiting " + (this.getDisplayArea() ? "for Rect" : "for Display Area") + " - requestedContentSize: " + JSON.stringify(requestedContentSize));
+          this.debug("measureContent - Waiting " + (this.getDisplayArea() ? "for Rect" : "for Display Area") + " - requestedContentSize", requestedContentSize);
           setTimeout(() => this.measureContent(requestedContentSize), 100);
         } else {
-          this.debug("measureContent - Showing Popover - requestedContentSize: " + JSON.stringify(requestedContentSize));
+          this.debug("measureContent - Showing Popover - requestedContentSize", requestedContentSize);
           let geom = this.computeGeometry({requestedContentSize});
-          this.debug("measureContent - Showing Popover - geom: " + JSON.stringify(geom));
+          this.debug("measureContent - Showing Popover - geom", geom);
 
           // If the view initially overflowed the display area, wait one more render cycle to test-render it within the display area to get
           //  final calculations for popoverOrigin before show
@@ -179,8 +180,15 @@ class Popover extends React.Component {
           }
         }
       } else if (requestedContentSize.width !== this.state.requestedContentSize.width || requestedContentSize.height !== this.state.requestedContentSize.height) {
-        this.debug("measureContent - new requestedContentSize: " + JSON.stringify(requestedContentSize) + " (used to be " + JSON.stringify(this.state.requestedContentSize) + ")");
-        this.handleGeomChange(requestedContentSize);
+
+        // In the case of an animation within the popover that affects the popover size, this function will be called frequently throughout the duration
+        //   of the animation.  This will continuously schedule and then cancel the timeout until the last time this is called when the animation is complete.
+        // If this method is only called once, we are only introducing a 50ms lag into the process, so shouldn't be noticeable
+        clearTimeout(this.measureContentTimeout);
+        this.measureContentTimeout = setTimeout(() => {
+          this.debug("measureContent - new requestedContentSize: " + JSON.stringify(requestedContentSize) + " (used to be " + JSON.stringify(this.state.requestedContentSize) + ")");
+          this.handleGeomChange(requestedContentSize);
+        }, 50);
       }
     }
   }
@@ -190,8 +198,10 @@ class Popover extends React.Component {
     fromRect = fromRect || Object.assign({}, this.props.fromRect || this.state.fromRect);
     displayArea = displayArea || Object.assign({}, this.getDisplayArea());
 
-    this.debug("computeGeometry - displayArea: " + JSON.stringify(displayArea));
-    this.debug("computeGeometry - fromRect: " + JSON.stringify(fromRect));
+    this.debug("computeGeometry - displayArea", displayArea);
+    this.debug("computeGeometry - fromRect", fromRect);
+
+    let newGeom = null;
 
     if (fromRect && isRect(fromRect)) {
       //check to see if fromRect is outside of displayArea, and adjust if it is
@@ -208,23 +218,68 @@ class Popover extends React.Component {
 
       switch (placement) {
         case PLACEMENT_OPTIONS.TOP:
-          return this.computeTopGeometry(options);
+          newGeom = this.computeTopGeometry(options);
+          break;
         case PLACEMENT_OPTIONS.BOTTOM:
-          return this.computeBottomGeometry(options);
+          newGeom = this.computeBottomGeometry(options);
+          break;
         case PLACEMENT_OPTIONS.LEFT:
-          return this.computeLeftGeometry(options);
+          newGeom = this.computeLeftGeometry(options);
+          break;
         case PLACEMENT_OPTIONS.RIGHT:
-          return this.computeRightGeometry(options);
+          newGeom = this.computeRightGeometry(options);
+          break;
         default:
-          return this.computeAutoGeometry(options);
+          newGeom = this.computeAutoGeometry(options);
       }
-    } else {
+
+      // If the popover will be restricted and the view that the popover is showing from is sufficiently large, try to show the popover inside the view
+      if (newGeom.viewLargerThanDisplayArea.width || newGeom.viewLargerThanDisplayArea.height) {
+        let fromRectHeightVisible = fromRect.y < displayArea.y
+          ? fromRect.height - (displayArea.y - fromRect.y)
+          : displayArea.y + displayArea.height - fromRect.y;
+        if (fromRect.width > requestedContentSize.width && fromRectHeightVisible > requestedContentSize.height) {
+          let preferedX = Math.max(fromRect.x + 10, fromRect.x + (fromRect.width - requestedContentSize.width)/2);
+          let preferedY = Math.max(fromRect.y + 10, fromRect.y + (fromRect.height - requestedContentSize.height)/2);
+
+          let constrainedX = Math.max(preferedX, displayArea.x);
+          if (constrainedX + requestedContentSize.width > displayArea.x + displayArea.width)
+            constrainedX = displayArea.x + displayArea.width - requestedContentSize.width;
+
+          let constrainedY = Math.max(preferedY, displayArea.y);
+          if (constrainedY + requestedContentSize.height > displayArea.y + displayArea.height)
+            constrainedY = displayArea.y + displayArea.height - requestedContentSize.height;
+
+          let forcedContentSize = {
+            width: Math.min(fromRect.width - 20, displayArea.width),
+            height: Math.min(fromRect.height - 20, displayArea.height)
+          }
+
+          newGeom = {
+            popoverOrigin: new Point(constrainedX, constrainedY),
+            anchorPoint: new Point(fromRect.x + (fromRect.width/2), fromRect.y + (fromRect.height/2)),
+            forcedContentSize,
+            viewLargerThanDisplayArea: {
+              width: requestedContentSize.width > forcedContentSize.width,
+              height: requestedContentSize.height > forcedContentSize.height
+            },
+            showArrow: false
+          }
+        } else {
+          // If we can't fit inside or outside the fromRect, show the popover centered on the screen
+          newGeom = null;
+        }
+      }
+    }
+
+    
+    if (!newGeom) {
       const minY = displayArea.y;
       const minX = displayArea.x;
       const preferedY = (displayArea.height - requestedContentSize.height)/2 + displayArea.y;
       const preferedX = (displayArea.width - requestedContentSize.width)/2 + displayArea.x;
 
-      return {
+      newGeom = {
         popoverOrigin: new Point(Math.max(minX, preferedX), Math.max(minY, preferedY)),
         anchorPoint: new Point(displayArea.width/2 + displayArea.x, displayArea.height/2 + displayArea.y),
         forcedContentSize: {
@@ -234,9 +289,12 @@ class Popover extends React.Component {
         viewLargerThanDisplayArea: {
           width: preferedX < minX - 1,
           height: preferedY < minY - 1
-        }
+        },
+        showArrow: false
       }
     }
+
+    return newGeom;
   }
 
   computeTopGeometry({displayArea, fromRect, requestedContentSize}) {
@@ -276,7 +334,8 @@ class Popover extends React.Component {
       anchorPoint,
       placement: PLACEMENT_OPTIONS.TOP,
       forcedContentSize,
-      viewLargerThanDisplayArea
+      viewLargerThanDisplayArea,
+      showArrow: true
     }
   }
 
@@ -316,7 +375,8 @@ class Popover extends React.Component {
       anchorPoint,
       placement: PLACEMENT_OPTIONS.BOTTOM,
       forcedContentSize,
-      viewLargerThanDisplayArea
+      viewLargerThanDisplayArea,
+      showArrow: true
     }
   }
 
@@ -362,7 +422,8 @@ class Popover extends React.Component {
       anchorPoint,
       placement: PLACEMENT_OPTIONS.LEFT,
       forcedContentSize,
-      viewLargerThanDisplayArea
+      viewLargerThanDisplayArea,
+      showArrow: true
     }
   }
 
@@ -404,7 +465,8 @@ class Popover extends React.Component {
       anchorPoint,
       placement: PLACEMENT_OPTIONS.RIGHT,
       forcedContentSize,
-      viewLargerThanDisplayArea
+      viewLargerThanDisplayArea,
+      showArrow: true
     }
   }
 
@@ -420,7 +482,7 @@ class Popover extends React.Component {
 
     arrowSize = this.getArrowSize(PLACEMENT_OPTIONS.TOP);
 
-    this.debug("computeAutoGeometry - possiblePlacements: " + JSON.stringify(possiblePlacements));
+    this.debug("computeAutoGeometry - possiblePlacements", possiblePlacements);
 
     // Keep same placement if possible
     if (possiblePlacements.length === 2 && this.state.placement !== PLACEMENT_OPTIONS.AUTO && possiblePlacements.indexOf(this.state.placement) !== -1) {
@@ -525,11 +587,17 @@ class Popover extends React.Component {
   getTranslateOrigin() {
     const {forcedContentSize, viewLargerThanDisplayArea, requestedContentSize, popoverOrigin, anchorPoint} = this.state;
 
-    const viewWidth = viewLargerThanDisplayArea.width ? forcedContentSize.width : requestedContentSize.width || 0;
-    const viewHeight = viewLargerThanDisplayArea.height ? forcedContentSize.height : requestedContentSize.height || 0;
-    const popoverCenter = new Point(popoverOrigin.x + (viewWidth / 2), popoverOrigin.y + (viewHeight / 2));
+    const popoverWidth = viewLargerThanDisplayArea.width ? forcedContentSize.width : requestedContentSize.width || 0;
+    const popoverHeight = viewLargerThanDisplayArea.height ? forcedContentSize.height : requestedContentSize.height || 0;
+    const popoverCenter = new Point(popoverOrigin.x + (popoverWidth / 2), popoverOrigin.y + (popoverHeight / 2));
     const shiftHorizantal = anchorPoint.x - popoverCenter.x;
     const shiftVertical = anchorPoint.y - popoverCenter.y;
+
+    this.debug("getTranslateOrigin - popoverOrigin", popoverOrigin);
+    this.debug("getTranslateOrigin - popoverSize", {width: popoverWidth, height: popoverHeight});
+    this.debug("getTranslateOrigin - anchorPoint", anchorPoint);
+    this.debug("getTranslateOrigin - shift", {hoizontal: shiftHorizantal, vertical: shiftVertical});
+
     return new Point(popoverOrigin.x + shiftHorizantal, popoverOrigin.y + shiftVertical);
   }
 
@@ -598,7 +666,7 @@ class Popover extends React.Component {
     const { forcedContentSize, popoverOrigin, animatedValues } = this.state;
     requestedContentSize = requestedContentSize || Object.assign({}, this.state.requestedContentSize);
 
-    this.debug("handleGeomChange - requestedContentSize: " + JSON.stringify(requestedContentSize));
+    this.debug("handleGeomChange - requestedContentSize: ", requestedContentSize);
 
     // handleGeomChange may be called more than one times before the first has a chance to finish,
     //  so we use updateCount to make sure that we only trigger an animation on the last one
@@ -612,7 +680,7 @@ class Popover extends React.Component {
         if (this.updateCount <= 1) {
           this.updateCount--;
           let moveTo = new Point(geom.popoverOrigin.x, geom.popoverOrigin.y);
-          this.debug("handleGeomChange - Triggering popover move to: " + JSON.stringify(moveTo))
+          this.debug("handleGeomChange - Triggering popover move to", moveTo);
           this.animateTo({
             values: animatedValues,
             fade: 1,
@@ -796,7 +864,7 @@ class Popover extends React.Component {
               {this.props.children}
             </Animated.View>
 
-            {(this.props.fromRect || this.state.fromRect) &&
+            {this.state.showArrow &&
               <Animated.View style={arrowViewStyle}>
                 <View style={arrowInnerStyle}/>
               </Animated.View>
