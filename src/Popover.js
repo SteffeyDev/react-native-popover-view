@@ -876,7 +876,7 @@ class Popover extends React.Component {
 
     if (this.props.showInModal) {
       return (
-        <Modal transparent={true} supportedOrientations={['portrait', 'landscape']} hardwareAccelerated={true} visible={this.state.visible} onRequestClose={this.props.onClose}>
+        <Modal transparent={true} supportedOrientations={['portrait', 'portrait-upside-down', 'landscape']} hardwareAccelerated={true} visible={this.state.visible} onRequestClose={this.props.onClose}>
           {contentView}
         </Modal>
       );
