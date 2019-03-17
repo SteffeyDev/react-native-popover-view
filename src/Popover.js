@@ -630,11 +630,17 @@ class Popover extends React.Component {
         }
         this.debug("componentWillReceiveProps - Awaiting popover show");
       } else {
-        if (this.state.showing)
-          this.animateOut();
-        else
+        if (this.state.visible) {
+          if (this.state.showing)
+            this.animateOut();
+          else
+            this.animateOutAfterShow = true;
+          this.debug("componentWillReceiveProps - Hiding popover");
+        }
+        else {
           this.props.doneClosingCallback();
-        this.debug("componentWillReceiveProps - Hiding popover");
+          this.debug("componentWillReceiveProps - Popover never shown");
+        }
       }
     } else if (willBeVisible) {
       this.calculateRect(nextProps, fromRect => {
@@ -732,7 +738,13 @@ class Popover extends React.Component {
       scale: 1,
       translatePoint,
       easing: Easing.out(Easing.back()),
-      callback: () => this.setState({showing: true})
+      callback: () => {
+        this.setState({showing: true});
+        if (this.animateOutAfterShow) {
+          this.animateOut();
+          this.animateOutAfterShow = false;
+        }
+      }
     })
   }
 
