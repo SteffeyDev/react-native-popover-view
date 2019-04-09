@@ -176,6 +176,9 @@ class Popover extends React.Component {
             this.setState(Object.assign(geom, {requestedContentSize}));
           } else {
             this.debug("measureContent - Showing Popover - Animating In");
+            setTimeout(() => {
+                this.props.onOpen();
+            }, 0);
             this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), this.animateIn);
           }
         }
@@ -954,6 +957,7 @@ Popover.defaultProps = {
   arrowStyle: {},
   popoverStyle: {},
   placement: PLACEMENT_OPTIONS.AUTO,
+  onOpen: noop,
   onClose: noop,
   doneClosingCallback: noop,
   showInModal: true,
@@ -967,6 +971,7 @@ Popover.propTypes = {
   isVisible: PropTypes.bool,
   displayArea: PropTypes.objectOf(PropTypes.number),
   placement: PropTypes.oneOf([PLACEMENT_OPTIONS.LEFT, PLACEMENT_OPTIONS.RIGHT, PLACEMENT_OPTIONS.TOP, PLACEMENT_OPTIONS.BOTTOM, PLACEMENT_OPTIONS.AUTO]),
+  onOpen: PropTypes.func,
   onClose: PropTypes.func,
   doneClosingCallback: PropTypes.func,
   showInModal: PropTypes.bool,
