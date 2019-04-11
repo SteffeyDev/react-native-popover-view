@@ -8,13 +8,11 @@ import { Rect, Point, Size, isRect, isPoint, rectChanged, pointChanged, waitForN
 
 const noop = () => {};
 
-const {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window');
 const DEFAULT_ARROW_SIZE = new Size(16, 8);
 const DEFAULT_BORDER_RADIUS = 3;
-const FIX_SHIFT = SCREEN_WIDTH * 2;
+const FIX_SHIFT = Dimensions.get('window').width * 2;
 
 const isIOS = Platform.OS === 'ios';
-const isLandscape = () => Dimensions.get('screen').width >= Dimensions.get('screen').height;
 
 const DEBUG = false;
 const MULTIPLE_POPOVER_WARNING = "Popover Warning - Can't Show - Attempted to show a Popover while another one was already showing.  You can only show one Popover at a time, and must wait for one to close completely before showing a different one.  You can use the doneClosingCallback prop to detect when a Popover has finished closing.  To show multiple Popovers simultaneously, all but one should have showInModal={false}.  Once you disable showInModal, you can show as many Popovers as you want, but you are responsible for keeping them above other views."
@@ -148,7 +146,8 @@ class Popover extends React.Component {
   }
 
   // First thing called when device rotates
-  handleResizeEvent = () => {
+  handleResizeEvent = change => {
+    this.debug("handleResizeEvent - New Dimensions", change);
     if (this.props.isVisible) {
       this.waitForResizeToFinish = true;
     }
