@@ -748,8 +748,8 @@ class Popover extends React.Component {
       translatePoint: this.getTranslateOrigin(),
       callback: () => this.setState({visible: false, forcedContentSize: {}}, () => {
 
-        // If showing in an RN modal, the onCloseComplete callback will be called from the Modal onDismiss callback
-        if (this.props.mode !== POPOVER_MODE.RN_MODAL)
+        // If showing in an RN modal, the onCloseComplete callback will be called from the Modal onDismiss callback (on iOS only)
+        if (this.props.mode !== POPOVER_MODE.RN_MODAL || !isIOS)
           this.props.onCloseComplete()
       }),
       easing: Easing.inOut(Easing.quad)
