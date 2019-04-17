@@ -75,25 +75,48 @@ import Popover from 'react-native-popover-view'
 Prop              | Type     | Optional | Default     | Description
 ----------------- | -------- | -------- | ----------- | -----------
 isVisible         | bool     | No       | false       | Show/Hide the popover
+mode              | string   | Yes      | 'rn-modal'  | One of: 'rn-modal', 'js-modal', 'tooltip'. See [Mode](#mode) section below for details.
 fromView          | ref      | Yes      | null        | The `ref` of the view that should anchor the popover.
 fromRect          | rect     | Yes      | null        | Alternative to `fromView`.  Rectangle at which to anchor the popover.
+fromDynamicRect   | function | Yes      |             | Same as `fromRect`, but instead of passing a static rectangle, pass a function that takes the display area dimensions as parameters: `(displayAreaWidth, displayAreaHeight) => new Rect(...)`
 displayArea       | rect     | Yes      | screen rect | Area where the popover is allowed to be displayed
 placement         | string   | Yes      | 'auto'      | How to position the popover - top &#124; bottom &#124; left &#124; right &#124; auto. When 'auto' is specified, it will determine the ideal placement so that the popover is fully visible within `displayArea`.
-onClose           | function | Yes      |             | Callback to be fired when the user taps outside the popover
-doneClosingCallback | function | Yes    |             | Callback to be fired when the popover is finished closing (after animation)
-showInModal       | bool     | Yes      | true        | Whether the popover should be encapsulated in the [Modal view from RN](https://facebook.github.io/react-native/docs/modal.html), which allows it to show above all other content, or just be present in the view hierarchy like a normal view.
-arrowStyle        | object   | Yes      | {}          | The style of the arrow that points to the rect. Supported options are `width`, `height`, and `backgroundColor`. You can use `{backgroundColor: 'transparent'}` to hid the arrow completely.
+animationConfig   | object   | Yes      |             | An object containing any configuration options that can be passed to Animated.timing (e.g. `{ duration: 600, easing: Easing.inOut(Easing.quad) }`).  The configuration options you pass will override the defaults for all animations.
+verticalOffset    | number   | Yes      | 0           | The amount to vertically shift the popover on the screen.  In certain Android configurations, you may need to apply a `verticalOffset` of `-StatusBar.currentHeight` for the popover to originate from the correct place.
 popoverStyle      | object   | Yes      | {}          | The style of the popover itself. You can override the `borderRadius`, `backgroundColor`, or any other [`style` prop for a `View`](https://facebook.github.io/react-native/docs/view-style-props.html).
-showBackground    | bool     | Yes      | true        | Whether the background behind the popover darkens when the popover is shown.
-animationConfig   | object     | Yes      |           | An object containing any configuration options that can be passed to Animated.timing (e.g. `{ duration: 600, easing: Easing.inOut(Easing.quad) }`).  The configuration options you pass will override the defaults for all animations.
-verticalOffset    | number     | Yes      | 0         | The amount to vertically shift the popover on the screen.  In certain Android configurations, you may need to apply a `verticalOffset` of `-StatusBar.currentHeight` for the popover to originate from the correct place.
-debug             | bool       | Yes      | false     | Set this to `true` to turn on debug logging to the console.  This is useful for figuring out why a Popover isn't showing.
+arrowStyle        | object   | Yes      | {}          | The style of the arrow that points to the rect. Supported options are `width`, `height`, and `backgroundColor`. You can use `{backgroundColor: 'transparent'}` to hid the arrow completely.
+backgroundStyle   | object   | Yes      | {}          | The style of the background that fades in.
+onOpenStart       | function | Yes      |             | Callback to be fired when the open animation starts (before animation)
+onOpenComplete    | function | Yes      |             | Callback to be fired when the open animation ends (after animation)
+onRequestClose    | function | Yes      |             | Callback to be fired when the user taps outside the popover (on the background) or taps the "hardware" back button on Android
+onCloseStart      | function | Yes      |             | Callback to be fired when the popover starts closing (before animation)
+onCloseComplete   | function | Yes      |             | Callback to be fired when the popover is finished closing (after animation)
+debug             | bool     | Yes      | false       | Set this to `true` to turn on debug logging to the console.  This is useful for figuring out why a Popover isn't showing.
 
 If neither `fromRect` or `fromView` are provided, the popover will float in the center of the screen.
 
 `rect` is an object with the following properties: `{x: number, y: number, width: number, height: number}`. You can create the object yourself, or `import Popover, { Rect } from 'react-native-popover-view` and create a rect by calling `new Rect(x, y, width, height)`.
 
 Likewise, `size` is an object with the following properties: `{width: number, height: number}`. You can create the object yourself, or `import Popover, { Size } from 'react-native-popover-view` and create a rect by calling `new Size(width, height)`.
+
+### <a name="mode"/>Mode
+
+The Popover can show in three modes:
+* Popover.MODE.RN_MODAL ('rn-modal')
+* Popover.MODE.JS_MODAL ('js-modal')
+* Popover.MODE.TOOLTIP ('tooltip')
+
+#### RN Modal (Default)
+
+Shows the popover full screen in a [React Native Modal](https://facebook.github.io/react-native/docs/modal) Component.  The upside is that it is guaranteed to show on top of all other views, regardless of where the `Popover` component is placed in the view hierarchy.  The downside is that you can only have one Modal shown at any one time, so this won't work for nested popovers or if you use a Modal for other reasons.  Taps to the area outside the popover will trigger the `onRequestClose` callback.
+
+#### JS Modal
+
+Shows the popover in the space provided, filling the `Popover` component's parent.  This looks identical to `rn-modal` if the `Popover` component's parent is a top-level view, but may look weird if the `Popover` is nested inside a few views with their own padding and margins.  With careful component hierarchy design, this can allow for nested popovers and popovers in other Modals. Taps to the area outside the popover will trigger the `onRequestClose` callback.
+
+#### Tooltip
+
+Shows the `Popover` without taking over the screen, no background is faded in and taps to the area around the popover fall through to those views (as expected).  The `onRequestClose` callback will never be called, so the `Popover` will have to be dismissed some other way.
 
 ### <a name="standalone-example"/>Full Example
 ```jsx
@@ -130,7 +153,7 @@ class PopoverExample extends Component {
         <Popover
           isVisible={this.state.isVisible}
           fromView={this.touchable}
-          onClose={() => this.closePopover()}>
+          onRequestClose={() => this.closePopover()}>
           <Text>I'm the content of this popover!</Text>
         </Popover>
       </View>
@@ -180,6 +203,14 @@ If you pass in a `fromView` prop, but the Popover still shows centered on the sc
 See https://github.com/facebook/react-native/issues/3282 and https://github.com/SteffeyDev/react-native-popover-view/issues/28 for more info.
 
 ## <a name="upgrading" />Upgrading
+
+#### `1.x` to `2.0`
+
+* `onClose` has been renamed to `onRequestClose` (for clarity and consistency with normal RN Modals)
+* New `mode` prop replaces `showInModal`.  Replace `showInModal={false}` with `mode={Popover.MODE.JS_MODAL}`
+* `doneClosingCallback` has been renamed `onCloseComplete`
+* New `backgroundStyle` prop replaces `showBackground`.  Replace `showBackground={false}` with `backgroundStyle={{ backgroundColor: 'transparent' }}`
+* Fix in version 2.0 means that `verticalOffset` may no longer be needed, so if you are using it be sure to test
 
 #### `1.0` to `1.1`
 

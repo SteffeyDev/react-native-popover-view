@@ -4,7 +4,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import SafeAreaView from 'react-native-safe-area-view';
 import { Platform, Dimensions, Animated, TouchableWithoutFeedback, View, Modal, Keyboard, Easing } from 'react-native';
-import { Rect, Point, Size, isRect, isPoint, rectChanged, pointChanged, waitForNewRect, runAfterChange } from './Utility';
+import { Rect, Point, Size, isRect, isPoint, rectChanged, pointChanged, waitForNewRect, runAfterChange, getRectForRef } from './Utility';
 
 const noop = () => {};
 
@@ -15,7 +15,7 @@ const FIX_SHIFT = Dimensions.get('window').width * 2;
 const isIOS = Platform.OS === 'ios';
 
 const DEBUG = false;
-const MULTIPLE_POPOVER_WARNING = "Popover Warning - Can't Show - Attempted to show a Popover while another one was already showing.  You can only show one Popover at a time, and must wait for one to close completely before showing a different one.  You can use the doneClosingCallback prop to detect when a Popover has finished closing.  To show multiple Popovers simultaneously, all but one should have showInModal={false}.  Once you disable showInModal, you can show as many Popovers as you want, but you are responsible for keeping them above other views."
+const MULTIPLE_POPOVER_WARNING = "Popover Warning - Can't Show - Attempted to show a Popover while another one was already showing.  You can only show one Popover at a time, and must wait for one to close completely before showing a different one.  You can use the onCloseComplete prop to detect when a Popover has finished closing.  To show multiple Popovers simultaneously, all but one should have mode={Popover.MODE.JS_MODAL}.  Once you change the mode, you can show as many Popovers as you want, but you are responsible for keeping them above other views."
 
 const PLACEMENT_OPTIONS = Object.freeze({
   TOP: 'top',
@@ -23,6 +23,12 @@ const PLACEMENT_OPTIONS = Object.freeze({
   BOTTOM: 'bottom',
   LEFT: 'left',
   AUTO: 'auto'
+});
+
+const POPOVER_MODE = Object.freeze({
+  JS_MODAL: 'js-modal',
+  RN_MODAL: 'rn-modal',
+  TOOLTIP: 'tooltip'
 });
 
 class Popover extends React.Component {
@@ -64,26 +70,38 @@ class Popover extends React.Component {
       console.log(line + (obj ? ": " + JSON.stringify(obj) : ''));
   }
 
+  getDisplayAreaOffset(displayArea, callback) {
+    // If we aren't shoowing in RN Modal, we have no guarantee that we have the whole screen, so need to adapt to that
+    if (this.props.mode !== POPOVER_MODE.RN_MODAL) {
+      getRectForRef(this.containerRef, rect => callback(new Point(rect.x, rect.y)));
+    } else {
+      callback(new Point(0, 0));
+    }
+  }
+
   setDefaultDisplayArea(evt) {
     let newDisplayArea = new Rect(evt.nativeEvent.layout.x + 10, evt.nativeEvent.layout.y + 10, evt.nativeEvent.layout.width - 20, evt.nativeEvent.layout.height - 20);
     if (!this.state.defaultDisplayArea || rectChanged(this.state.defaultDisplayArea, newDisplayArea)) {
       this.debug("setDefaultDisplayArea - newDisplayArea", newDisplayArea);
       if (!this.skipNextDefaultDisplayArea) {
-        this.setState({defaultDisplayArea: newDisplayArea}, () => {
-          this.calculateRect(this.props, fromRect => {
-            this.debug("setDefaultDisplayArea (inside calculateRect callback) - fromRect", fromRect);
-            this.debug("setDefaultDisplayArea (inside calculateRect callback) - getDisplayArea()", this.getDisplayArea());
-            this.debug("setDefaultDisplayArea (inside calculateRect callback) - displayAreaStore", this.displayAreaStore);
-            if (rectChanged(fromRect, this.state.fromRect)
-              || rectChanged(this.getDisplayArea(), this.displayAreaStore)) {
-              this.displayAreaStore = this.getDisplayArea();
-              this.debug("setDefaultDisplayArea (inside calculateRect callback) - Triggering state update");
-              this.setState({fromRect}, () => {
-                this.handleGeomChange();
-                this.waitForResizeToFinish = false;
-              });
-            }
-          })
+        this.getDisplayAreaOffset(newDisplayArea, displayAreaOffset => {
+          this.debug("setDefaultDisplayArea - displayAreaOffset", displayAreaOffset);
+          this.setState({ defaultDisplayArea: newDisplayArea, displayAreaOffset }, () => {
+            this.calculateRect(this.props, fromRect => {
+              this.debug("setDefaultDisplayArea (inside calculateRect callback) - fromRect", fromRect);
+              this.debug("setDefaultDisplayArea (inside calculateRect callback) - getDisplayArea()", this.getDisplayArea());
+              this.debug("setDefaultDisplayArea (inside calculateRect callback) - displayAreaStore", this.displayAreaStore);
+              if (rectChanged(fromRect, this.state.fromRect)
+                || rectChanged(this.getDisplayArea(), this.displayAreaStore)) {
+                this.displayAreaStore = this.getDisplayArea();
+                this.debug("setDefaultDisplayArea (inside calculateRect callback) - Triggering state update");
+                this.setState({ fromRect }, () => {
+                  this.handleGeomChange();
+                  this.waitForResizeToFinish = false;
+                });
+              }
+            });
+          });
         });
       }
       if (this.skipNextDefaultDisplayArea) this.debug("setDefaultDisplayArea - Skipping first because isLandscape");
@@ -129,7 +147,7 @@ class Popover extends React.Component {
     if (this.props.isVisible) {
       if (!Popover.isShowingInModal) {
         setTimeout(() => this.calculateRect(this.props, fromRect => (fromRect || !this.props.fromView) && this.setState({fromRect, isAwaitingShow: true, visible: true})), 0);
-        if (this.props.showInModal) Popover.isShowingInModal = true;
+        if (this.props.mode === POPOVER_MODE.RN_MODAL) Popover.isShowingInModal = true;
       } else {
         console.warn(MULTIPLE_POPOVER_WARNING);
       }
@@ -139,8 +157,12 @@ class Popover extends React.Component {
   }
 
   componentWillUnmount() {
-    if (this.state.visible)
+    if (this.state.visible) {
       this.animateOut();
+    } else {
+      setTimeout(this.props.onCloseStart);
+      setTimeout(this.props.onCloseComplete);
+    }
 
     Dimensions.removeEventListener('change', this.handleResizeEvent)
   }
@@ -175,6 +197,11 @@ class Popover extends React.Component {
             this.setState(Object.assign(geom, {requestedContentSize}));
           } else {
             this.debug("measureContent - Showing Popover - Animating In");
+
+            // If showing in a modal, the onOpenStart callback will be called from the modal onShow callback
+            if (this.props.mode !== POPOVER_MODE.RN_MODAL)
+              setTimeout(this.props.onOpenStart);
+
             this.setState(Object.assign(geom, {requestedContentSize, isAwaitingShow: false}), this.animateIn);
           }
         }
@@ -614,7 +641,7 @@ class Popover extends React.Component {
     let willBeVisible = nextProps.isVisible;
     let {
       isVisible,
-      showInModal
+      mode
     } = this.props;
 
     if (willBeVisible !== isVisible) {
@@ -623,7 +650,7 @@ class Popover extends React.Component {
         // so that we can have some logic depending on the geometry
         if (!Popover.isShowingInModal) {
           this.calculateRect(nextProps, fromRect => this.setState({fromRect, isAwaitingShow: true, visible: true}));
-          if (showInModal) Popover.isShowingInModal = true;
+          if (mode === POPOVER_MODE.RN_MODAL) Popover.isShowingInModal = true;
         } else {
           console.warn(MULTIPLE_POPOVER_WARNING);
         }
@@ -637,7 +664,8 @@ class Popover extends React.Component {
           this.debug("componentWillReceiveProps - Hiding popover");
         }
         else {
-          this.props.doneClosingCallback();
+          setTimeout(this.props.onCloseStart);
+          setTimeout(this.props.onCloseComplete);
           this.debug("componentWillReceiveProps - Popover never shown");
         }
       }
@@ -657,14 +685,19 @@ class Popover extends React.Component {
   calculateRect(props, callback) {
     let initialRect = this.state.fromRect || new Rect(0, 0, 0, 0);
     let displayArea = props.displayArea || this.getDisplayArea();
-    if (props.calculateRect)
-      runAfterChange(callback_ => callback_(props.calculateRect(displayArea.width, displayArea.height)), initialRect, () => {
-        callback({fromRect: props.calculateRect(displayArea.width, displayArea.height)});
+    if (props.fromDynamicRect)
+      runAfterChange(callback_ => callback_(props.fromDynamicRect(displayArea.width, displayArea.height)), initialRect, () => {
+        callback({fromRect: props.fromDynamicRect(displayArea.width, displayArea.height)});
       });
-    else if (props.fromView)
-      waitForNewRect(props.fromView, initialRect, callback, this.props.verticalOffset);
-    else
+    else if (props.fromView) {
+      const verticalOffset = this.props.verticalOffset + (this.state.displayAreaOffset ? -1 * this.state.displayAreaOffset.y : 0);
+      const horizontalOffset = this.state.displayAreaOffset ? -1 * this.state.displayAreaOffset.x : 0;
+      waitForNewRect(props.fromView, initialRect, rect => {
+        callback(new Rect(rect.x + horizontalOffset, rect.y + verticalOffset, rect.width, rect.height));
+      });
+    } else {
       callback(props.fromRect);
+    }
   }
 
   handleGeomChange(requestedContentSize) {
@@ -699,11 +732,12 @@ class Popover extends React.Component {
   }
 
   animateOut() {
+    setTimeout(this.props.onCloseStart);
     this.keyboardDidShowListener && this.keyboardDidShowListener.remove();
     this.keyboardDidHideListener && this.keyboardDidHideListener.remove();
 
     // Animation callback may or may not get called if animation is cut short, so calling this a bit early for safety
-    if (this.props.showInModal) Popover.isShowingInModal = false;
+    if (this.props.mode === POPOVER_MODE.RN_MODAL) Popover.isShowingInModal = false;
 
     this.setState({shiftedDisplayArea: null, showing: false});
 
@@ -712,7 +746,12 @@ class Popover extends React.Component {
       fade: 0,
       scale: 0,
       translatePoint: this.getTranslateOrigin(),
-      callback: () => this.setState({visible: false, forcedContentSize: {}}, () => this.props.doneClosingCallback()),
+      callback: () => this.setState({visible: false, forcedContentSize: {}}, () => {
+
+        // If showing in an RN modal, the onCloseComplete callback will be called from the Modal onDismiss callback
+        if (this.props.mode !== POPOVER_MODE.RN_MODAL)
+          this.props.onCloseComplete()
+      }),
       easing: Easing.inOut(Easing.quad)
     });
   }
@@ -739,6 +778,7 @@ class Popover extends React.Component {
       easing: Easing.out(Easing.back()),
       callback: () => {
         this.setState({showing: true});
+        setTimeout(this.props.onOpenComplete);
         if (this.animateOutAfterShow) {
           this.animateOut();
           this.animateOutAfterShow = false;
@@ -835,10 +875,9 @@ class Popover extends React.Component {
       ...styles.background,
       transform: [
         {translateX: backgroundShift}
-      ]
+      ],
+      ...this.props.backgroundStyle
     };
-    if (this.props.showBackground)
-      backgroundStyle.backgroundColor = 'rgba(0,0,0,0.5)'
 
     let containerStyle = {
       ...styles.container,
@@ -859,17 +898,17 @@ class Popover extends React.Component {
     });
 
     let contentView = (
-      <View style={[styles.container, {left: 0}]}>
-        <SafeAreaView pointerEvent="none" style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}>
-          <TouchableWithoutFeedback onPress={this.props.onClose} style={{flex: 1}} onLayout={evt => this.setDefaultDisplayArea(evt)}><View style={{flex: 1}} /></TouchableWithoutFeedback>
+      <View pointerEvents="box-none" style={[styles.container, {left: 0}]} ref={ref => this.containerRef = ref}>
+        <SafeAreaView pointerEvents="none" style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}>
+          <TouchableWithoutFeedback style={{flex: 1}} onLayout={evt => this.setDefaultDisplayArea(evt)}><View style={{flex: 1}} /></TouchableWithoutFeedback>
         </SafeAreaView>
 
-        <Animated.View style={containerStyle}>
-          <TouchableWithoutFeedback onPress={this.props.onClose}>
-            <Animated.View style={backgroundStyle}/>
-          </TouchableWithoutFeedback>
+        <Animated.View pointerEvents="box-none" style={containerStyle}>
+          { this.props.mode !== POPOVER_MODE.TOOLTIP && <TouchableWithoutFeedback onPress={this.props.onRequestClose}>
+            <Animated.View style={backgroundStyle} />
+          </TouchableWithoutFeedback> }
 
-          <View style={{top: 0, left: 0}}>
+          <View pointerEvents="box-none" style={{top: 0, left: 0}}>
             
             <Animated.View style={popoverViewStyle} onLayout={evt => this.measureContent(evt.nativeEvent.layout)}>
               {this.props.children}
@@ -877,7 +916,7 @@ class Popover extends React.Component {
 
             {this.state.showArrow &&
               <Animated.View style={arrowViewStyle}>
-                <View style={arrowInnerStyle}/>
+                <View style={arrowInnerStyle} />
               </Animated.View>
             }
           </View>
@@ -885,9 +924,16 @@ class Popover extends React.Component {
       </View>
     );
 
-    if (this.props.showInModal) {
+    if (this.props.mode === POPOVER_MODE.RN_MODAL) {
       return (
-        <Modal transparent={true} supportedOrientations={['portrait', 'portrait-upside-down', 'landscape']} hardwareAccelerated={true} visible={this.state.visible} onRequestClose={this.props.onClose}>
+        <Modal
+          transparent={true}
+          supportedOrientations={['portrait', 'portrait-upside-down', 'landscape']}
+          hardwareAccelerated={true}
+          visible={this.state.visible}
+          onShow={this.props.onOpenStart}
+          onDismiss={this.props.onCloseComplete}
+          onRequestClose={this.props.onRequestClose}>
           {contentView}
         </Modal>
       );
@@ -914,12 +960,14 @@ var styles = {
     left: 0,
     right: FIX_SHIFT,
     position: 'absolute',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)'
   },
   contentContainer: {
     flexDirection: 'column',
   },
   popoverContainer: {
-    position: 'absolute'
+    position: 'absolute',
+    zIndex: 1000
   },
   popoverContent: {
     backgroundColor: 'white',
@@ -948,36 +996,53 @@ var styles = {
 
 Popover.defaultDisplayArea = {};
 Popover.PLACEMENT_OPTIONS = PLACEMENT_OPTIONS;
+Popover.MODE = POPOVER_MODE;
 Popover.defaultProps = {
-  isVisible: false,
-  arrowStyle: {},
-  popoverStyle: {},
+  isVisible: true,
+  mode: POPOVER_MODE.RN_MODAL,
   placement: PLACEMENT_OPTIONS.AUTO,
-  onClose: noop,
-  doneClosingCallback: noop,
-  showInModal: true,
   layoutRtl: false,
-  showBackground: true,
   verticalOffset: 0,
+  popoverStyle: {},
+  arrowStyle: {},
+  backgroundStyle: {},
+  onOpenStart: noop,
+  onOpenComplete: noop,
+  onRequestClose: noop,
+  onCloseStart: noop,
+  onCloseComplete: noop,
   debug: false
 }
 
 Popover.propTypes = {
+  // display
   isVisible: PropTypes.bool,
-  displayArea: PropTypes.objectOf(PropTypes.number),
-  placement: PropTypes.oneOf([PLACEMENT_OPTIONS.LEFT, PLACEMENT_OPTIONS.RIGHT, PLACEMENT_OPTIONS.TOP, PLACEMENT_OPTIONS.BOTTOM, PLACEMENT_OPTIONS.AUTO]),
-  onClose: PropTypes.func,
-  doneClosingCallback: PropTypes.func,
-  showInModal: PropTypes.bool,
+  mode: PropTypes.oneOf([POPOVER_MODE.JS_MODAL, POPOVER_MODE.RN_MODAL, POPOVER_MODE.TOOLTIP]),
+
+  // anchor
   fromRect: PropTypes.objectOf(PropTypes.number),
   fromView: PropTypes.object,
-  calculateRect: PropTypes.func,
+  fromDynamicRect: PropTypes.func,
+
+  // config
+  displayArea: PropTypes.objectOf(PropTypes.number),
+  placement: PropTypes.oneOf([PLACEMENT_OPTIONS.LEFT, PLACEMENT_OPTIONS.RIGHT, PLACEMENT_OPTIONS.TOP, PLACEMENT_OPTIONS.BOTTOM, PLACEMENT_OPTIONS.AUTO]),
+  animationConfig: PropTypes.object,
   layoutRtl: PropTypes.bool,
-  showBackground: PropTypes.bool,
+  verticalOffset: PropTypes.number,
+
+  // style
   popoverStyle: PropTypes.object,
   arrowStyle: PropTypes.object,
-  animationConfig: PropTypes.object,
-  verticalOffset: PropTypes.number,
+  backgroundStyle: PropTypes.object,
+
+  // lifecycle
+  onOpenStart: PropTypes.func,
+  onOpenComplete: PropTypes.func,
+  onRequestClose: PropTypes.func,
+  onCloseStart: PropTypes.func,
+  onCloseComplete: PropTypes.func,
+
   debug: PropTypes.bool
 }
 

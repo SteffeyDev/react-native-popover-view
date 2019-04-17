@@ -29,6 +29,12 @@ export function isPoint(point) {
   return point && (point.x || point.x === 0) && !isNaN(point.x) && (point.y || point.y === 0) && !isNaN(point.y);
 }
 
+export function getRectForRef(ref, callback) {
+  NativeModules.UIManager.measure(findNodeHandle(ref), (x0, y0, width, height, x, y) => {
+    callback(new Rect(x, y, width, height));
+  })
+}
+
 export function runAfterChange(getFirst, second, func) {
   let count = 0; // Failsafe so that the interval doesn't run forever
   let checkFunc = () => 
@@ -44,15 +50,11 @@ export function runAfterChange(getFirst, second, func) {
   checkFunc();
 }
 
-export function waitForNewRect(ref, initialRect, onFinish, verticalOffset = 0) {
+export function waitForNewRect(ref, initialRect, onFinish) {
   runAfterChange(callback => {
-    NativeModules.UIManager.measure(findNodeHandle(ref), (x0, y0, width, height, x, y) => {
-      callback(new Rect(x, y + verticalOffset, width, height));
-    })
+    getRectForRef(ref, callback);
   }, initialRect, () => {
-    NativeModules.UIManager.measure(findNodeHandle(ref), (x0, y0, width, height, x, y) => {
-      onFinish(new Rect(x, y + verticalOffset, width, height))
-    })
+    getRectForRef(ref, onFinish);
   });
 }
 
