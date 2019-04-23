@@ -13,7 +13,7 @@ declare module 'react-native-popover-view' {
   interface PopoverViewProps {
     isVisible: boolean;
     mode?: 'rn-modal' | 'js-modal' | 'tooltip';
-    fromView?: Ref<Component<any>>;
+    fromView?: Component<any> | null;
     fromRect?: Rect;
     fromDynamicRect?: (displayAreaWidth: number, displayAreaHeight) => Rect;
     displayArea?: Rect;
