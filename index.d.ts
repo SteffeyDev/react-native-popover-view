@@ -1,19 +1,19 @@
 declare module 'react-native-popover-view' {
-  import {Component, Ref} from 'react';
-  import {Animated, StyleProp, View, ViewStyle} from 'react-native';
+  import { Component, ComponentType, Ref } from "react";
+  import { Animated, StyleProp, TouchableOpacity, View, ViewStyle } from "react-native";
 
   export class Rect {
     constructor(x: number, y: number, width: number, height: number);
   }
 
   export class Size extends Rect {
-    constructor(width: number, height: number)
+    constructor(width: number, height: number);
   }
 
   interface PopoverViewProps {
     isVisible: boolean;
     mode?: 'rn-modal' | 'js-modal' | 'tooltip';
-    fromView?: Ref<View>;
+    fromView?: Ref<Component<any>>;
     fromRect?: Rect;
     fromDynamicRect?: (displayAreaWidth: number, displayAreaHeight) => Rect;
     displayArea?: Rect;
