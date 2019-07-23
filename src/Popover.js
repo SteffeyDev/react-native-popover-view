@@ -87,7 +87,7 @@ class Popover extends React.Component {
         this.getDisplayAreaOffset(newDisplayArea, displayAreaOffset => {
           this.debug("setDefaultDisplayArea - displayAreaOffset", displayAreaOffset);
           this.setState({ defaultDisplayArea: newDisplayArea, displayAreaOffset }, () => {
-            this.calculateRect(this.props, fromRect => {
+            this.calculateRect(fromRect => {
               this.debug("setDefaultDisplayArea (inside calculateRect callback) - fromRect", fromRect);
               this.debug("setDefaultDisplayArea (inside calculateRect callback) - getDisplayArea()", this.getDisplayArea());
               this.debug("setDefaultDisplayArea (inside calculateRect callback) - displayAreaStore", this.displayAreaStore);
@@ -146,7 +146,7 @@ class Popover extends React.Component {
     // Show popover if isVisible is initially true
     if (this.props.isVisible) {
       if (!Popover.isShowingInModal) {
-        setTimeout(() => this.calculateRect(this.props, fromRect => (fromRect || !this.props.fromView) && this.setState({fromRect, isAwaitingShow: true, visible: true})), 0);
+        setTimeout(() => this.calculateRect(fromRect => (fromRect || !this.props.fromView) && this.setState({fromRect, isAwaitingShow: true, visible: true})), 0);
         if (this.props.mode === POPOVER_MODE.RN_MODAL) Popover.isShowingInModal = true;
       } else {
         console.warn(MULTIPLE_POPOVER_WARNING);
@@ -631,26 +631,22 @@ class Popover extends React.Component {
     return this.state.shiftedDisplayArea || this.props.displayArea || this.state.defaultDisplayArea;
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
 
     // Make sure a value we care about has actually changed
     let importantProps = ["isVisible", "fromRect", "displayArea", "verticalOffset", "placement"]
-    if (!importantProps.reduce((acc, key) => acc || this.props[key] !== nextProps[key], false))
+    if (!importantProps.reduce((acc, key) => acc || this.props[key] !== prevProps[key], false))
       return;
 
-    let willBeVisible = nextProps.isVisible;
-    let {
-      isVisible,
-      mode
-    } = this.props;
+    let willBeVisible = this.props.isVisible;
 
-    if (willBeVisible !== isVisible) {
+    if (willBeVisible !== prevProps.isVisible) {
       if (willBeVisible) {
         // We want to start the show animation only when contentSize is known
         // so that we can have some logic depending on the geometry
         if (!Popover.isShowingInModal) {
-          this.calculateRect(nextProps, fromRect => this.setState({fromRect, isAwaitingShow: true, visible: true}));
-          if (mode === POPOVER_MODE.RN_MODAL) Popover.isShowingInModal = true;
+          this.calculateRect(fromRect => this.setState({ fromRect, isAwaitingShow: true, visible: true }));
+          if (this.props.mode === POPOVER_MODE.RN_MODAL) Popover.isShowingInModal = true;
         } else {
           console.warn(MULTIPLE_POPOVER_WARNING);
         }
@@ -662,41 +658,40 @@ class Popover extends React.Component {
           else
             this.animateOutAfterShow = true;
           this.debug("componentWillReceiveProps - Hiding popover");
-        }
-        else {
+        } else {
           setTimeout(this.props.onCloseStart);
           setTimeout(this.props.onCloseComplete);
           this.debug("componentWillReceiveProps - Popover never shown");
         }
       }
     } else if (willBeVisible) {
-      this.calculateRect(nextProps, fromRect => {
+      this.calculateRect(fromRect => {
         if (rectChanged(fromRect, this.state.fromRect)
-            || (nextProps.displayArea && !this.props.displayArea)
-            || rectChanged(nextProps.displayArea, this.props.displayArea)
+            || (this.props.displayArea && !prevProps.displayArea)
+            || rectChanged(this.props.displayArea, prevProps.displayArea)
             || rectChanged(this.getDisplayArea(), this.displayAreaStore)) {
           this.displayAreaStore = this.getDisplayArea();
-          this.setState({fromRect}, () => this.handleGeomChange());
+          this.setState({ fromRect }, () => this.handleGeomChange());
         }
       })
     }
   }
 
-  calculateRect(props, callback) {
+  calculateRect(callback) {
     let initialRect = this.state.fromRect || new Rect(0, 0, 0, 0);
-    let displayArea = props.displayArea || this.getDisplayArea();
-    if (props.fromDynamicRect)
-      runAfterChange(callback_ => callback_(props.fromDynamicRect(displayArea.width, displayArea.height)), initialRect, () => {
-        callback({fromRect: props.fromDynamicRect(displayArea.width, displayArea.height)});
+    let displayArea = this.props.displayArea || this.getDisplayArea();
+    if (this.props.fromDynamicRect)
+      runAfterChange(callback_ => callback_(this.props.fromDynamicRect(displayArea.width, displayArea.height)), initialRect, () => {
+        callback({fromRect: this.props.fromDynamicRect(displayArea.width, displayArea.height)});
       });
-    else if (props.fromView) {
+    else if (this.props.fromView) {
       const verticalOffset = this.props.verticalOffset + (this.state.displayAreaOffset ? -1 * this.state.displayAreaOffset.y : 0);
       const horizontalOffset = this.state.displayAreaOffset ? -1 * this.state.displayAreaOffset.x : 0;
-      waitForNewRect(props.fromView, initialRect, rect => {
+      waitForNewRect(this.props.fromView, initialRect, rect => {
         callback(new Rect(rect.x + horizontalOffset, rect.y + verticalOffset, rect.width, rect.height));
       });
     } else {
-      callback(props.fromRect);
+      callback(this.props.fromRect);
     }
   }
 

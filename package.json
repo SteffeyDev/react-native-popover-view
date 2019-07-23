@@ -1,6 +1,6 @@
 {
   "name": "react-native-popover-view",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "A <Popover /> component for react-native",
   "main": "src/index.js",
   "author": "Peter Steffey <steffeydev@icloud.com> (https://github.com/steffeydev)",
@@ -34,19 +34,19 @@
     "url": "git@github.com:steffeydev/react-native-popover-view.git"
   },
   "devDependencies": {
-    "babel-jest": "^22.0.4",
-    "enzyme": "^3.3.0",
-    "enzyme-adapter-react-16": "^1.1.1",
-    "enzyme-to-json": "^3.3.0",
-    "jest": "^22.0.4",
+    "babel-jest": "^24.8.0",
+    "enzyme": "^3.10.0",
+    "enzyme-adapter-react-16": "^1.14.0",
+    "enzyme-to-json": "^3.3.5",
+    "jest": "^24.8.0",
     "jest-serializer-enzyme": "^1.0.0",
-    "react": "16",
+    "react": "^16.8.6",
     "react-addons-test-utils": "^15.6.2",
-    "react-dom": "16",
-    "react-native": "^0.51.0",
-    "react-test-renderer": "^16.2.0"
+    "react-dom": "^16.8.6",
+    "react-native": "^0.60.4",
+    "react-test-renderer": "^16.8.6"
   },
   "dependencies": {
-    "react-native-safe-area-view": "^0.10.0"
+    "react-native-safe-area-view": "^0.14.6"
   }
 }
