@@ -3,14 +3,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import SafeAreaView from 'react-native-safe-area-view';
-import { Platform, Dimensions, Animated, TouchableWithoutFeedback, View, Modal, Keyboard, Easing } from 'react-native';
+import { Platform, Dimensions, Animated, TouchableWithoutFeedback, View, Modal, Keyboard, Easing, I18nManager } from 'react-native';
 import { Rect, Point, Size, isRect, isPoint, rectChanged, pointChanged, waitForNewRect, runAfterChange, getRectForRef } from './Utility';
 
 const noop = () => {};
 
 const DEFAULT_ARROW_SIZE = new Size(16, 8);
 const DEFAULT_BORDER_RADIUS = 3;
-const FIX_SHIFT = Dimensions.get('window').width * 2;
+const FIX_SHIFT = Dimensions.get('window').height * 2;
 
 const isIOS = Platform.OS === 'ios';
 
@@ -179,8 +179,8 @@ class Popover extends React.Component {
     if (!requestedContentSize.width) console.warn("Popover Warning - Can't Show - The Popover content has a width of 0, so there is nothing to present.");
     if (!requestedContentSize.height) console.warn("Popover Warning - Can't Show - The Popover content has a height of 0, so there is nothing to present.");
     if (this.waitForResizeToFinish) this.debug("measureContent - Waiting for resize to finish");
-    if (requestedContentSize.width && requestedContentSize.height && !this.waitForResizeToFinish) {
 
+    if (requestedContentSize.width && requestedContentSize.height && !this.waitForResizeToFinish) {
       if (this.state.isAwaitingShow) {
         if ((this.props.fromView && !this.state.fromRect) || !this.getDisplayArea()) {
           this.debug("measureContent - Waiting " + (this.getDisplayArea() ? "for Rect" : "for Display Area") + " - requestedContentSize", requestedContentSize);
@@ -407,7 +407,7 @@ class Popover extends React.Component {
   }
 
   getPolarity () {
-    return this.props.layoutRtl ? -1 : 1;
+    return I18nManager.isRTL ? -1 : 1;
   }
 
   computeLeftGeometry({displayArea, fromRect, requestedContentSize}) {
@@ -607,7 +607,7 @@ class Popover extends React.Component {
           arrowX = translatePoint.x + viewWidth - arrowWidth - this.getBorderRadius()
       }
     }
-    return new Point(FIX_SHIFT /* Temp fix for useNativeDriver issue */ + arrowX, arrowY);
+    return new Point(arrowX, (FIX_SHIFT*2) /* Temp fix for useNativeDriver issue */ + arrowY);
   }
 
   getTranslateOrigin() {
@@ -760,7 +760,7 @@ class Popover extends React.Component {
 
     // Should grow from anchor point
     let translateStart = this.getTranslateOrigin()
-    translateStart.x += FIX_SHIFT // Temp fix for useNativeDriver issue
+    translateStart.y += (FIX_SHIFT*2) // Temp fix for useNativeDriver issue
     values.translate.setValue(translateStart);
     const translatePoint = new Point(this.state.popoverOrigin.x, this.state.popoverOrigin.y);
     values.translateArrow.setValue(this.getArrowTranslateLocation(translatePoint));
@@ -774,6 +774,7 @@ class Popover extends React.Component {
       callback: () => {
         this.setState({showing: true});
         setTimeout(this.props.onOpenComplete);
+        setTimeout(() => getRectForRef(this.popoverRef, (rect) => this.debug("animateIn - onOpenComplete - Calculated Popover Rect", rect)));
         if (this.animateOutAfterShow) {
           this.animateOut();
           this.animateOutAfterShow = false;
@@ -796,7 +797,7 @@ class Popover extends React.Component {
 
     const newArrowLocation = this.getArrowTranslateLocation(translatePoint);
 
-    translatePoint.x = translatePoint.x + FIX_SHIFT // Temp fix for useNativeDriver issue
+    translatePoint.y = translatePoint.y + (FIX_SHIFT*2) // Temp fix for useNativeDriver issue
 
     if (!fade && fade !== 0) { console.log("Popover: Fade value is null"); return; }
     if (!isPoint(translatePoint)) { console.log("Popover: Translate Point value is null"); return; }
@@ -839,7 +840,7 @@ class Popover extends React.Component {
     var arrowViewStyle = {
       position: 'absolute',
       top: 0,
-      left: 0,
+      ...(I18nManager.isRTL ? { right: 0 } : { left: 0 }),
       width: arrowWidth,
       height: arrowHeight,
       transform: [
@@ -869,7 +870,7 @@ class Popover extends React.Component {
     let backgroundStyle = {
       ...styles.background,
       transform: [
-        {translateX: backgroundShift}
+        {translateY: backgroundShift}
       ],
       ...this.props.backgroundStyle
     };
@@ -894,7 +895,7 @@ class Popover extends React.Component {
 
     let contentView = (
       <View pointerEvents="box-none" style={[styles.container, {left: 0}]} ref={ref => this.containerRef = ref}>
-        <SafeAreaView pointerEvents="none" style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}>
+        <SafeAreaView pointerEvents="none" style={{position: 'absolute', top: FIX_SHIFT, left: 0, right: 0, bottom: 0}}>
           <TouchableWithoutFeedback style={{flex: 1}} onLayout={evt => this.setDefaultDisplayArea(evt)}><View style={{flex: 1}} /></TouchableWithoutFeedback>
         </SafeAreaView>
 
@@ -905,7 +906,7 @@ class Popover extends React.Component {
 
           <View pointerEvents="box-none" style={{top: 0, left: 0}}>
             
-            <Animated.View style={popoverViewStyle} onLayout={evt => this.measureContent(evt.nativeEvent.layout)}>
+            <Animated.View style={popoverViewStyle} ref={ref => this.popoverRef = ref} onLayout={evt => this.measureContent(evt.nativeEvent.layout)}>
               {this.props.children}
             </Animated.View>
 
@@ -942,18 +943,18 @@ class Popover extends React.Component {
 
 var styles = {
   container: {
-    top: 0,
+    top: -1 * FIX_SHIFT,
     bottom: 0,
-    left: -1 * FIX_SHIFT,
+    left: 0,
     right: 0,
     position: 'absolute',
     backgroundColor: 'transparent'
   },
   background: {
     top: 0,
-    bottom: 0,
+    bottom: FIX_SHIFT,
     left: 0,
-    right: FIX_SHIFT,
+    right: 0,
     position: 'absolute',
     backgroundColor: 'rgba(0, 0, 0, 0.5)'
   },
@@ -996,7 +997,6 @@ Popover.defaultProps = {
   isVisible: true,
   mode: POPOVER_MODE.RN_MODAL,
   placement: PLACEMENT_OPTIONS.AUTO,
-  layoutRtl: false,
   verticalOffset: 0,
   popoverStyle: {},
   arrowStyle: {},
@@ -1023,7 +1023,6 @@ Popover.propTypes = {
   displayArea: PropTypes.objectOf(PropTypes.number),
   placement: PropTypes.oneOf([PLACEMENT_OPTIONS.LEFT, PLACEMENT_OPTIONS.RIGHT, PLACEMENT_OPTIONS.TOP, PLACEMENT_OPTIONS.BOTTOM, PLACEMENT_OPTIONS.AUTO]),
   animationConfig: PropTypes.object,
-  layoutRtl: PropTypes.bool,
   verticalOffset: PropTypes.number,
 
   // style
