@@ -73,7 +73,7 @@ class Popover extends React.Component {
   getDisplayAreaOffset(displayArea, callback) {
     // If we aren't shoowing in RN Modal, we have no guarantee that we have the whole screen, so need to adapt to that
     if (this.props.mode !== POPOVER_MODE.RN_MODAL) {
-      getRectForRef(this.containerRef, rect => callback(new Point(rect.x, rect.y)));
+      getRectForRef(this.containerRef, rect => callback(new Point(rect.x, rect.y + FIX_SHIFT)));
     } else {
       callback(new Point(0, 0));
     }
