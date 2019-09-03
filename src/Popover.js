@@ -81,7 +81,10 @@ class Popover extends React.Component {
 
   setDefaultDisplayArea(evt) {
     let newDisplayArea = new Rect(evt.nativeEvent.layout.x + 10, evt.nativeEvent.layout.y + 10, evt.nativeEvent.layout.width - 20, evt.nativeEvent.layout.height - 20);
-    if (!this.state.defaultDisplayArea || rectChanged(this.state.defaultDisplayArea, newDisplayArea)) {
+    // When the popover is closing and the display area's onLayout event is called, the width/height values may be zero
+    // which causes a bad display area for the first mount when the popover re-opens
+    const isValidDisplayArea = newDisplayArea.width > 0 && newDisplayArea.height > 0;
+    if ((!this.state.defaultDisplayArea || rectChanged(this.state.defaultDisplayArea, newDisplayArea)) && isValidDisplayArea) {
       this.debug("setDefaultDisplayArea - newDisplayArea", newDisplayArea);
       if (!this.skipNextDefaultDisplayArea) {
         this.getDisplayAreaOffset(newDisplayArea, displayAreaOffset => {
