@@ -917,7 +917,7 @@ class Popover extends React.Component {
               const layout = evt.nativeEvent.layout
               setTimeout(() => {
                 this.measureContent(layout)
-              }, 1)
+              }, 5)
             }}>
               {this.props.children}
             </Animated.View>
