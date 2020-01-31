@@ -909,7 +909,12 @@ class Popover extends React.Component {
 
           <View pointerEvents="box-none" style={{top: 0, left: 0}}>
             
-            <Animated.View style={popoverViewStyle} ref={ref => this.popoverRef = ref} onLayout={evt => this.measureContent(evt.nativeEvent.layout)}>
+            <Animated.View style={popoverViewStyle} ref={ref => this.popoverRef = ref} onLayout={evt => {
+              const layout = evt.nativeEvent.layout
+              setTimeout(() => {
+                this.measureContent(layout)
+              }, 10)
+            }}>
               {this.props.children}
             </Animated.View>
 
