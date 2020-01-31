@@ -10,7 +10,6 @@ const noop = () => {};
 
 const DEFAULT_ARROW_SIZE = new Size(16, 8);
 const DEFAULT_BORDER_RADIUS = 3;
-const FIX_SHIFT = Dimensions.get('window').height * 2;
 
 const isIOS = Platform.OS === 'ios';
 
@@ -73,10 +72,13 @@ class Popover extends React.Component {
   getDisplayAreaOffset(displayArea, callback) {
     // If we aren't shoowing in RN Modal, we have no guarantee that we have the whole screen, so need to adapt to that
     if (this.props.mode !== POPOVER_MODE.RN_MODAL) {
-      getRectForRef(this.containerRef, rect => callback(new Point(rect.x, rect.y + FIX_SHIFT)));
+      getRectForRef(this.containerRef, rect => callback(new Point(rect.x, rect.y + this.getWindowHeight)));
     } else {
       callback(new Point(0, 0));
     }
+  }
+  getWindowHeight() {
+    return Dimensions.get('window').height * 2;
   }
 
   setDefaultDisplayArea(evt) {
@@ -610,7 +612,7 @@ class Popover extends React.Component {
           arrowX = translatePoint.x + viewWidth - arrowWidth - this.getBorderRadius()
       }
     }
-    return new Point(arrowX, (FIX_SHIFT*2) /* Temp fix for useNativeDriver issue */ + arrowY);
+    return new Point(arrowX, (this.getWindowHeight()*2) /* Temp fix for useNativeDriver issue */ + arrowY);
   }
 
   getTranslateOrigin() {
@@ -763,7 +765,7 @@ class Popover extends React.Component {
 
     // Should grow from anchor point
     let translateStart = this.getTranslateOrigin()
-    translateStart.y += (FIX_SHIFT*2) // Temp fix for useNativeDriver issue
+    translateStart.y += (this.getWindowHeight()*2) // Temp fix for useNativeDriver issue
     values.translate.setValue(translateStart);
     const translatePoint = new Point(this.state.popoverOrigin.x, this.state.popoverOrigin.y);
     values.translateArrow.setValue(this.getArrowTranslateLocation(translatePoint));
@@ -800,7 +802,7 @@ class Popover extends React.Component {
 
     const newArrowLocation = this.getArrowTranslateLocation(translatePoint);
 
-    translatePoint.y = translatePoint.y + (FIX_SHIFT*2) // Temp fix for useNativeDriver issue
+    translatePoint.y = translatePoint.y + (this.getWindowHeight()*2) // Temp fix for useNativeDriver issue
 
     if (!fade && fade !== 0) { console.log("Popover: Fade value is null"); return; }
     if (!isPoint(translatePoint)) { console.log("Popover: Translate Point value is null"); return; }
@@ -867,11 +869,12 @@ class Popover extends React.Component {
     // Temp fix for useNativeDriver issue
     let backgroundShift = animatedValues.fade.interpolate({
       inputRange: [0, 0.0001, 1],
-      outputRange: [0, FIX_SHIFT, FIX_SHIFT]
+      outputRange: [0, this.getWindowHeight(), this.getWindowHeight()]
     })
 
     let backgroundStyle = {
       ...styles.background,
+      bottom: this.getWindowHeight(),
       transform: [
         {translateY: backgroundShift}
       ],
@@ -880,7 +883,8 @@ class Popover extends React.Component {
 
     let containerStyle = {
       ...styles.container,
-      opacity: animatedValues.fade
+      opacity: animatedValues.fade,
+      top: -1 * this.getWindowHeight()
     };
 
     let popoverViewStyle = Object.assign({
@@ -897,9 +901,9 @@ class Popover extends React.Component {
     });
 
     let contentView = (
-      <View pointerEvents="box-none" style={[styles.container, {left: 0}]} ref={ref => this.containerRef = ref}>
-        <SafeAreaView pointerEvents="none" style={{position: 'absolute', top: FIX_SHIFT, left: 0, right: 0, bottom: 0}}>
-          <TouchableWithoutFeedback style={{flex: 1}} onLayout={evt => this.setDefaultDisplayArea(evt)}><View style={{flex: 1}} /></TouchableWithoutFeedback>
+      <View pointerEvents="box-none" style={[styles.container, {left: 0, top:  -1 * this.getWindowHeight()}]} ref={ref => this.containerRef = ref}>
+        <SafeAreaView pointerEvents="none" style={{position: 'absolute', top: this.getWindowHeight(), left: 0, right: 0, bottom: 0}}>
+          <TouchableWithoutFeedback style={{flex: 1}} ref={ref => this.dda = ref} onLayout={evt => this.setDefaultDisplayArea(evt)}><View style={{flex: 1}} /></TouchableWithoutFeedback>
         </SafeAreaView>
 
         <Animated.View pointerEvents="box-none" style={containerStyle}>
@@ -909,7 +913,12 @@ class Popover extends React.Component {
 
           <View pointerEvents="box-none" style={{top: 0, left: 0}}>
             
-            <Animated.View style={popoverViewStyle} ref={ref => this.popoverRef = ref} onLayout={evt => this.measureContent(evt.nativeEvent.layout)}>
+            <Animated.View style={popoverViewStyle} ref={ref => this.popoverRef = ref} onLayout={evt => {
+              const layout = evt.nativeEvent.layout
+              setTimeout(() => {
+                this.measureContent(layout)
+              }, 1)
+            }}>
               {this.props.children}
             </Animated.View>
 
@@ -946,16 +955,14 @@ class Popover extends React.Component {
 
 var styles = {
   container: {
-    top: -1 * FIX_SHIFT,
     bottom: 0,
     left: 0,
     right: 0,
     position: 'absolute',
-    backgroundColor: 'transparent'
+    backgroundColor: 'transparent',
   },
   background: {
     top: 0,
-    bottom: FIX_SHIFT,
     left: 0,
     right: 0,
     position: 'absolute',
