@@ -10,6 +10,7 @@ const noop = () => {};
 
 const DEFAULT_ARROW_SIZE = new Size(16, 8);
 const DEFAULT_BORDER_RADIUS = 3;
+const FIX_SHIFT = Dimensions.get('window').height * 2;	
 
 const isIOS = Platform.OS === 'ios';
 
@@ -72,13 +73,10 @@ class Popover extends React.Component {
   getDisplayAreaOffset(displayArea, callback) {
     // If we aren't shoowing in RN Modal, we have no guarantee that we have the whole screen, so need to adapt to that
     if (this.props.mode !== POPOVER_MODE.RN_MODAL) {
-      getRectForRef(this.containerRef, rect => callback(new Point(rect.x, rect.y + this.getWindowHeight)));
+      getRectForRef(this.containerRef, rect => callback(new Point(rect.x, rect.y + FIX_SHIFT)));
     } else {
       callback(new Point(0, 0));
     }
-  }
-  getWindowHeight() {
-    return Dimensions.get('window').height * 2;
   }
 
   setDefaultDisplayArea(evt) {
@@ -612,7 +610,7 @@ class Popover extends React.Component {
           arrowX = translatePoint.x + viewWidth - arrowWidth - this.getBorderRadius()
       }
     }
-    return new Point(arrowX, (this.getWindowHeight()*2) /* Temp fix for useNativeDriver issue */ + arrowY);
+    return new Point(arrowX, (FIX_SHIFT*2) /* Temp fix for useNativeDriver issue */ + arrowY);
   }
 
   getTranslateOrigin() {
@@ -765,7 +763,7 @@ class Popover extends React.Component {
 
     // Should grow from anchor point
     let translateStart = this.getTranslateOrigin()
-    translateStart.y += (this.getWindowHeight()*2) // Temp fix for useNativeDriver issue
+    translateStart.y += (FIX_SHIFT*2) // Temp fix for useNativeDriver issue
     values.translate.setValue(translateStart);
     const translatePoint = new Point(this.state.popoverOrigin.x, this.state.popoverOrigin.y);
     values.translateArrow.setValue(this.getArrowTranslateLocation(translatePoint));
@@ -802,7 +800,7 @@ class Popover extends React.Component {
 
     const newArrowLocation = this.getArrowTranslateLocation(translatePoint);
 
-    translatePoint.y = translatePoint.y + (this.getWindowHeight()*2) // Temp fix for useNativeDriver issue
+    translatePoint.y = translatePoint.y + (FIX_SHIFT*2) // Temp fix for useNativeDriver issue
 
     if (!fade && fade !== 0) { console.log("Popover: Fade value is null"); return; }
     if (!isPoint(translatePoint)) { console.log("Popover: Translate Point value is null"); return; }
@@ -869,12 +867,12 @@ class Popover extends React.Component {
     // Temp fix for useNativeDriver issue
     let backgroundShift = animatedValues.fade.interpolate({
       inputRange: [0, 0.0001, 1],
-      outputRange: [0, this.getWindowHeight(), this.getWindowHeight()]
+      outputRange: [0, FIX_SHIFT, FIX_SHIFT]
     })
 
     let backgroundStyle = {
       ...styles.background,
-      bottom: this.getWindowHeight(),
+      bottom: FIX_SHIFT,
       transform: [
         {translateY: backgroundShift}
       ],
@@ -884,7 +882,7 @@ class Popover extends React.Component {
     let containerStyle = {
       ...styles.container,
       opacity: animatedValues.fade,
-      top: -1 * this.getWindowHeight()
+      top: -1 * FIX_SHIFT
     };
 
     let popoverViewStyle = Object.assign({
@@ -901,8 +899,8 @@ class Popover extends React.Component {
     });
 
     let contentView = (
-      <View pointerEvents="box-none" style={[styles.container, {left: 0, top:  -1 * this.getWindowHeight()}]} ref={ref => this.containerRef = ref}>
-        <SafeAreaView pointerEvents="none" style={{position: 'absolute', top: this.getWindowHeight(), left: 0, right: 0, bottom: 0}}>
+      <View pointerEvents="box-none" style={[styles.container, {left: 0, top:  -1 * FIX_SHIFT}]} ref={ref => this.containerRef = ref}>
+        <SafeAreaView pointerEvents="none" style={{position: 'absolute', top: FIX_SHIFT, left: 0, right: 0, bottom: 0}}>
           <TouchableWithoutFeedback style={{flex: 1}} ref={ref => this.dda = ref} onLayout={evt => this.setDefaultDisplayArea(evt)}><View style={{flex: 1}} /></TouchableWithoutFeedback>
         </SafeAreaView>
 
@@ -959,10 +957,11 @@ var styles = {
     left: 0,
     right: 0,
     position: 'absolute',
-    backgroundColor: 'transparent',
+    backgroundColor: 'transparent'
   },
   background: {
     top: 0,
+    bottom: FIX_SHIFT,
     left: 0,
     right: 0,
     position: 'absolute',
