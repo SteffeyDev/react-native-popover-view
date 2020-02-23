@@ -899,7 +899,9 @@ class Popover extends React.Component {
     let contentView = (
       <View pointerEvents="box-none" style={[styles.container, {left: 0}]} ref={ref => this.containerRef = ref}>
         <SafeAreaView pointerEvents="none" style={{position: 'absolute', top: FIX_SHIFT, left: 0, right: 0, bottom: 0}}>
-          <TouchableWithoutFeedback style={{flex: 1}} onLayout={evt => this.setDefaultDisplayArea(evt)}><View style={{flex: 1}} /></TouchableWithoutFeedback>
+          <TouchableWithoutFeedback style={{flex: 1}} onLayout={evt => this.setDefaultDisplayArea(evt)}>
+            <View style={{flex: 1}} />
+          </TouchableWithoutFeedback>
         </SafeAreaView>
 
         <Animated.View pointerEvents="box-none" style={containerStyle}>
@@ -909,12 +911,9 @@ class Popover extends React.Component {
 
           <View pointerEvents="box-none" style={{top: 0, left: 0}}>
             
-            <Animated.View style={popoverViewStyle} ref={ref => this.popoverRef = ref} onLayout={evt => {
-              const layout = evt.nativeEvent.layout
-              setTimeout(() => {
-                this.measureContent(layout)
-              }, 10)
-            }}>
+            <Animated.View style={popoverViewStyle} ref={ref => this.popoverRef = ref} onLayout={evt =>
+              setTimeout(() => this.measureContent(evt.nativeEvent.layout), 10)
+            }>
               {this.props.children}
             </Animated.View>
 
