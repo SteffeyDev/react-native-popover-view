@@ -935,6 +935,7 @@ class Popover extends React.Component {
           supportedOrientations={['portrait', 'portrait-upside-down', 'landscape']}
           hardwareAccelerated={true}
           visible={this.state.visible}
+          statusBarTranslucent={this.props.statusBarTranslucent}
           onShow={this.props.onOpenStart}
           onDismiss={this.props.onCloseComplete}
           onRequestClose={this.props.onRequestClose}>
@@ -1032,6 +1033,7 @@ Popover.propTypes = {
   placement: PropTypes.oneOf([PLACEMENT_OPTIONS.LEFT, PLACEMENT_OPTIONS.RIGHT, PLACEMENT_OPTIONS.TOP, PLACEMENT_OPTIONS.BOTTOM, PLACEMENT_OPTIONS.AUTO]),
   animationConfig: PropTypes.object,
   verticalOffset: PropTypes.number,
+  statusBarTranslucent: PropTypes.bool,
 
   // style
   popoverStyle: PropTypes.object,
