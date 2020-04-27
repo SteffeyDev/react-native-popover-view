@@ -898,7 +898,7 @@ class Popover extends React.Component {
 
     let contentView = (
       <View pointerEvents="box-none" style={[styles.container, {left: 0}]} ref={ref => this.containerRef = ref}>
-        <SafeAreaView pointerEvents="none" style={{position: 'absolute', top: FIX_SHIFT, left: 0, right: 0, bottom: 0}}>
+        <SafeAreaView pointerEvents="none" forceInset={this.props.safeAreaInsets} style={{position: 'absolute', top: FIX_SHIFT, left: 0, right: 0, bottom: 0}}>
           <TouchableWithoutFeedback style={{flex: 1}} onLayout={evt => this.setDefaultDisplayArea(evt)}>
             <View style={{flex: 1}} />
           </TouchableWithoutFeedback>
@@ -1034,6 +1034,7 @@ Popover.propTypes = {
   animationConfig: PropTypes.object,
   verticalOffset: PropTypes.number,
   statusBarTranslucent: PropTypes.bool,
+  safeAreaInsets: PropTypes.object,
 
   // style
   popoverStyle: PropTypes.object,

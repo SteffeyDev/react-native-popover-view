@@ -1,15 +1,15 @@
 declare module "react-native-popover-view" {
-
-import {
+  import {
     Animated,
     StyleProp,
     TouchableOpacity,
     View,
     ViewStyle
-} from "react-native";
-import { Component, ComponentType, Ref } from "react";
+  } from "react-native";
+  import { Component, ComponentType, Ref } from "react";
+  import { SafeAreaViewProps } from "react-native-safe-area-view";
 
-export class Rect {
+  export class Rect {
     constructor(x: number, y: number, width: number, height: number);
   }
 
@@ -30,6 +30,8 @@ export class Rect {
     placement?: "top" | "bottom" | "left" | "right" | "auto";
     animationConfig?: Animated.TimingAnimationConfig;
     verticalOffset?: number;
+    statusBarTranslucent?: boolean;
+    safeAreaInsets?: SafeAreaViewProps["forceInset"];
     popoverStyle?: StyleProp<ViewStyle>;
     arrowStyle?: StyleProp<ViewStyle>;
     backgroundStyle?: StyleProp<ViewStyle>;
