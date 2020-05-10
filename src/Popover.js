@@ -22,7 +22,8 @@ const PLACEMENT_OPTIONS = Object.freeze({
   RIGHT: 'right',
   BOTTOM: 'bottom',
   LEFT: 'left',
-  AUTO: 'auto'
+  AUTO: 'auto',
+  CENTER: 'center'
 });
 
 const POPOVER_MODE = Object.freeze({
@@ -229,6 +230,7 @@ class Popover extends React.Component {
 
     this.debug("computeGeometry - displayArea", displayArea);
     this.debug("computeGeometry - fromRect", fromRect);
+    this.debug("computeGeometry - placement", placement);
 
     let newGeom = null;
 
@@ -258,12 +260,15 @@ class Popover extends React.Component {
         case PLACEMENT_OPTIONS.RIGHT:
           newGeom = this.computeRightGeometry(options);
           break;
+        case PLACEMENT_OPTIONS.CENTER:
+          newGeom = null;
+          break;
         default:
           newGeom = this.computeAutoGeometry(options);
       }
 
       // If the popover will be restricted and the view that the popover is showing from is sufficiently large, try to show the popover inside the view
-      if (newGeom.viewLargerThanDisplayArea.width || newGeom.viewLargerThanDisplayArea.height) {
+      if (newGeom && (newGeom.viewLargerThanDisplayArea.width || newGeom.viewLargerThanDisplayArea.height)) {
         let fromRectHeightVisible = fromRect.y < displayArea.y
           ? fromRect.height - (displayArea.y - fromRect.y)
           : displayArea.y + displayArea.height - fromRect.y;
@@ -284,6 +289,7 @@ class Popover extends React.Component {
             height: Math.min(fromRect.height - 20, displayArea.height)
           }
 
+          this.debug("computeGeometry - showing inside anchor");
           newGeom = {
             popoverOrigin: new Point(constrainedX, constrainedY),
             anchorPoint: new Point(fromRect.x + (fromRect.width/2), fromRect.y + (fromRect.height/2)),
@@ -294,8 +300,10 @@ class Popover extends React.Component {
             },
             showArrow: false
           }
-        } else {
-          // If we can't fit inside or outside the fromRect, show the popover centered on the screen
+        }
+        else if (placement === PLACEMENT_OPTIONS.AUTO) {
+          // If we can't fit inside or outside the fromRect, show the popover centered on the screen,
+          //  but only do this if they haven't asked for a specifc placement type
           newGeom = null;
         }
       }
@@ -308,6 +316,7 @@ class Popover extends React.Component {
       const preferedY = (displayArea.height - requestedContentSize.height)/2 + displayArea.y;
       const preferedX = (displayArea.width - requestedContentSize.width)/2 + displayArea.x;
 
+      this.debug("computeGeometry - showing centered on screen");
       newGeom = {
         popoverOrigin: new Point(Math.max(minX, preferedX), Math.max(minY, preferedY)),
         anchorPoint: new Point(displayArea.width/2 + displayArea.x, displayArea.height/2 + displayArea.y),
@@ -1030,7 +1039,7 @@ Popover.propTypes = {
 
   // config
   displayArea: PropTypes.objectOf(PropTypes.number),
-  placement: PropTypes.oneOf([PLACEMENT_OPTIONS.LEFT, PLACEMENT_OPTIONS.RIGHT, PLACEMENT_OPTIONS.TOP, PLACEMENT_OPTIONS.BOTTOM, PLACEMENT_OPTIONS.AUTO]),
+  placement: PropTypes.oneOf([PLACEMENT_OPTIONS.LEFT, PLACEMENT_OPTIONS.RIGHT, PLACEMENT_OPTIONS.TOP, PLACEMENT_OPTIONS.BOTTOM, PLACEMENT_OPTIONS.AUTO, PLACEMENT_OPTIONS.CENTER]),
   animationConfig: PropTypes.object,
   verticalOffset: PropTypes.number,
   statusBarTranslucent: PropTypes.bool,
