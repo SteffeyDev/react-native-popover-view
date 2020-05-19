@@ -28,7 +28,7 @@ declare module "react-native-popover-view" {
     ) => Rect;
     displayArea?: Rect;
     placement?: "top" | "bottom" | "left" | "right" | "auto";
-    animationConfig?: Animated.TimingAnimationConfig;
+    animationConfig?: Partial<Animated.TimingAnimationConfig>;
     verticalOffset?: number;
     statusBarTranslucent?: boolean;
     safeAreaInsets?: SafeAreaViewProps["forceInset"];
