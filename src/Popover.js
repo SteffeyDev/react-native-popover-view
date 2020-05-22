@@ -157,11 +157,15 @@ class Popover extends React.Component {
     }
 
     Dimensions.addEventListener('change', this.handleResizeEvent)
+
+    this._isMounted = true;
   }
 
   componentWillUnmount() {
+    this._isMounted = false;
+
     if (this.state.visible) {
-      this.animateOut(true);
+      this.animateOut();
     } else {
       setTimeout(this.props.onCloseStart);
       setTimeout(this.props.onCloseComplete);
@@ -752,7 +756,7 @@ class Popover extends React.Component {
     }
   }
 
-  animateOut(unmounting = false) {
+  animateOut() {
     setTimeout(this.props.onCloseStart);
     this.keyboardDidShowListener && this.keyboardDidShowListener.remove();
     this.keyboardDidHideListener && this.keyboardDidHideListener.remove();
@@ -774,7 +778,7 @@ class Popover extends React.Component {
             this.props.onCloseComplete()
         }
 
-        if (!unmounting) this.setState({visible: false, forcedContentSize: {}}, onCloseComplete)
+        if (this._isMounted) this.setState({visible: false, forcedContentSize: {}}, onCloseComplete)
         else onCloseComplete();
       },
       easing: Easing.inOut(Easing.quad)
@@ -802,10 +806,13 @@ class Popover extends React.Component {
       translatePoint,
       easing: Easing.out(Easing.back()),
       callback: () => {
-        this.setState({showing: true});
+        if (this._isMounted) {
+          this.setState({showing: true});
+          if (this.popoverRef)
+            setTimeout(() => getRectForRef(this.popoverRef, (rect) => this.debug("animateIn - onOpenComplete - Calculated Popover Rect", rect)));
+        }
         setTimeout(this.props.onOpenComplete);
-        setTimeout(() => getRectForRef(this.popoverRef, (rect) => this.debug("animateIn - onOpenComplete - Calculated Popover Rect", rect)));
-        if (this.animateOutAfterShow) {
+        if (this.animateOutAfterShow || !this._isMounted) {
           this.animateOut();
           this.animateOutAfterShow = false;
         }
