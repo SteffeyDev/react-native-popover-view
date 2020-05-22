@@ -161,7 +161,7 @@ class Popover extends React.Component {
 
   componentWillUnmount() {
     if (this.state.visible) {
-      this.animateOut();
+      this.animateOut(true);
     } else {
       setTimeout(this.props.onCloseStart);
       setTimeout(this.props.onCloseComplete);
@@ -752,7 +752,7 @@ class Popover extends React.Component {
     }
   }
 
-  animateOut() {
+  animateOut(unmounting = false) {
     setTimeout(this.props.onCloseStart);
     this.keyboardDidShowListener && this.keyboardDidShowListener.remove();
     this.keyboardDidHideListener && this.keyboardDidHideListener.remove();
@@ -767,12 +767,16 @@ class Popover extends React.Component {
       fade: 0,
       scale: 0,
       translatePoint: this.getTranslateOrigin(),
-      callback: () => this.setState({visible: false, forcedContentSize: {}}, () => {
+      callback: () => {
+        const onCloseComplete = () => {
+          // If showing in an RN modal, the onCloseComplete callback will be called from the Modal onDismiss callback (on iOS only)
+          if (this.props.mode !== POPOVER_MODE.RN_MODAL || !isIOS)
+            this.props.onCloseComplete()
+        }
 
-        // If showing in an RN modal, the onCloseComplete callback will be called from the Modal onDismiss callback (on iOS only)
-        if (this.props.mode !== POPOVER_MODE.RN_MODAL || !isIOS)
-          this.props.onCloseComplete()
-      }),
+        if (!unmounting) this.setState({visible: false, forcedContentSize: {}}, onCloseComplete)
+        else onCloseComplete();
+      },
       easing: Easing.inOut(Easing.quad)
     });
   }
