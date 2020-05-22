@@ -37,6 +37,7 @@ class Popover extends React.Component {
   constructor(props) {
     super(props)
 
+    this.willUnmount = false;
     this.state = {
       requestedContentSize: {},
       forcedContentSize: {},
@@ -160,6 +161,7 @@ class Popover extends React.Component {
   }
 
   componentWillUnmount() {
+    this.willUnmount = true;
     if (this.state.visible) {
       this.animateOut();
     } else {
@@ -849,6 +851,9 @@ class Popover extends React.Component {
       })
     ]).start(() => {
       this.animating = false;
+      if (this.willUnmount) {
+        return;
+      }
       if (callback) callback();
     });
   }
