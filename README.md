@@ -161,7 +161,7 @@ class PopoverExample extends Component {
       </View>
     );
   }
-});
+}
 
 var styles = StyleSheet.create({
   container: {
