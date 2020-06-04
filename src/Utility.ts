@@ -1,31 +1,46 @@
 import { NativeModules, findNodeHandle, Dimensions } from 'react-native'
 
-export function Point(x, y) {
-  this.x = x;
-  this.y = y;
+export class Point {
+  x: number;
+  y: number;
+  constructor(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
 }
 
-export function Size(width, height) {
-  this.width = width;
-  this.height = height;
+export class Size {
+  width: number;
+  height: number;
+  constructor(width: number, height: number) {
+    this.width = width;
+    this.height = height;
+  }
 }
 
-export function Rect(x, y, width, height) {
-  this.x = x;
-  this.y = y;
-  this.width = width;
-  this.height = height;
+export class Rect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  constructor(x: number, y: number, width: number, height: number) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+  }
 }
 
-export function isTablet() {
+export function isTablet(): boolean {
   return Dimensions.get('window').height / Dimensions.get('window').width < 1.6;
 }
 
-export function isRect(rect) {
+export function isRect(rect: any): boolean {
+  return rect instanceof Rect;
   return rect && (rect.x || rect.x === 0) && (rect.y || rect.y === 0) && (rect.width || rect.width === 0) && (rect.height || rect.height === 0);
 }
 
-export function isPoint(point) {
+export function isPoint(point: object): boolean {
   return point && (point.x || point.x === 0) && !isNaN(point.x) && (point.y || point.y === 0) && !isNaN(point.y);
 }
 
