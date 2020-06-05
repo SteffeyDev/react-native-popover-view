@@ -865,7 +865,10 @@ export default class Popover extends Component<Props, State> {
         // so that we can have some logic depending on the geometry
         if (!Popover.isShowingInModal) {
           this.debug("componentDidUpdate - setting visible and awaiting calculations");
-          this.calculateRect().then(fromRect => this.setState({ fromRect, isAwaitingShow: true, visible: true }));
+          this.calculateRect().then(fromRect => {
+            this.debug("componentDidUpdate - calculated rect:", fromRect);
+            this.setState({ fromRect, isAwaitingShow: true, visible: true });
+          });
           if (this.props.mode === POPOVER_MODE.RN_MODAL) Popover.isShowingInModal = true;
         } else {
           console.warn(MULTIPLE_POPOVER_WARNING);
@@ -900,10 +903,11 @@ export default class Popover extends Component<Props, State> {
   }
 
   async calculateRect(): Promise<Rect | null> {
-    const { displayAreaOffset }: Partial<State> = this.state;
+    const { displayAreaOffset, fromRect }: Partial<State> = this.state;
     const { from } = this.props;
-    let initialRect = this.state.fromRect || new Rect(0, 0, 0, 0);
+    let initialRect = fromRect || new Rect(0, 0, 0, 0);
     let displayArea = this.props.displayArea || this.getDisplayArea();
+    console.log(from);
 
     if (!from) return null;
 
@@ -916,14 +920,14 @@ export default class Popover extends Component<Props, State> {
       return from(displayArea);
     }
 
-    if (from.hasOwnProperty('curent')) {
+    if (from.hasOwnProperty('current')) {
       const verticalOffset = this.props.verticalOffset + (displayAreaOffset ? -1 * displayAreaOffset!.y : 0);
       const horizontalOffset = displayAreaOffset ? -1 * displayAreaOffset!.x : 0;
-      const rect = await waitForNewRect(this.props.from, initialRect)
+      const rect = await waitForNewRect(from, initialRect)
       return new Rect(rect.x + horizontalOffset, rect.y + verticalOffset, rect.width, rect.height);
     }
 
-    console.error('Popover "from" prop not a supported type');
+    console.warn('Popover "from" prop not a supported type');
     return null;
   }
 

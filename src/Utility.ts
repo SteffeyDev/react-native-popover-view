@@ -43,13 +43,13 @@ export class Rect {
 
 export function getRectForRef(ref: any): Promise<Rect> {
   return new Promise(resolve => {
-    NativeModules.UIManager.measure(findNodeHandle(ref), (_x: any, _y: any, width: number, height: number, x: number, y: number) => {
+    NativeModules.UIManager.measure(findNodeHandle(ref.current), (_x: any, _y: any, width: number, height: number, x: number, y: number) => {
       resolve(new Rect(x, y, width, height));
     })
   });
 }
 
-export async function waitForChange(getFirst: () => Promise<any>, getSecond: () => Promise<any>) {
+export async function waitForChange(getFirst: () => Promise<Rect>, getSecond: () => Promise<Rect>) {
   let count = 0; // Failsafe so that the interval doesn't run forever
   let first, second;
   do  {
@@ -57,8 +57,8 @@ export async function waitForChange(getFirst: () => Promise<any>, getSecond: () 
     second = await getSecond();
     await new Promise(resolve => setTimeout(resolve, 100));
     count++
-    if (count++ > 20) throw new Error()
-  } while (first !== second)
+    if (count++ > 20) throw new Error('Timed out waiting for change (waited 2 seconds)')
+  } while (Rect.equals(first, second))
 }
 
 export async function waitForNewRect(ref: any, initialRect: Rect): Promise<Rect> {
