@@ -1,6 +1,7 @@
 'use strict';
 
-import React, { Component, ReactNode, Ref } from 'react';
+import React, { Component, ReactNode } from 'react';
+import PropTypes from 'prop-types';
 import SafeAreaView, { SafeAreaViewProps } from 'react-native-safe-area-view';
 import {
   Platform,
@@ -15,9 +16,10 @@ import {
   ViewStyle,
   StyleSheet,
   I18nManager,
-  EasingFunction
+  EasingFunction,
+  LayoutChangeEvent
 } from 'react-native';
-import { Rect, Point, Size, isRect, isPoint, rectChanged, pointChanged, waitForNewRect, runAfterChange, getRectForRef } from './Utility';
+import { Rect, Point, Size, waitForNewRect, waitForChange, getRectForRef } from './Utility';
 
 const noop = () => {};
 
@@ -64,7 +66,7 @@ type GeometryType = {
 
 interface Props {
   // display
-  isVisible: boolean;
+  isVisible?: boolean;
   mode: POPOVER_MODE;
 
   // anchor
@@ -117,6 +119,43 @@ interface State {
 }
 
 export default class Popover extends Component<Props, State> {
+  static propTypes = {
+    // display
+    isVisible: PropTypes.bool,
+    mode: PropTypes.oneOf([POPOVER_MODE.JS_MODAL, POPOVER_MODE.RN_MODAL, POPOVER_MODE.TOOLTIP]),
+
+    // anchor
+    from: PropTypes.oneOf([
+      PropTypes.func,
+      PropTypes.element,
+      PropTypes.instanceOf(Rect),
+      PropTypes.shape({ current: PropTypes.any }),
+      PropTypes.exact({ x: PropTypes.number, y: PropTypes.number, width: PropTypes.number, height: PropTypes.number })
+    ]),
+
+    // config
+    displayArea: PropTypes.oneOf([PropTypes.instanceOf(Rect), PropTypes.exact({ x: PropTypes.number, y: PropTypes.number, width: PropTypes.number, height: PropTypes.number })]),
+    placement: PropTypes.oneOf([PLACEMENT_OPTIONS.LEFT, PLACEMENT_OPTIONS.RIGHT, PLACEMENT_OPTIONS.TOP, PLACEMENT_OPTIONS.BOTTOM, PLACEMENT_OPTIONS.AUTO, PLACEMENT_OPTIONS.CENTER]),
+    animationConfig: PropTypes.object,
+    verticalOffset: PropTypes.number,
+    statusBarTranslucent: PropTypes.bool,
+    safeAreaInsets: PropTypes.object,
+
+    // style
+    popoverStyle: PropTypes.object,
+    arrowStyle: PropTypes.object,
+    backgroundStyle: PropTypes.object,
+
+    // lifecycle
+    onOpenStart: PropTypes.func,
+    onOpenComplete: PropTypes.func,
+    onRequestClose: PropTypes.func,
+    onCloseStart: PropTypes.func,
+    onCloseComplete: PropTypes.func,
+
+    debug: PropTypes.bool
+  }
+
   static defaultProps = {
     mode: POPOVER_MODE.RN_MODAL,
     placement: PLACEMENT_OPTIONS.AUTO,
@@ -158,56 +197,65 @@ export default class Popover extends Component<Props, State> {
     }
   }
 
-  isShowingInModal: boolean = false;
-  containerRef: Ref<ReactNode> = null;
-  skipNextDefaultDisplayArea: boolean = false;
-  waitForResizeToFinish: boolean = false;
-  displayAreaStore: Rect | undefined;
-  _isMounted: boolean = false;
-  updateCount: number = 0;
-  animating: boolean = false;
-  animateOutAfterShow: boolean = false;
+  private static isShowingInModal: boolean = false;
+  private skipNextDefaultDisplayArea: boolean = false;
+  private waitForResizeToFinish: boolean = false;
+  private displayAreaStore: Rect | undefined;
+  private _isMounted: boolean = false;
+  private updateCount: number = 0;
+  private animating: boolean = false;
+  private animateOutAfterShow: boolean = false;
 
-  measureContentTimeout: any;
-  keyboardDidShowListener: any;
-  keyboardDidHideListener: any;
+  private containerRef = React.createRef<View>();
+  private popoverRef = React.createRef<View>();
+
+  private measureContentTimeout: any;
+  private keyboardDidShowListener: any;
+  private keyboardDidHideListener: any;
 
   debug(line: string, obj?: any): void {
     if (DEBUG || this.props.debug)
       console.log(line + (obj ? ": " + JSON.stringify(obj) : ''));
   }
 
-  getDisplayAreaOffset(): Promise<Point> {
+  async getDisplayAreaOffset(): Promise<Point> {
     // If we aren't showing in RN Modal, we have no guarantee that we have the whole screen, so need to adapt to that
     if (this.props.mode !== POPOVER_MODE.RN_MODAL) {
-      return new Promise(resolve => {
-        getRectForRef(this.containerRef, (rect: Rect) => resolve(new Point(rect.x, rect.y + FIX_SHIFT)));
-      });
+      const rect = await getRectForRef(this.containerRef)
+      return new Point(rect.x, rect.y + FIX_SHIFT);
     } else {
-      return Promise.resolve(new Point(0, 0));
+      return new Point(0, 0);
     }
   }
 
   setDefaultDisplayArea(newDisplayArea: Rect) {
+    const { fromRect, defaultDisplayArea }: Partial<State> = this.state;
     // When the popover is closing and the display area's onLayout event is called, the width/height values may be zero
     // which causes a bad display area for the first mount when the popover re-opens
     const isValidDisplayArea = newDisplayArea.width > 0 && newDisplayArea.height > 0;
-    if ((!this.state.defaultDisplayArea || rectChanged(this.state.defaultDisplayArea, newDisplayArea)) && isValidDisplayArea) {
+    if ((!defaultDisplayArea || !Rect.equals(defaultDisplayArea, newDisplayArea)) && isValidDisplayArea) {
       this.debug("setDefaultDisplayArea - newDisplayArea", newDisplayArea);
       if (!this.skipNextDefaultDisplayArea) {
         this.getDisplayAreaOffset().then(displayAreaOffset => {
           this.debug("setDefaultDisplayArea - displayAreaOffset", displayAreaOffset);
           this.setState({ defaultDisplayArea: newDisplayArea, displayAreaOffset }, () => {
-            this.calculateRect(fromRect => {
-              this.debug("setDefaultDisplayArea (inside calculateRect callback) - fromRect", fromRect);
+            this.calculateRect().then(newFromRect => {
+              this.debug("setDefaultDisplayArea (inside calculateRect callback) - fromRect", newFromRect);
               this.debug("setDefaultDisplayArea (inside calculateRect callback) - getDisplayArea()", this.getDisplayArea());
               this.debug("setDefaultDisplayArea (inside calculateRect callback) - displayAreaStore", this.displayAreaStore);
-              if (rectChanged(fromRect, this.state.fromRect)
-                || rectChanged(this.getDisplayArea(), this.displayAreaStore)) {
+
+              if (
+                (
+                  (!fromRect && !!newFromRect) ||
+                  (!!fromRect && !newFromRect) ||
+                  (newFromRect && fromRect && !Rect.equals(newFromRect, fromRect!))
+                ) ||
+                (!this.displayAreaStore || !Rect.equals(this.getDisplayArea(), this.displayAreaStore))
+              ) {
                 this.displayAreaStore = this.getDisplayArea();
                 if (this.state.visible && !this.state.isAwaitingShow) {
                   this.debug("setDefaultDisplayArea (inside calculateRect callback) - Triggering state update");
-                  this.setState({ fromRect }, () => {
+                  this.setState({ fromRect: newFromRect }, () => {
                     this.handleGeomChange();
                     this.waitForResizeToFinish = false;
                   });
@@ -259,7 +307,8 @@ export default class Popover extends Component<Props, State> {
     // Show popover if isVisible is initially true
     if (this.props.isVisible) {
       if (!Popover.isShowingInModal) {
-        setTimeout(() => this.calculateRect(fromRect => (fromRect || !(this.props.from instanceof Ref)) && this.setState({fromRect, isAwaitingShow: true, visible: true})), 0);
+        const { from } = this.props;
+        setTimeout(() => this.calculateRect().then(fromRect => (fromRect || !(from && from.hasOwnProperty('current'))) && this.setState({fromRect, isAwaitingShow: true, visible: true})), 0);
         if (this.props.mode === POPOVER_MODE.RN_MODAL) Popover.isShowingInModal = true;
       } else {
         console.warn(MULTIPLE_POPOVER_WARNING);
@@ -301,7 +350,8 @@ export default class Popover extends Component<Props, State> {
 
     if (requestedContentSize.width && requestedContentSize.height && !this.waitForResizeToFinish) {
       if (this.state.isAwaitingShow) {
-        if ((this.props.fromView && !this.state.fromRect) || !this.getDisplayArea()) {
+        const { from } = this.props;
+        if ((from && from.hasOwnProperty('current') && !this.state.fromRect) || !this.getDisplayArea()) {
           this.debug("measureContent - Waiting " + (this.getDisplayArea() ? "for Rect" : "for Display Area") + " - requestedContentSize", requestedContentSize);
           setTimeout(() => this.measureContent(requestedContentSize), 100);
         } else {
@@ -355,7 +405,7 @@ export default class Popover extends Component<Props, State> {
 
     let newGeom = null;
 
-    if (fromRect && isRect(fromRect)) {
+    if (fromRect && fromRect instanceof Rect) {
       //check to see if fromRect is outside of displayArea, and adjust if it is
       if (fromRect.x > displayArea.x + displayArea.width) fromRect.x = displayArea.x + displayArea.width;
       if (fromRect.y > displayArea.y + displayArea.height) fromRect.y = displayArea.y + displayArea.height;
@@ -815,7 +865,7 @@ export default class Popover extends Component<Props, State> {
         // so that we can have some logic depending on the geometry
         if (!Popover.isShowingInModal) {
           this.debug("componentDidUpdate - setting visible and awaiting calculations");
-          this.calculateRect(fromRect => this.setState({ fromRect, isAwaitingShow: true, visible: true }));
+          this.calculateRect().then(fromRect => this.setState({ fromRect, isAwaitingShow: true, visible: true }));
           if (this.props.mode === POPOVER_MODE.RN_MODAL) Popover.isShowingInModal = true;
         } else {
           console.warn(MULTIPLE_POPOVER_WARNING);
@@ -835,36 +885,46 @@ export default class Popover extends Component<Props, State> {
         }
       }
     } else if (this.props.isVisible && prevProps.isVisible) {
-      this.calculateRect(fromRect => {
-        if (rectChanged(fromRect, this.state.fromRect)
+      this.calculateRect().then(newFromRect => {
+        const { fromRect }: Partial<State> = this.state;
+        const { displayArea }: Partial<Props> = this.props;
+        if ((fromRect && newFromRect && !Rect.equals(newFromRect, fromRect))
             || (this.props.displayArea && !prevProps.displayArea)
-            || rectChanged(this.props.displayArea, prevProps.displayArea)
-            || rectChanged(this.getDisplayArea(), this.displayAreaStore)) {
+            || (displayArea && prevProps.displayArea && !Rect.equals(displayArea, prevProps.displayArea))
+            || (this.displayAreaStore && !Rect.equals(this.getDisplayArea(), this.displayAreaStore))) {
           this.displayAreaStore = this.getDisplayArea();
-          this.setState({ fromRect }, () => this.handleGeomChange());
+          this.setState({ fromRect: newFromRect }, () => this.handleGeomChange());
         }
       })
     }
   }
 
-  calculateRect(callback: (rect: Rect) => void): void {
+  async calculateRect(): Promise<Rect | null> {
+    const { displayAreaOffset }: Partial<State> = this.state;
+    const { from } = this.props;
     let initialRect = this.state.fromRect || new Rect(0, 0, 0, 0);
     let displayArea = this.props.displayArea || this.getDisplayArea();
-    if (this.props.from instanceof Function)
-      runAfterChange(callback_ => callback_(this.props.from(displayArea)), initialRect, () => {
-        callback({fromRect: this.props.from(displayArea)});
-      });
-    else if (this.props.from instanceof ReactNode) {
-      const verticalOffset = this.props.verticalOffset + (this.state.displayAreaOffset ? -1 * this.state.displayAreaOffset.y : 0);
-      const horizontalOffset = this.state.displayAreaOffset ? -1 * this.state.displayAreaOffset.x : 0;
-      waitForNewRect(this.props.from, initialRect, rect => {
-        callback(new Rect(rect.x + horizontalOffset, rect.y + verticalOffset, rect.width, rect.height));
-      });
-    } else if (this.props.from instanceof Rect) {
-      callback(this.props.from);
-    } else {
-      console.error('Popover "from" prop not a supported type');
+
+    if (!from) return null;
+
+    if (this.props.from instanceof Rect) {
+      return this.props.from;
     }
+
+    if (from instanceof Function) {
+      await waitForChange(() => Promise.resolve(from(displayArea)), () => Promise.resolve(initialRect))
+      return from(displayArea);
+    }
+
+    if (from.hasOwnProperty('curent')) {
+      const verticalOffset = this.props.verticalOffset + (displayAreaOffset ? -1 * displayAreaOffset!.y : 0);
+      const horizontalOffset = displayAreaOffset ? -1 * displayAreaOffset!.x : 0;
+      const rect = await waitForNewRect(this.props.from, initialRect)
+      return new Rect(rect.x + horizontalOffset, rect.y + verticalOffset, rect.width, rect.height);
+    }
+
+    console.error('Popover "from" prop not a supported type');
+    return null;
   }
 
   handleGeomChange(requestedContentSize?: Size) {
@@ -883,7 +943,12 @@ export default class Popover extends Component<Props, State> {
 
     let geom = this.computeGeometry({ requestedContentSize });
 
-    if (pointChanged(geom.popoverOrigin, popoverOrigin) || rectChanged(geom.forcedContentSize, forcedContentSize)) {
+    if (
+      !Point.equals(geom.popoverOrigin, popoverOrigin) ||
+      (!geom.forcedContentSize && forcedContentSize) ||
+      (!forcedContentSize && geom.forcedContentSize) ||
+      (geom.forcedContentSize && forcedContentSize && !Size.equals(geom.forcedContentSize, forcedContentSize))
+    ) {
       this.setState({ ...geom, requestedContentSize}, () => {
         if (this.updateCount <= 1) {
           this.updateCount--;
@@ -949,12 +1014,12 @@ export default class Popover extends Component<Props, State> {
       fade: 1,
       scale: 1,
       translatePoint,
-      easing: Easing.out(Easing.back()),
+      easing: Easing.out(Easing.elastic(1)),
       callback: () => {
         if (this._isMounted) {
           this.setState({showing: true});
           if (this.popoverRef)
-            setTimeout(() => getRectForRef(this.popoverRef, (rect) => this.debug("animateIn - onOpenComplete - Calculated Popover Rect", rect)));
+            setTimeout(() => getRectForRef(this.popoverRef).then((rect: Rect) => this.debug("animateIn - onOpenComplete - Calculated Popover Rect", rect)));
         }
         setTimeout(this.props.onOpenComplete);
         if (this.animateOutAfterShow || !this._isMounted) {
@@ -971,7 +1036,7 @@ export default class Popover extends Component<Props, State> {
       fade: number;
       scale: number;
       translatePoint: Point;
-      callback: () => void;
+      callback?: () => void;
       easing: EasingFunction;
       values: {
         scale: Animated.Value,
@@ -999,7 +1064,7 @@ export default class Popover extends Component<Props, State> {
     translatePoint.y = translatePoint.y + (FIX_SHIFT*2) // Temp fix for useNativeDriver issue
 
     if (!fade && fade !== 0) { console.log("Popover: Fade value is null"); return; }
-    if (!isPoint(translatePoint)) { console.log("Popover: Translate Point value is null"); return; }
+    if (!translatePoint) { console.log("Popover: Translate Point value is null"); return; }
     if (!scale && scale !== 0) { console.log("Popover: Scale value is null"); return; }
     this.animating = true;
     Animated.parallel([
@@ -1089,7 +1154,7 @@ export default class Popover extends Component<Props, State> {
     };
 
     let contentView = (
-      <View pointerEvents="box-none" style={[styles.container, {left: 0}]} ref={ref => this.containerRef = ref}>
+      <View pointerEvents="box-none" style={[styles.container, {left: 0}]} ref={this.containerRef}>
         <SafeAreaView pointerEvents="none" forceInset={this.props.safeAreaInsets} style={{position: 'absolute', top: FIX_SHIFT, left: 0, right: 0, bottom: 0}}>
           <TouchableWithoutFeedback style={{flex: 1}} onLayout={
             evt => this.setDefaultDisplayArea(
@@ -1113,7 +1178,7 @@ export default class Popover extends Component<Props, State> {
 
           <View pointerEvents="box-none" style={{top: 0, left: 0}}>
             
-            <Animated.View style={popoverViewStyle} ref={ref => this.popoverRef = ref} onLayout={evt => {
+            <Animated.View style={popoverViewStyle} ref={this.popoverRef} onLayout={(evt: LayoutChangeEvent) => {
               const layout = { ...evt.nativeEvent.layout };
               setTimeout(() => this.measureContent(layout), 10);
             }}>

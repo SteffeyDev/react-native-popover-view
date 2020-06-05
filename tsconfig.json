@@ -1,10 +1,9 @@
 {
   "compilerOptions": {
-    "emitDeclarationOnly": true,
-    "outDir": "build",
+    "outDir": "dist",
     "module": "esnext",
     "target": "es5",
-    "lib": ["es6"],
+    "lib": ["es6", "es5"],
     "sourceMap": true,
     "allowJs": false,
     "jsx": "react",
@@ -18,8 +17,9 @@
     "suppressImplicitAnyIndexErrors": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "strict": true
   },
   "include": ["src"],
-  "exclude": ["node_modules/**", "build"]
+  "exclude": ["node_modules/**", "dist"]
 }

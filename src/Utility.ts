@@ -1,4 +1,4 @@
-import { NativeModules, findNodeHandle, Dimensions } from 'react-native'
+import { NativeModules, findNodeHandle } from 'react-native'
 
 export class Point {
   x: number;
@@ -6,6 +6,9 @@ export class Point {
   constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
+  }
+  static equals(a: Point, b: Point): boolean {
+    return Math.round(a.x) === Math.round(b.x) && Math.round(a.y) === Math.round(b.y);
   }
 }
 
@@ -15,6 +18,10 @@ export class Size {
   constructor(width: number, height: number) {
     this.width = width;
     this.height = height;
+  }
+
+  static equals(a: Size, b: Size): boolean {
+    return (Math.round(a.width) === Math.round(b.width) && Math.round(a.height) === Math.round(b.height));
   }
 }
 
@@ -29,56 +36,46 @@ export class Rect {
     this.width = width;
     this.height = height;
   }
+  static equals(a: Rect, b: Rect): boolean {
+    return (Math.round(a.x) === Math.round(b.x) && Math.round(a.y) === Math.round(b.y) && Math.round(a.width) === Math.round(b.width) && Math.round(a.height) === Math.round(b.height));
+  }
 }
 
-export function isTablet(): boolean {
-  return Dimensions.get('window').height / Dimensions.get('window').width < 1.6;
-}
-
-export function isRect(rect: any): boolean {
-  return rect instanceof Rect;
-  return rect && (rect.x || rect.x === 0) && (rect.y || rect.y === 0) && (rect.width || rect.width === 0) && (rect.height || rect.height === 0);
-}
-
-export function isPoint(point: object): boolean {
-  return point && (point.x || point.x === 0) && !isNaN(point.x) && (point.y || point.y === 0) && !isNaN(point.y);
-}
-
-export function getRectForRef(ref, callback) {
-  NativeModules.UIManager.measure(findNodeHandle(ref), (x0, y0, width, height, x, y) => {
-    callback(new Rect(x, y, width, height));
-  })
-}
-
-export function runAfterChange(getFirst, second, func) {
-  let count = 0; // Failsafe so that the interval doesn't run forever
-  let checkFunc = () => 
-    getFirst(first => {
-      if (first !== second) {
-        func();
-      } else if (count < 20) {
-        count++;
-        setTimeout(checkFunc, 100);
-      }
-    });
-
-  checkFunc();
-}
-
-export function waitForNewRect(ref, initialRect, onFinish) {
-  runAfterChange(callback => {
-    getRectForRef(ref, callback);
-  }, initialRect, () => {
-    getRectForRef(ref, onFinish);
+export function getRectForRef(ref: any): Promise<Rect> {
+  return new Promise(resolve => {
+    NativeModules.UIManager.measure(findNodeHandle(ref), (_x: any, _y: any, width: number, height: number, x: number, y: number) => {
+      resolve(new Rect(x, y, width, height));
+    })
   });
 }
 
-export function rectChanged(a, b) {
-  if (!isRect(a) || !isRect(b)) return false;
+export async function waitForChange(getFirst: () => Promise<any>, getSecond: () => Promise<any>) {
+  let count = 0; // Failsafe so that the interval doesn't run forever
+  let first, second;
+  do  {
+    first = await getFirst();
+    second = await getSecond();
+    await new Promise(resolve => setTimeout(resolve, 100));
+    count++
+    if (count++ > 20) throw new Error()
+  } while (first !== second)
+}
+
+export async function waitForNewRect(ref: any, initialRect: Rect): Promise<Rect> {
+  await waitForChange(() => getRectForRef(ref), () => Promise.resolve(initialRect))
+  return await getRectForRef(ref);
+}
+
+export function sizeChanged(a: Size | null, b: Size | null): boolean {
+  if (!a || !b) return false;
+  return (Math.round(a.width) !== Math.round(b.width) || Math.round(a.height) !== Math.round(b.height));
+}
+
+export function rectChanged(a: Rect | null, b: Rect | null): boolean {
+  if (!a || !b) return false;
   return (Math.round(a.x) !== Math.round(b.x) || Math.round(a.y) !== Math.round(b.y) || Math.round(a.width) !== Math.round(b.width) || Math.round(a.height) !== Math.round(b.height));
 }
 
-export function pointChanged(a, b) {
-  if (!isPoint(a) || !isPoint(b)) return false;
+export function pointChanged(a: Point, b: Point): boolean {
   return (Math.round(a.x) !== Math.round(b.x) || Math.round(a.y) !== Math.round(b.y));
 }
