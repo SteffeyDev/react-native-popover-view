@@ -1,4 +1,5 @@
-import { NativeModules, findNodeHandle } from 'react-native'
+import { NativeModules, findNodeHandle, StyleProp, ViewStyle, StyleSheet } from 'react-native'
+import { PLACEMENT_OPTIONS, DEFAULT_ARROW_SIZE, DEFAULT_BORDER_RADIUS } from './Constants';
 
 export class Point {
   x: number;
@@ -57,7 +58,9 @@ export async function waitForChange(getFirst: () => Promise<Rect>, getSecond: ()
     second = await getSecond();
     await new Promise(resolve => setTimeout(resolve, 100));
     count++
-    if (count++ > 20) throw new Error('Timed out waiting for change (waited 2 seconds)')
+    if (count++ > 20) {
+      throw new Error('waitForChange - Timed out waiting for change (waited 2 seconds)');
+    }
   } while (Rect.equals(first, second))
 }
 
@@ -78,4 +81,23 @@ export function rectChanged(a: Rect | null, b: Rect | null): boolean {
 
 export function pointChanged(a: Point, b: Point): boolean {
   return (Math.round(a.x) !== Math.round(b.x) || Math.round(a.y) !== Math.round(b.y));
+}
+
+export function getArrowSize(placement: PLACEMENT_OPTIONS, arrowStyle: StyleProp<ViewStyle>) {
+  let width = StyleSheet.flatten(arrowStyle).width;
+  if (typeof width !== "number") width = DEFAULT_ARROW_SIZE.width;
+  let height = StyleSheet.flatten(arrowStyle).height;
+  if (typeof height !== "number") height = DEFAULT_ARROW_SIZE.height;
+  switch(placement) {
+    case PLACEMENT_OPTIONS.LEFT:
+    case PLACEMENT_OPTIONS.RIGHT:
+      return new Size(height, width);
+    default:
+      return new Size(width, height);
+  }
+}
+
+export function getBorderRadius(popoverStyle: StyleProp<ViewStyle>): number {
+  if (StyleSheet.flatten(popoverStyle).borderRadius === 0) return 0;
+  return StyleSheet.flatten(popoverStyle).borderRadius || DEFAULT_BORDER_RADIUS;
 }
