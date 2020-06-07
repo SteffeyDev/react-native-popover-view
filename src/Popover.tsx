@@ -897,7 +897,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       fade: 1,
       scale: 1,
       translatePoint,
-      easing: Easing.out(Easing.elastic(1)),
+      easing: Easing.out(Easing.back(1)),
       callback: () => {
         if (this._isMounted) {
           this.setState({ showing: true });

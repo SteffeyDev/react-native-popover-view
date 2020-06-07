@@ -6,7 +6,7 @@
 
 A well-tested, adaptable, lightweight `<Popover>` component for react-native. Great for use in Tablets; you can put entire views that you would normally show in a modal (on a smaller device) into a popover, optionally give it an anchor point, and have it float on top of all of the other views.
 
-It is written entirely in JavaScript, but uses [React Native's native driver](https://facebook.github.io/react-native/blog/2017/02/14/using-native-driver-for-animated.html) for responsive animations, even when the JS thread is busy.
+It is written entirely in TypeScript, but uses [React Native's native driver](https://facebook.github.io/react-native/blog/2017/02/14/using-native-driver-for-animated.html) for responsive animations, even when the JS thread is busy.
 
 The `<Popover>` is able to handle dynamic content and adapt to screen size changes while showing, and will move out of the way for on-screen keyboards automatically.
 
@@ -14,37 +14,27 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
 ##### Table of Contents
 * [Features](#features)
 * [Demo](#demo)
-* [Origins](#origins)
 * [Installation](#installation)
-* [Standalone Usage](#standalone)
-  * [Props](#props)
-  * [Example](#standalone-example)
-* [Usage with React Navigation](#rn)
+* [Usage](#usage)
+* [Props](#props)
 * [Troubleshooting](#troubleshooting)
 * [Upgrading](#upgrading)
 * [Contributing](#contributing)
 * [Credits](#credits)
 
 ## <a name="features"/>Popover Features
+* Extremely simple but also highly customizable
 * Moves to avoid keyboard
 * Ability to show from a view, from a rect, or float in center of screen
 * Adapts to changing content size
 * Automatically detects best placement on screen
 * Moves to stay visible on orientation change or when entering split-screen mode
-* (Optional) Integration with [React Navigation](https://reactnavigation.org)
 
 ## <a name="demo"/>Demo App
 
 You can play around with the various features using [the Expo test app](https://expo.io/@steffeydev/popover-view-test-app).
 Source Code: [react-native-popover-view-test-app](https://github.com/SteffeyDev/react-native-popover-view-test-app)
 
-### <a name="origins"/>A Note on Origins
-
-This is a fork of [react-native-popover](https://github.com/jeanregisser/react-native-popover), originally created by Jean Regisser but since abandoned.
-
-I have rebuilt most of the library from the ground up for improved handling of changing screen sizes on tablets (split-screen mode), a redesigned automatic placement algorithm, and ES6 compatibility.
-
-Similar forks exist on Github (such as [react-native-modal-popover](https://github.com/doomsower/react-native-modal-popover)), but this is the first to be published on NPM as far as I know.
 
 ## <a name="installation"/>Installation
 
@@ -56,29 +46,226 @@ or
 yarn add react-native-popover-view
 ```
 
-## <a name="standalone"/>Standalone Usage
+## <a name="usage"/>Usage
+
+### Showing popover from an element
+
+For the simplest usage, just pass your `Touchable` into the `from` prop.  The `Popover` will automatically be shown when the `Touchable` is pressed.  Note that if you pass an `onPress` or `ref` prop to the `Touchable` it will be overwritten.
 
 ```jsx
-import Popover from 'react-native-popover-view'
+import React from 'react';
+import Popover from 'react-native-popover-view';
 
-...
-  render (
+function App() {
+  return (
     <Popover
-      isVisible={this.state.isVisible}>
-      <CustomElement />
+      from={(
+        <TouchableOpacity>
+          <Text>Press here to open popover!</Text>
+        </TouchableOpacity>
+      )}>
+      <Text>This is the contents of the popover</Text>
     </Popover>
-  )
+  );
+}
 ```
 
-### <a name="props"/>Props
+### Showing popover from an element (advanced)
+
+For more advanced usage, pass in a function that returns any React element.  You control which element the popover anchors on (using the `sourceRef`) and when the popover will be shown (using the `showPopover`) callback.  In this example, the `Popover` will appear to originate from the text _inside_ the popover, and will only be shown when the `Touchable` is held down.
+
+```jsx
+import React from 'react';
+import Popover from 'react-native-popover-view';
+
+function App() {
+  return (
+    <Popover
+      from={(sourceRef, showPopover) => (
+        <View>
+          <TouchableOpacity onLongPress={showPopover}>
+            <Text ref={sourceRef}>Press here to open popover!</Text>
+          </TouchableOpacity>
+        </View>
+      )}>
+      <Text>This is the contents of the popover</Text>
+    </Popover>
+  );
+}
+```
+
+
+### Showing popover from a reference to an element
+
+If you need to manually show and hide the `Popover`, or just want even more control (e.g. having the `Popover` and `Touchable` in complete different parts of the node heiarchy), you can just pass in a normal `ref`, then use `isVisible` and `onRequestClose` to control visiblity.  `onRequestClose` is called when the user taps on the background.  If you want to force the user to tap a button inside the `Popover` to dismiss, you could omit `onRequestClose` and change the state manually.
+
+```jsx
+import React, { useRef, useState } from 'react';
+import Popover from 'react-native-popover-view';
+
+function App() {
+  const touchable = useRef();
+  const [showPopover, setShowPopover] = useState(false);
+
+  return (
+    <>
+      <TouchableOpacity ref={touchable} onPress={() => setShowPopover(true)}>
+        <Text>Press here to open popover!</Text>
+      </TouchableOpacity>
+      <Popover from={touchable} isVisible={showPopover} onRequestClose={() => setShowPopover(false)}>
+        <Text>This is the contents of the popover</Text>
+      </Popover>
+    </>
+  );
+}
+```
+
+### Showing popover from a predetermined position
+
+If you already know the exact location of the place you want the `Popover` to anchor, you can create a `Rect(x, y, width, height)` object, and show from that `Rect`.  Note that `Rect(x, y, 0, 0)` is equivalent to showing from the point `(x, y)`.
+
+```jsx
+import React, { useState } from 'react';
+import Popover, { Rect } from 'react-native-popover-view';
+
+function App() {
+  const [showPopover, setShowPopover] = useState(false);
+
+  return (
+    <>
+      <TouchableOpacity onPress={() => setShowPopover(true)}>
+        <Text>Press here to open popover!</Text>
+      </TouchableOpacity>
+      <Popover from={new Rect(5, 100, 20, 40)} isVisible={showPopover} onRequestClose={() => setShowPopover(false)}>
+        <Text>This is the contents of the popover</Text>
+      </Popover>
+    </>
+  );
+}
+```
+
+### Showing popover centered on the screen
+
+If you just want the popover to be centered on the screen, not anchored to anything, you can omit the `from` prop altogether.
+
+```jsx
+import React, { useState } from 'react';
+import Popover from 'react-native-popover-view';
+
+function App() {
+  const [showPopover, setShowPopover] = useState(false);
+
+  return (
+    <>
+      <TouchableOpacity onPress={() => setShowPopover(true)}>
+        <Text>Press here to open popover!</Text>
+      </TouchableOpacity>
+      <Popover isVisible={showPopover} onRequestClose={() => setShowPopover(false)}>
+        <Text>This is the contents of the popover</Text>
+      </Popover>
+    </>
+  );
+}
+```
+
+### Showing popover in a specific direction
+
+Normally, the `Popover` will automatically pick the direction it pops out based on where it would fit best on the screen, even showing centered and unanchored if the contents would be compressed otherwise.  If you would like to force a direction, you can pass in the `placement` prop.
+
+```jsx
+import React from 'react';
+import Popover, { PopoverPlacement } from 'react-native-popover-view';
+
+function App() {
+  return (
+    <Popover
+      placement={PopoverPlacement.BOTTOM}
+      from={(
+        <TouchableOpacity>
+          <Text>Press here to open popover!</Text>
+        </TouchableOpacity>
+      )}>
+      <Text>This is the contents of the popover</Text>
+    </Popover>
+  );
+}
+```
+
+### Showing popover as a tooltip
+
+Normally, the popover creates a background that dims the content behind it.  You can also show a tooltip without fading the background.  Read more about the available modes below.  Note that when using `TOOLTIP` mode, you must control the visiblity manually (`onRequestClose` will never be called).
+
+```jsx
+import React, { useRef, useState } from 'react';
+import Popover, { PopoverMode, PopoverPlacement } from 'react-native-popover-view';
+
+function App() {
+  const [showPopover, setShowPopover] = useState(false);
+
+  return (
+    <Popover
+      mode={PopoverMode.TOOLTIP}
+      placement={PopoverPlacement.TOP}
+      isVisible={showPopover}
+      from={(
+        <TouchableOpacity onPress={() => setShowPopover(true)}>
+          <Text>Press here to open popover!</Text>
+        </TouchableOpacity>
+      )}>
+      <>
+        <Text>This is the contents of the popover</Text>
+        <TouchableOpacity onPress={() => setShowPopover(false)}>
+          <Text>Dismiss</Text>
+        </TouchableOpacity>
+      </>
+    </Popover>
+  );
+}
+```
+
+### Using class components
+
+If you are not using functional components and hooks yet, you can still use class components in almost every case outlined above.  Here is an example of using a class component and a `ref`, which is slightly different than when using function components.
+
+```jsx
+import React, { createRef } from 'react';
+import Popover from 'react-native-popover-view';
+
+class App() {
+  constructor(props) {
+    super(props);
+
+    this.touchable = createRef();
+    this.state = {
+      showPopover: false
+    }
+  }
+
+  render() {
+    return (
+      <>
+        <TouchableOpacity ref={this.touchable} onPress={() => this.setState({ showPopover: true })}>
+          <Text>Press here to open popover!</Text>
+        </TouchableOpacity>
+        <Popover
+          from={touchable}
+          isVisible={this.state.showPopover}
+          onRequestClose={() => this.setState({ showPopover: false })}>
+          <Text>This is the contents of the popover</Text>
+        </Popover>
+      </>
+    );
+  }
+}
+```
+
+## <a name="props"/>Props
 
 Prop              | Type     | Optional | Default     | Description
 ----------------- | -------- | -------- | ----------- | -----------
 isVisible         | bool     | No       | false       | Show/Hide the popover
 mode              | string   | Yes      | 'rn-modal'  | One of: 'rn-modal', 'js-modal', 'tooltip'. See [Mode](#mode) section below for details.
-fromView          | ref      | Yes      | null        | The `ref` of the view that should anchor the popover.
-fromRect          | rect     | Yes      | null        | Alternative to `fromView`.  Rectangle at which to anchor the popover.
-fromDynamicRect   | function | Yes      |             | Same as `fromRect`, but instead of passing a static rectangle, pass a function that takes the display area dimensions as parameters: `(displayAreaWidth, displayAreaHeight) => new Rect(...)`
+from              | element OR ref OR rect | Yes      | null        | Either a React element, a function that returns a React element, a `ref` created from `React.createRef` or `React.useRef`, or a Rect object created by `new Rect(x, y, width, height)`.
 displayArea       | rect     | Yes      | screen rect | Area where the popover is allowed to be displayed
 placement         | string   | Yes      | 'auto'      | How to position the popover - top &#124; bottom &#124; left &#124; right &#124; center &#124; auto. When 'auto' is specified, it will determine the ideal placement so that the popover is fully visible within `displayArea`.
 animationConfig   | object   | Yes      |             | An object containing any configuration options that can be passed to Animated.timing (e.g. `{ duration: 600, easing: Easing.inOut(Easing.quad) }`).  The configuration options you pass will override the defaults for all animations.
@@ -95,11 +282,7 @@ onCloseStart      | function | Yes      |             | Callback to be fired whe
 onCloseComplete   | function | Yes      |             | Callback to be fired when the popover is finished closing (after animation)
 debug             | bool     | Yes      | false       | Set this to `true` to turn on debug logging to the console.  This is useful for figuring out why a Popover isn't showing.
 
-If neither `fromRect` or `fromView` are provided, the popover will float in the center of the screen.
-
-`rect` is an object with the following properties: `{x: number, y: number, width: number, height: number}`. You can create the object yourself, or `import Popover, { Rect } from 'react-native-popover-view` and create a rect by calling `new Rect(x, y, width, height)`.
-
-Likewise, `size` is an object with the following properties: `{width: number, height: number}`. You can create the object yourself, or `import Popover, { Size } from 'react-native-popover-view` and create a rect by calling `new Size(width, height)`.
+If no `from` is provided, the popover will float in the center of the screen.
 
 ### <a name="mode"/>Mode
 
@@ -120,75 +303,7 @@ Shows the popover in the space provided, filling the `Popover` component's paren
 
 Shows the `Popover` without taking over the screen, no background is faded in and taps to the area around the popover fall through to those views (as expected).  The `onRequestClose` callback will never be called, so the `Popover` will have to be dismissed some other way.
 
-### <a name="standalone-example"/>Full Example
-```jsx
-import React, { Component } from 'react';
-import Popover from 'react-native-popover-view';
-import {
-  AppRegistry,
-  StyleSheet,
-  Text,
-  TouchableHighlight,
-  View,
-} from 'react-native';
-
-class PopoverExample extends Component {
-  state = {
-    isVisible: false
-  }
-
-  showPopover() {
-    this.setState({isVisible: true});
-  }
-
-  closePopover() {
-    this.setState({isVisible: false});
-  }
-
-  render() {
-    return (
-      <View style={styles.container}>
-        <TouchableHighlight ref={ref => this.touchable = ref} style={styles.button} onPress={() => this.showPopover()}>
-          <Text>Press me</Text>
-        </TouchableHighlight>
-
-        <Popover
-          isVisible={this.state.isVisible}
-          fromView={this.touchable}
-          onRequestClose={() => this.closePopover()}>
-          <Text>I'm the content of this popover!</Text>
-        </Popover>
-      </View>
-    );
-  }
-});
-
-var styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgb(43, 186, 180)',
-  },
-  button: {
-    borderRadius: 4,
-    padding: 10,
-    marginLeft: 10,
-    marginRight: 10,
-    backgroundColor: '#ccc',
-    borderColor: '#333',
-    borderWidth: 1,
-  }
-});
-
-AppRegistry.registerComponent('PopoverExample', () => PopoverExample);
-```
-
 ---
-
-## <a name="rn"/>Usage with React Navigation
-
-To use this library with React Navigation for deep integration, see [react-navigation-popover](https://github.com/SteffeyDev/react-navigation-popover).
 
 ## <a name="troubleshooting" />Troubleshooting
 
@@ -205,6 +320,12 @@ If you pass in a `fromView` prop, but the Popover still shows centered on the sc
 See https://github.com/facebook/react-native/issues/3282 and https://github.com/SteffeyDev/react-native-popover-view/issues/28 for more info.
 
 ## <a name="upgrading" />Upgrading
+
+#### `2.x` to `3.0`
+
+* `fromRect` and `fromView` have been consolidated into a single `from` prop, where you can pass a Rect or a Ref.  All Refs passed in must now be a `RefObject` created from `React.createRef` or `React.useRef`.  All Rects passed in must be an actual Rect object (e.g. `from={new Rect(x, y, width, height)}`).
+* `from` prop now supports additional modes, including passing in a Touchable for simpler usage.  See new examples and usage notes above.
+* `fromDynamicRect` has been removed.
 
 #### `1.x` to `2.0`
 
@@ -233,8 +354,13 @@ Pull requests are welcome; if you find that you are having to bend over backward
 
 ## <a name="credits"/>Credits
 
-Original codebase created by Jean Regisser <jean.regisser@gmail.com> (https://github.com/jeanregisser) as [react-native-popover](https://github.com/jeanregisser/react-native-popover), which has been abandoned.
+This is a fork of [react-native-popover](https://github.com/jeanregisser/react-native-popover), originally created by Jean Regisser <jean.regisser@gmail.com> (https://github.com/jeanregisser) but since abandoned.
+
+I have rebuilt most of the library from the ground up for improved handling of changing screen sizes on tablets (split-screen mode), a redesigned automatic placement algorithm, TypeScript, and ES6 compatibility.
+
+Similar forks exist on Github (such as [react-native-modal-popover](https://github.com/doomsower/react-native-modal-popover)), but this is the first to be published on NPM as far as I know.
 
 ---
 
 **MIT Licensed**
+
