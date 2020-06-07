@@ -4,12 +4,13 @@
 [![npm version](http://img.shields.io/npm/dm/react-native-popover-view.svg?style=flat-square)](https://npmjs.org/package/react-native-popover-view "View this project on npm")
 [![npm licence](http://img.shields.io/npm/l/react-native-popover-view.svg?style=flat-square)](https://npmjs.org/package/react-native-popover-view "View this project on npm")
 
-A well-tested, adaptable, lightweight `<Popover>` component for react-native. Great for use in Tablets; you can put entire views that you would normally show in a modal (on a smaller device) into a popover, optionally give it an anchor point, and have it float on top of all of the other views.
+A well-tested, adaptable, lightweight `<Popover>` component for react-native.
 
 It is written entirely in TypeScript, but uses [React Native's native driver](https://facebook.github.io/react-native/blog/2017/02/14/using-native-driver-for-animated.html) for responsive animations, even when the JS thread is busy.
 
 The `<Popover>` is able to handle dynamic content and adapt to screen size changes while showing, and will move out of the way for on-screen keyboards automatically.
 
+Great for use in Tablets; you can put entire views that you would normally show in a modal (on a smaller device) into a popover, optionally give it an anchor point, and have it float on top of all of the other views.
 
 ##### Table of Contents
 * [Features](#features)
@@ -50,7 +51,7 @@ yarn add react-native-popover-view
 
 ### Showing popover from an element
 
-For the simplest usage, just pass your `Touchable` into the `from` prop.  The `Popover` will automatically be shown when the `Touchable` is pressed.  Note that if you pass an `onPress` or `ref` prop to the `Touchable` it will be overwritten.
+For the simplest usage, just pass your `Touchable` into the `from` prop.  The `Popover` will automatically be shown when the `Touchable` is pressed.
 
 ```jsx
 import React from 'react';
@@ -69,10 +70,11 @@ function App() {
   );
 }
 ```
+Note that if you pass an `onPress` or `ref` prop to the `Touchable` it will be overwritten.
 
 ### Showing popover from an element (advanced)
 
-For more advanced usage, pass in a function that returns any React element.  You control which element the popover anchors on (using the `sourceRef`) and when the popover will be shown (using the `showPopover`) callback.  In this example, the `Popover` will appear to originate from the text _inside_ the popover, and will only be shown when the `Touchable` is held down.
+For more advanced usage, pass in a function that returns any React element.  You control which element the popover anchors on (using the `sourceRef`) and when the popover will be shown (using the `showPopover` callback).  In this example, the `Popover` will appear to originate from the text _inside_ the popover, and will only be shown when the `Touchable` is held down.
 
 ```jsx
 import React from 'react';
@@ -94,10 +96,39 @@ function App() {
 }
 ```
 
+### Showing popover from an element (allow manual dismiss)
+
+You can control visibility yourself instead of letting the `Popover` manage it automatically by using the `isVisible` and `onRequestClose` prop.  This would allow you to manually dismiss the `Popover`.  `onRequestClose` is called when the user taps outside the `Popover`.  If you want to force the user to tap a button inside the `Popover` to dismiss, you could omit `onRequestClose` and change the state manually.
+
+```jsx
+import React, { useState, useEffect } from 'react';
+import Popover from 'react-native-popover-view';
+
+function App() {
+  const [showPopover, setShowPopover] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => setShowPopover(false), 2000);
+  }, []);
+
+  return (
+    <Popover
+      isVisible={showPopover}
+      onRequestClose={() => setShowPopover(false)}
+      from={(
+        <TouchableOpacity onPress={() => setShowPopover(true)}>
+          <Text>Press here to open popover!</Text>
+        </TouchableOpacity>
+      )}>
+      <Text>This popover will be dismissed automatically after 2 seconds</Text>
+    </Popover>
+  );
+}
+```
 
 ### Showing popover from a reference to an element
 
-If you need to manually show and hide the `Popover`, or just want even more control (e.g. having the `Popover` and `Touchable` in complete different parts of the node heiarchy), you can just pass in a normal `ref`, then use `isVisible` and `onRequestClose` to control visiblity.  `onRequestClose` is called when the user taps on the background.  If you want to force the user to tap a button inside the `Popover` to dismiss, you could omit `onRequestClose` and change the state manually.
+If you need even more control (e.g. having the `Popover` and `Touchable` in complete different parts of the node heiarchy), you can just pass in a normal `ref`.
 
 ```jsx
 import React, { useRef, useState } from 'react';
@@ -137,7 +168,7 @@ function App() {
         <Text>Press here to open popover!</Text>
       </TouchableOpacity>
       <Popover from={new Rect(5, 100, 20, 40)} isVisible={showPopover} onRequestClose={() => setShowPopover(false)}>
-        <Text>This is the contents of the popover</Text>
+        <Text>This popover will stay centered on the screen, even when the device is rotated!</Text>
       </Popover>
     </>
   );
@@ -212,7 +243,6 @@ function App() {
           <Text>Press here to open popover!</Text>
         </TouchableOpacity>
       )}>
-      <>
         <Text>This is the contents of the popover</Text>
         <TouchableOpacity onPress={() => setShowPopover(false)}>
           <Text>Dismiss</Text>
@@ -225,7 +255,7 @@ function App() {
 
 ### Using class components
 
-If you are not using functional components and hooks yet, you can still use class components in almost every case outlined above.  Here is an example of using a class component and a `ref`, which is slightly different than when using function components.
+If you are not using functional components and hooks yet, you can still use class components in almost every case outlined above.  Here is an example of using a class component and a `ref`, which is slightly different when using class components.
 
 ```jsx
 import React, { createRef } from 'react';
@@ -248,7 +278,7 @@ class App() {
           <Text>Press here to open popover!</Text>
         </TouchableOpacity>
         <Popover
-          from={touchable}
+          from={this.touchable}
           isVisible={this.state.showPopover}
           onRequestClose={() => this.setState({ showPopover: false })}>
           <Text>This is the contents of the popover</Text>
@@ -266,7 +296,7 @@ Prop              | Type     | Optional | Default     | Description
 isVisible         | bool     | No       | false       | Show/Hide the popover
 mode              | string   | Yes      | 'rn-modal'  | One of: 'rn-modal', 'js-modal', 'tooltip'. See [Mode](#mode) section below for details.
 from              | element OR ref OR rect | Yes      | null        | Either a React element, a function that returns a React element, a `ref` created from `React.createRef` or `React.useRef`, or a Rect object created by `new Rect(x, y, width, height)`.
-displayArea       | rect     | Yes      | screen rect | Area where the popover is allowed to be displayed
+displayArea       | rect     | Yes      | rect | Area where the popover is allowed to be displayed
 placement         | string   | Yes      | 'auto'      | How to position the popover - top &#124; bottom &#124; left &#124; right &#124; center &#124; auto. When 'auto' is specified, it will determine the ideal placement so that the popover is fully visible within `displayArea`.
 animationConfig   | object   | Yes      |             | An object containing any configuration options that can be passed to Animated.timing (e.g. `{ duration: 600, easing: Easing.inOut(Easing.quad) }`).  The configuration options you pass will override the defaults for all animations.
 verticalOffset    | number   | Yes      | 0           | The amount to vertically shift the popover on the screen.  In certain Android configurations, you may need to apply a `verticalOffset` of `-StatusBar.currentHeight` for the popover to originate from the correct place.
@@ -309,11 +339,9 @@ Shows the `Popover` without taking over the screen, no background is faded in an
 
 In all cases, start by passing the `debug={true}` prop to the Popover, to see if the debug output can help you figure out the issue.
 
-#### Show `fromView` not working
+#### Show `from` a ref not working
 
-First, make sure that the `ref` is defined prior to showing the Popover.  If you set the Popover's `isVisible` prop to `true` while the variable passed into `fromView` is undefined, the Popover will show centered on the screen.
-
-If you pass in a `fromView` prop, but the Popover still shows centered on the screen on an **Android device**, try adding these props to the component whose `ref` you passed in to `fromView`:
+If on an **Android device**, try adding these props to the component whose `ref` you passed in to `from`:
 * `renderToHardwareTextureAndroid={true}`
 * `collapsable={false}`
 
@@ -324,7 +352,7 @@ See https://github.com/facebook/react-native/issues/3282 and https://github.com/
 #### `2.x` to `3.0`
 
 * `fromRect` and `fromView` have been consolidated into a single `from` prop, where you can pass a Rect or a Ref.  All Refs passed in must now be a `RefObject` created from `React.createRef` or `React.useRef`.  All Rects passed in must be an actual Rect object (e.g. `from={new Rect(x, y, width, height)}`).
-* `from` prop now supports additional modes, including passing in a Touchable for simpler usage.  See new examples and usage notes above.
+* `from` prop now supports additional modes, including passing in a React element for simpler usage.  See new examples and usage notes above.
 * `fromDynamicRect` has been removed.
 
 #### `1.x` to `2.0`
