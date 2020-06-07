@@ -1,6 +1,6 @@
 'use strict';
 
-import React, { Component, ReactNode } from 'react';
+import React, { Component, RefObject, ReactNode } from 'react';
 import PropTypes from 'prop-types';
 import SafeAreaView, { SafeAreaViewProps } from 'react-native-safe-area-view';
 import {
@@ -19,7 +19,7 @@ import {
   EasingFunction,
   LayoutChangeEvent
 } from 'react-native';
-import { Rect, Point, Size, waitForNewRect, getRectForRef, getArrowSize, getBorderRadius } from './Utility';
+import { Rect, Point, Size, getRectForRef, getArrowSize, getBorderRadius } from './Utility';
 import { MULTIPLE_POPOVER_WARNING, PLACEMENT_OPTIONS, POPOVER_MODE, DEFAULT_BORDER_RADIUS, FIX_SHIFT } from './Constants';
 import { computeGeometry } from './Geometry';
 
@@ -55,23 +55,82 @@ interface PopoverProps {
 
 interface PublicPopoverProps extends PopoverProps {
   mode: POPOVER_MODE;
+  from?: Rect | RefObject<View> | ((sourceRef: RefObject<View>, openPopover: () => void) => Rect) | ReactNode;
 }
 
-export default class Popover extends Component<PublicPopoverProps> {
+interface PublicPopoverState {
+  isVisible: boolean;
+}
+
+export default class Popover extends Component<PublicPopoverProps, PublicPopoverState> {
   static defaultProps = {
     mode: POPOVER_MODE.RN_MODAL
   }
 
+  state = {
+    isVisible: false
+  }
+
+  private sourceRef: RefObject<View> = React.createRef();
+
   render() {
-    const { mode, ...otherProps } = this.props;
+    const { mode, from, isVisible, onRequestClose, ...otherProps } = this.props;
+
+    const actualIsVisible = isVisible === undefined ? this.state.isVisible : isVisible;
+
+    let fromRect: Rect | undefined = undefined;
+    let fromRef: RefObject<View> | undefined = undefined;
+    let sourceElement: ReactNode | undefined = undefined;
+
+    if (from) {
+      if (from instanceof Rect) {
+        fromRect = from;
+      } else if (from.hasOwnProperty('current')) {
+        fromRef = from as RefObject<View>;
+      } else if (typeof from === 'function') {
+        const element = from(this.sourceRef, () => this.setState({ isVisible: true })); 
+        if (React.isValidElement(element)) {
+          sourceElement = element;
+          fromRef = this.sourceRef;
+        }
+      } else if (React.isValidElement(from)) {
+        sourceElement = from;
+        fromRef = this.sourceRef;
+        // TODO: Modify source element to set isVisible state on tap
+      } else {
+        console.warn('Popover: `from` prop is an invalid value. Pass a React element, Rect, RefObject, or function that returns a React element.');
+      }
+    }
+
+    if (sourceElement) {
+      console.log(sourceElement);
+      // TODO: Modify source element to set sourceRef
+    }
+
+    const modalProps = {
+      ...otherProps,
+      fromRect,
+      fromRef,
+      isVisible: actualIsVisible,
+      onRequestClose: () => {
+        onRequestClose();
+        this.setState({ isVisible: false });
+      }
+    }
 
     if (mode === POPOVER_MODE.RN_MODAL) {
       return (
-        <RNModalPopover {...otherProps} />
+        <>
+          {sourceElement}
+          <RNModalPopover {...modalProps} />
+        </>
       );
     } else {
       return (
-        <JSModalPopover tooltip={mode === POPOVER_MODE.TOOLTIP} {...otherProps} />
+        <>
+          {sourceElement}
+          <JSModalPopover showBackground={mode !== POPOVER_MODE.TOOLTIP} {...modalProps} />
+        </>
       );
     }
   }
@@ -83,6 +142,9 @@ interface ModalPopoverState {
 
 interface RNModalPopoverProps extends PopoverProps {
   statusBarTranslucent?: boolean
+  fromRect?: Rect;
+  fromRef?: RefObject<View>;
+  displayArea?: Rect;
 }
 
 class RNModalPopover extends Component<RNModalPopoverProps, ModalPopoverState> {
@@ -145,7 +207,10 @@ class RNModalPopover extends Component<RNModalPopoverProps, ModalPopoverState> {
 }
 
 interface JSModalPopoverProps extends PopoverProps {
-  tooltip: boolean
+  showBackground: boolean;
+  fromRect?: Rect;
+  fromRef?: RefObject<View>;
+  displayArea?: Rect;
 }
 
 class JSModalPopover extends Component<JSModalPopoverProps, ModalPopoverState> {
@@ -163,14 +228,13 @@ class JSModalPopover extends Component<JSModalPopoverProps, ModalPopoverState> {
   }
 
   render() {
-    const { onCloseComplete, tooltip, ...otherProps } = this.props;
+    const { onCloseComplete, ...otherProps } = this.props;
     const { visible } = this.state;
 
     if (visible) {
       return (
         <View ref={this.containerRef}>
           <AdaptivePopover
-            showBackground={!tooltip}
             onCloseComplete={() => {
               onCloseComplete();
               this.setState({ visible: false });
@@ -197,7 +261,8 @@ interface AdaptivePopoverState {
 }
 
 interface AdaptivePopoverProps extends PopoverProps {
-  from?: Rect | ((displayArea: Rect) => Rect) | ReactNode;
+  fromRect?: Rect;
+  fromRef?: RefObject<View>;
   showBackground?: boolean;
   displayArea?: Rect;
   getDisplayAreaOffset: () => Promise<Point>;
@@ -239,13 +304,10 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
 
   componentDidMount() {
     Dimensions.addEventListener('change', this.handleResizeEvent)
-    if (this.props.from) {
-      this.calculateRect()
-        .then(fromRect => {
-          this.setState({ fromRect });
-          this.debug('componentDidUpdate - set new fromRect', fromRect);
-        })
-        .catch(() => {});
+    if (this.props.fromRect)
+      this.setState({ fromRect: this.props.fromRect });
+    else if (this.props.fromRef) {
+      this.calculateRectFromRef();
     }
   }
 
@@ -260,13 +322,10 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
     if (!importantProps.reduce((acc, key) => acc || this.props[key] !== prevProps[key], false))
       return;
 
-    if (this.props.from !== prevProps.from) {
-      this.calculateRect()
-        .then(fromRect => {
-          this.setState({ fromRect });
-          this.debug('componentDidUpdate - set new fromRect', fromRect);
-        })
-        .catch(() => {});
+    if (this.props.fromRect && prevProps.fromRect && !Rect.equals(this.props.fromRect, prevProps.fromRect))
+      this.setState({ fromRect: this.props.fromRect });
+    else if (this.props.fromRef) {
+      this.calculateRectFromRef();
     }
 
     if (this.props.isVisible && prevProps.isVisible) {
@@ -295,41 +354,25 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
       console.log(line + (obj ? ": " + JSON.stringify(obj) : ''));
   }
 
-  setDefaultDisplayArea(newDisplayArea: Rect) {
-    const { fromRect, defaultDisplayArea }: Partial<AdaptivePopoverState> = this.state;
+  async setDefaultDisplayArea(newDisplayArea: Rect) {
+    const { defaultDisplayArea }: Partial<AdaptivePopoverState> = this.state;
     // When the popover is closing and the display area's onLayout event is called, the width/height values may be zero
     // which causes a bad display area for the first mount when the popover re-opens
     const isValidDisplayArea = newDisplayArea.width > 0 && newDisplayArea.height > 0;
     if ((!defaultDisplayArea || !Rect.equals(defaultDisplayArea, newDisplayArea)) && isValidDisplayArea) {
       this.debug("setDefaultDisplayArea - newDisplayArea", newDisplayArea);
       if (!this.skipNextDefaultDisplayArea) {
-        this.props.getDisplayAreaOffset().then(displayAreaOffset => {
-          this.debug("setDefaultDisplayArea - displayAreaOffset", displayAreaOffset);
-          this.setState({ defaultDisplayArea: newDisplayArea, displayAreaOffset }, () => {
-            this.calculateRect()
-              .then(newFromRect => {
-                this.debug("setDefaultDisplayArea (inside calculateRect callback) - fromRect", newFromRect);
-                this.debug("setDefaultDisplayArea (inside calculateRect callback) - getDisplayArea()", this.getDisplayArea());
-                this.debug("setDefaultDisplayArea (inside calculateRect callback) - displayAreaStore", this.displayAreaStore);
+        const displayAreaOffset = await this.props.getDisplayAreaOffset();
+        this.debug("setDefaultDisplayArea - displayAreaOffset", displayAreaOffset);
+        await new Promise(resolve => this.setState({ defaultDisplayArea: newDisplayArea, displayAreaOffset }, resolve));
 
-                if (
-                  (
-                    (!fromRect && !!newFromRect) ||
-                    (!!fromRect && !newFromRect) ||
-                    (newFromRect && fromRect && !Rect.equals(newFromRect, fromRect!))
-                  ) ||
-                  (!this.displayAreaStore || !Rect.equals(this.getDisplayArea(), this.displayAreaStore))
-                ) {
-                  this.displayAreaStore = this.getDisplayArea();
-                  this.debug("setDefaultDisplayArea (inside calculateRect callback) - Triggering state update");
-                  this.setState({ fromRect: newFromRect }, () => {
-                    this.waitForResizeToFinish = false;
-                  });
-                }
-              })
-              .catch(() => {});
-          });
-        });
+        // If we have a ref, then changing the display area may have resulted in the view moving, so need to poll and see if it moves
+        if (this.props.fromRef) {
+          await this.calculateRectFromRef();
+        }
+
+        this.waitForResizeToFinish = false;
+        this.displayAreaStore = this.getDisplayArea();
       }
       if (this.skipNextDefaultDisplayArea) this.debug("setDefaultDisplayArea - Skipping first because isLandscape");
       this.skipNextDefaultDisplayArea = false;
@@ -360,37 +403,39 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
     }});
   }
 
-  async calculateRect(): Promise<Rect | null> {
+  async calculateRectFromRef() {
     const { displayAreaOffset, fromRect }: Partial<AdaptivePopoverState> = this.state;
-    const { from } = this.props;
+    const { fromRef }: Partial<AdaptivePopoverProps> = this.props;
     let initialRect = fromRect || new Rect(0, 0, 0, 0);
 
-    if (!from) return null;
-
-    if (this.props.from instanceof Rect) {
-      this.debug('calculateRect - using provided Rect');
-      return this.props.from;
+    let count = 0;
+    while (!fromRef?.current) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      if (count++ > 20) return; // Timeout after 2 seconds
     }
 
-    if (from.hasOwnProperty('current')) {
-      this.debug('calculateRect - calculating from Ref');
-      const verticalOffset = this.props.verticalOffset + (displayAreaOffset ? -1 * displayAreaOffset!.y : 0);
-      const horizontalOffset = displayAreaOffset ? -1 * displayAreaOffset!.x : 0;
-      const rect = await waitForNewRect(from, initialRect)
-      this.debug('calculateRect - calculated Rect (without offsets)', rect);
-      return new Rect(rect.x + horizontalOffset, rect.y + verticalOffset, rect.width, rect.height);
-    }
+    this.debug('calculateRect - calculating from Ref');
+    const verticalOffset = this.props.verticalOffset + (displayAreaOffset ? -1 * displayAreaOffset!.y : 0);
+    const horizontalOffset = displayAreaOffset ? -1 * displayAreaOffset!.x : 0;
 
-    console.warn('Popover "from" prop not a supported type');
-    return null;
+    let rect: Rect;
+    count = 0;
+    do {
+      rect = await getRectForRef(fromRef);
+      if (count++ > 20) return; // Timeout after 2 seconds
+    } while (Rect.equals(rect, initialRect))
+
+    rect = new Rect(rect.x + horizontalOffset, rect.y + verticalOffset, rect.width, rect.height);
+    this.debug('calculateRect - calculated Rect', rect);
+    this.setState({ fromRect: rect });
   }
 
   render() {
-    const { onOpenStart, onCloseStart, displayArea: _ignoreDisplayArea, from, ...otherProps } = this.props;
+    const { onOpenStart, onCloseStart, displayArea: _ignoreDisplayArea, fromRef, fromRect: _ignoreFromRect, ...otherProps } = this.props;
     const { fromRect } = this.state;
 
-    // Don't render popover until we have an initial fromRect calculated
-    if (from && !fromRect) return null;
+    // Don't render popover until we have an initial fromRect calculated for the view
+    if (fromRef && !fromRect) return null;
 
     return (
       <BasePopover
@@ -611,7 +656,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
     }
   }
 
-  computeGeometry({ requestedContentSize }: { requestedContentSize: Size, placement?: PLACEMENT_OPTIONS }) {
+  computeGeometry({ requestedContentSize }: { requestedContentSize: Size }) {
     const { placement: previousPlacement } = this.state;
     const { arrowStyle, popoverStyle, fromRect, displayArea, placement } = this.props;
 

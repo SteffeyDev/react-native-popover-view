@@ -70,8 +70,9 @@ export function computeGeometry(options: ComputeGeometryProps) {
         break;
       default:
         newGeom = computeAutoGeometry({ ...options, fromRect, borderRadius });
-        debug("computeGeometry - chosen auto geometry", newGeom);
     }
+
+    debug("computeGeometry - chosen geometry", newGeom);
 
     // If the popover will be restricted and the view that the popover is showing from is sufficiently large, try to show the popover inside the view
     if (newGeom && (newGeom.viewLargerThanDisplayArea.width || newGeom.viewLargerThanDisplayArea.height)) {
