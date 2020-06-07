@@ -1,5 +1,5 @@
 import { StyleProp, ViewStyle } from 'react-native';
-import { PLACEMENT_OPTIONS } from './Constants';
+import { Placement } from './Constants';
 import { Rect, Size, Point, getArrowSize, getBorderRadius } from './Utility';
 
 type ComputeGeometryBaseProps = {
@@ -9,8 +9,8 @@ type ComputeGeometryBaseProps = {
 }
 
 type ComputeGeometryProps = ComputeGeometryBaseProps & {
-  placement: PLACEMENT_OPTIONS;
-  previousPlacement: PLACEMENT_OPTIONS;
+  placement: Placement;
+  previousPlacement: Placement;
   fromRect: Rect | null;
   arrowStyle: StyleProp<ViewStyle>;
   popoverStyle: StyleProp<ViewStyle>;
@@ -24,13 +24,13 @@ type ComputeGeometryDirectionProps = ComputeGeometryBaseProps & {
 }
 
 type ComputeGeometryAutoProps = ComputeGeometryDirectionProps & {
-  previousPlacement: PLACEMENT_OPTIONS;
+  previousPlacement: Placement;
 };
 
 type GeometryType = {
   popoverOrigin: Point;
   anchorPoint: Point;
-  placement: PLACEMENT_OPTIONS;
+  placement: Placement;
   forcedContentSize: Size | null;
   viewLargerThanDisplayArea: {
     width: boolean,
@@ -39,12 +39,14 @@ type GeometryType = {
 }
 
 export function computeGeometry(options: ComputeGeometryProps) {
-  const { requestedContentSize, placement, fromRect, displayArea, debug, popoverStyle } = options;
+  const { requestedContentSize, placement, displayArea, debug, popoverStyle } = options;
 
   let newGeom = null;
 
-  if (fromRect && fromRect instanceof Rect) {
-    //check to see if fromRect is outside of displayArea, and adjust if it is
+  if (options.fromRect && options.fromRect instanceof Rect) {
+    const fromRect = Rect.clone(options.fromRect); // Make copy so doesn't modify original
+
+    // Check to see if fromRect is outside of displayArea, and adjust if it is
     if (fromRect.x > displayArea.x + displayArea.width) fromRect.x = displayArea.x + displayArea.width;
     if (fromRect.y > displayArea.y + displayArea.height) fromRect.y = displayArea.y + displayArea.height;
     if (fromRect.x < 0) fromRect.x = -1 * fromRect.width;
@@ -53,19 +55,19 @@ export function computeGeometry(options: ComputeGeometryProps) {
     const borderRadius = getBorderRadius(popoverStyle);
 
     switch (placement) {
-      case PLACEMENT_OPTIONS.TOP:
+      case Placement.TOP:
         newGeom = computeTopGeometry({ ...options, fromRect, borderRadius });
         break;
-      case PLACEMENT_OPTIONS.BOTTOM:
+      case Placement.BOTTOM:
         newGeom = computeBottomGeometry({ ...options, fromRect, borderRadius });
         break;
-      case PLACEMENT_OPTIONS.LEFT:
+      case Placement.LEFT:
         newGeom = computeLeftGeometry({ ...options, fromRect, borderRadius });
         break;
-      case PLACEMENT_OPTIONS.RIGHT:
+      case Placement.RIGHT:
         newGeom = computeRightGeometry({ ...options, fromRect, borderRadius });
         break;
-      case PLACEMENT_OPTIONS.CENTER:
+      case Placement.CENTER:
         newGeom = null;
         break;
       default:
@@ -100,7 +102,7 @@ export function computeGeometry(options: ComputeGeometryProps) {
         newGeom = {
           popoverOrigin: new Point(constrainedX, constrainedY),
           anchorPoint: new Point(fromRect.x + (fromRect.width/2), fromRect.y + (fromRect.height/2)),
-          placement: PLACEMENT_OPTIONS.CENTER,
+          placement: Placement.CENTER,
           forcedContentSize,
           viewLargerThanDisplayArea: {
             width: requestedContentSize.width > forcedContentSize.width,
@@ -112,10 +114,10 @@ export function computeGeometry(options: ComputeGeometryProps) {
         // If we can't fit inside or outside the fromRect, show the popover centered on the screen,
         //  but only do this if they haven't asked for a specifc placement type
         //  and if it will actually help show more content
-        placement === PLACEMENT_OPTIONS.AUTO &&
+        placement === Placement.AUTO &&
         (
-          (newGeom.viewLargerThanDisplayArea.width && [PLACEMENT_OPTIONS.RIGHT, PLACEMENT_OPTIONS.LEFT].includes(newGeom.placement)) ||
-          (newGeom.viewLargerThanDisplayArea.height && [PLACEMENT_OPTIONS.TOP, PLACEMENT_OPTIONS.BOTTOM].includes(newGeom.placement))
+          (newGeom.viewLargerThanDisplayArea.width && [Placement.RIGHT, Placement.LEFT].includes(newGeom.placement)) ||
+          (newGeom.viewLargerThanDisplayArea.height && [Placement.TOP, Placement.BOTTOM].includes(newGeom.placement))
         )
       ) {
         newGeom = null;
@@ -134,7 +136,7 @@ export function computeGeometry(options: ComputeGeometryProps) {
     newGeom = {
       popoverOrigin: new Point(Math.max(minX, preferedX), Math.max(minY, preferedY)),
       anchorPoint: new Point(displayArea.width/2 + displayArea.x, displayArea.height/2 + displayArea.y),
-      placement: PLACEMENT_OPTIONS.CENTER,
+      placement: Placement.CENTER,
       forcedContentSize: {
         width: displayArea.width,
         height: displayArea.height
@@ -150,7 +152,7 @@ export function computeGeometry(options: ComputeGeometryProps) {
 }
 
 function computeTopGeometry({ displayArea, fromRect, requestedContentSize, arrowStyle, borderRadius }: ComputeGeometryDirectionProps): GeometryType {
-  const arrowSize = getArrowSize(PLACEMENT_OPTIONS.TOP, arrowStyle);
+  const arrowSize = getArrowSize(Placement.TOP, arrowStyle);
   let minY = displayArea.y;
   let preferedY = fromRect.y - requestedContentSize.height - arrowSize.height;
 
@@ -184,14 +186,14 @@ function computeTopGeometry({ displayArea, fromRect, requestedContentSize, arrow
   return {
     popoverOrigin,
     anchorPoint,
-    placement: PLACEMENT_OPTIONS.TOP,
+    placement: Placement.TOP,
     forcedContentSize,
     viewLargerThanDisplayArea
   }
 }
 
 function computeBottomGeometry({ displayArea, fromRect, requestedContentSize, arrowStyle, borderRadius }: ComputeGeometryDirectionProps): GeometryType {
-  const arrowSize = getArrowSize(PLACEMENT_OPTIONS.BOTTOM, arrowStyle);
+  const arrowSize = getArrowSize(Placement.BOTTOM, arrowStyle);
   let preferedY = fromRect.y + fromRect.height + arrowSize.height;
 
   let forcedContentSize = {
@@ -224,14 +226,14 @@ function computeBottomGeometry({ displayArea, fromRect, requestedContentSize, ar
   return {
     popoverOrigin,
     anchorPoint,
-    placement: PLACEMENT_OPTIONS.BOTTOM,
+    placement: Placement.BOTTOM,
     forcedContentSize,
     viewLargerThanDisplayArea
   }
 }
 
 function computeLeftGeometry({ displayArea, fromRect, requestedContentSize, borderRadius, arrowStyle }: ComputeGeometryDirectionProps): GeometryType {
-  const arrowSize = getArrowSize(PLACEMENT_OPTIONS.LEFT, arrowStyle);
+  const arrowSize = getArrowSize(Placement.LEFT, arrowStyle);
 
   let forcedContentSize = {
     height: displayArea.height,
@@ -266,14 +268,14 @@ function computeLeftGeometry({ displayArea, fromRect, requestedContentSize, bord
   return {
     popoverOrigin,
     anchorPoint,
-    placement: PLACEMENT_OPTIONS.LEFT,
+    placement: Placement.LEFT,
     forcedContentSize,
     viewLargerThanDisplayArea
   }
 }
 
 function computeRightGeometry({ displayArea, fromRect, requestedContentSize, arrowStyle, borderRadius }: ComputeGeometryDirectionProps): GeometryType {
-  const arrowSize = getArrowSize(PLACEMENT_OPTIONS.RIGHT, arrowStyle);
+  const arrowSize = getArrowSize(Placement.RIGHT, arrowStyle);
   let horizontalSpace = displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width;
 
   let forcedContentSize = {
@@ -308,7 +310,7 @@ function computeRightGeometry({ displayArea, fromRect, requestedContentSize, arr
   return {
     popoverOrigin,
     anchorPoint,
-    placement: PLACEMENT_OPTIONS.RIGHT,
+    placement: Placement.RIGHT,
     forcedContentSize,
     viewLargerThanDisplayArea
   }
@@ -318,8 +320,8 @@ function computeAutoGeometry(options: ComputeGeometryAutoProps): GeometryType {
   const { displayArea, requestedContentSize, fromRect, previousPlacement, debug, arrowStyle } = options
 
   // Keep same placement if possible (left/right)
-  if (previousPlacement === PLACEMENT_OPTIONS.LEFT || previousPlacement === PLACEMENT_OPTIONS.RIGHT) {
-    const geom = previousPlacement === PLACEMENT_OPTIONS.LEFT
+  if (previousPlacement === Placement.LEFT || previousPlacement === Placement.RIGHT) {
+    const geom = previousPlacement === Placement.LEFT
       ? computeLeftGeometry(options)
       : computeRightGeometry(options)
     debug("computeAutoGeometry - Left/right tryping to keep same, geometry", geom);
@@ -327,8 +329,8 @@ function computeAutoGeometry(options: ComputeGeometryAutoProps): GeometryType {
   }
 
   // Keep same placement if possible (top/bottom)
-  if (previousPlacement === PLACEMENT_OPTIONS.TOP || previousPlacement === PLACEMENT_OPTIONS.BOTTOM) {
-    const geom = previousPlacement === PLACEMENT_OPTIONS.TOP
+  if (previousPlacement === Placement.TOP || previousPlacement === Placement.BOTTOM) {
+    const geom = previousPlacement === Placement.TOP
       ? computeTopGeometry(options)
       : computeBottomGeometry(options)
     debug("computeAutoGeometry - Top/bottom tryping to keep same, geometry", geom);
@@ -336,7 +338,7 @@ function computeAutoGeometry(options: ComputeGeometryAutoProps): GeometryType {
   }
 
   // Otherwise, find the place that can fit it best (try left/right but default to top/bottom as that will typically have more space
-  const arrowSize = getArrowSize(PLACEMENT_OPTIONS.LEFT, arrowStyle);
+  const arrowSize = getArrowSize(Placement.LEFT, arrowStyle);
 
   // If it fits on left, choose left
   if (fromRect.x - displayArea.x - arrowSize.width >= requestedContentSize.width) { // We could fit it on the left side

@@ -1,5 +1,5 @@
 import { NativeModules, findNodeHandle, StyleProp, ViewStyle, StyleSheet } from 'react-native'
-import { PLACEMENT_OPTIONS, DEFAULT_ARROW_SIZE, DEFAULT_BORDER_RADIUS } from './Constants';
+import { Placement, DEFAULT_ARROW_SIZE, DEFAULT_BORDER_RADIUS } from './Constants';
 
 export class Point {
   x: number;
@@ -31,14 +31,20 @@ export class Rect {
   y: number;
   width: number;
   height: number;
+
   constructor(x: number, y: number, width: number, height: number) {
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
   }
+
   static equals(a: Rect, b: Rect): boolean {
     return (Math.round(a.x) === Math.round(b.x) && Math.round(a.y) === Math.round(b.y) && Math.round(a.width) === Math.round(b.width) && Math.round(a.height) === Math.round(b.height));
+  }
+
+  static clone(rect: Rect) {
+    return new Rect(rect.x, rect.y, rect.width, rect.height);
   }
 }
 
@@ -83,14 +89,14 @@ export function pointChanged(a: Point, b: Point): boolean {
   return (Math.round(a.x) !== Math.round(b.x) || Math.round(a.y) !== Math.round(b.y));
 }
 
-export function getArrowSize(placement: PLACEMENT_OPTIONS, arrowStyle: StyleProp<ViewStyle>) {
+export function getArrowSize(placement: Placement, arrowStyle: StyleProp<ViewStyle>) {
   let width = StyleSheet.flatten(arrowStyle).width;
   if (typeof width !== "number") width = DEFAULT_ARROW_SIZE.width;
   let height = StyleSheet.flatten(arrowStyle).height;
   if (typeof height !== "number") height = DEFAULT_ARROW_SIZE.height;
   switch(placement) {
-    case PLACEMENT_OPTIONS.LEFT:
-    case PLACEMENT_OPTIONS.RIGHT:
+    case Placement.LEFT:
+    case Placement.RIGHT:
       return new Size(height, width);
     default:
       return new Size(width, height);
