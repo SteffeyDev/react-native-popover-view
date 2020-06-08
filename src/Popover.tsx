@@ -520,7 +520,6 @@ interface BasePopoverState {
   requestedContentSize: Size | null;
   activeGeom: Geometry | undefined,
   nextGeom: Geometry | undefined,
-  forcedHeight: number | null;
   showing: boolean;
   animatedValues: {
     scale: Animated.Value,
@@ -551,10 +550,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
     requestedContentSize: null,
     activeGeom: undefined,
     nextGeom: undefined,
-    forcedHeight: null,
-    visible: false, // Modal
     showing: false, // Popover itself
-    fromRect: null,
     animatedValues: {
       scale: new Animated.Value(0),
       translate: new Animated.ValueXY(),
@@ -570,7 +566,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
   private popoverRef = React.createRef<View>();
   private arrowRef = React.createRef<View>();
 
-  private handleGeomChangeTimeout: any;
+  private handleChangeTimeout: any;
 
   debug(line: string, obj?: any): void {
     if (DEBUG || this.props.debug)
@@ -600,7 +596,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
         this.debug("componentDidUpdate - Hiding popover");
       }
     } else if (this.props.isVisible && prevProps.isVisible) {
-      this.handleGeomChange();
+      this.handleChange();
     }
   }
 
@@ -625,32 +621,32 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
 
     if (requestedContentSize.width && requestedContentSize.height) {
       this.debug("measureContent - new requestedContentSize: " + JSON.stringify(requestedContentSize) + " (used to be " + JSON.stringify(this.state.requestedContentSize) + ")");
-      this.setState({ requestedContentSize }, () => this.handleGeomChange());
+      this.setState({ requestedContentSize }, () => this.handleChange());
     }
   }
 
   // Many factors may cause the geometry to change.  This function collects all of them, waiting for 200ms after the last change,
   //  then takes action, either bringing up the popover or moving it to its new location
-  handleGeomChange() {
-    if (this.handleGeomChangeTimeout) clearTimeout(this.handleGeomChangeTimeout);
+  handleChange() {
+    if (this.handleChangeTimeout) clearTimeout(this.handleChangeTimeout);
 
     if (!this.state.requestedContentSize) {
       // this function will be called again once we have a requested content size, so safe to ignore for now
-      this.debug("handleGeomChange - no requestedContentSize, exiting...");
+      this.debug("handleChange - no requestedContentSize, exiting...");
       return;
     }
 
-    this.debug("handleGeomChange - waiting 200ms to accumulate all changes");
-    this.handleGeomChangeTimeout = setTimeout(() => {
+    this.debug("handleChange - waiting 100ms to accumulate all changes");
+    this.handleChangeTimeout = setTimeout(() => {
       const { activeGeom, animatedValues, requestedContentSize }: Partial<BasePopoverState> = this.state;
       const { arrowStyle, popoverStyle, fromRect, displayArea, placement, onOpenStart } = this.props;
 
       if (requestedContentSize) {
-        this.debug("handleGeomChange - requestedContentSize", requestedContentSize);
+        this.debug("handleChange - requestedContentSize", requestedContentSize);
 
-        this.debug("handleGeomChange - displayArea", displayArea);
-        this.debug("handleGeomChange - fromRect", fromRect);
-        this.debug("handleGeomChange - placement", placement.toString());
+        this.debug("handleChange - displayArea", displayArea);
+        this.debug("handleChange - fromRect", fromRect);
+        this.debug("handleChange - placement", placement.toString());
 
         const geom = computeGeometry({
           requestedContentSize,
@@ -667,14 +663,14 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
           if (geom.viewLargerThanDisplayArea.width || geom.viewLargerThanDisplayArea.height) {
             // If the view initially overflowed the display area, wait one more render cycle to test-render it within the display area to get
             //  final calculations for popoverOrigin before show
-            this.debug("handleGeomChange - delaying showing popover because viewLargerThanDisplayArea");
+            this.debug("handleChange - delaying showing popover because viewLargerThanDisplayArea");
           } else if (!activeGeom) {
-            this.debug("handleGeomChange - animating in");
+            this.debug("handleChange - animating in");
             setTimeout(onOpenStart);
             this.animateIn();
           } else if (activeGeom && !Geometry.equals(activeGeom, geom)) {
             let moveTo = new Point(geom.popoverOrigin.x, geom.popoverOrigin.y);
-            this.debug("handleGeomChange - Triggering popover move to", moveTo);
+            this.debug("handleChange - Triggering popover move to", moveTo);
             this.animateTo({
               values: animatedValues,
               fade: 1,
@@ -684,11 +680,11 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
               geom
             });
           } else {
-            this.debug("handleGeomChange - no change");
+            this.debug("handleChange - no change");
           }
         });
       }
-    }, 200);
+    }, 100);
   }
 
   getPolarity () {

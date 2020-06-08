@@ -102,7 +102,7 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
         newGeom = computeAutoGeometry({ ...options, fromRect, borderRadius });
     }
 
-    debug("computeGeometry - chosen geometry", newGeom);
+    debug("computeGeometry - initial chosen geometry", newGeom);
 
     // If the popover will be restricted and the view that the popover is showing from is sufficiently large, try to show the popover inside the view
     if (newGeom && (newGeom.viewLargerThanDisplayArea.width || newGeom.viewLargerThanDisplayArea.height)) {
@@ -127,7 +127,7 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
         }
 
         debug("computeGeometry - showing inside anchor");
-        newGeom = {
+        newGeom = new Geometry({
           popoverOrigin: new Point(constrainedX, constrainedY),
           anchorPoint: new Point(fromRect.x + (fromRect.width/2), fromRect.y + (fromRect.height/2)),
           placement: Placement.CENTER,
@@ -136,7 +136,7 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
             width: requestedContentSize.width > forcedContentSize.width,
             height: requestedContentSize.height > forcedContentSize.height
           }
-        }
+        });
       }
       else if (
         // If we can't fit inside or outside the fromRect, show the popover centered on the screen,
@@ -161,7 +161,7 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
     const preferedX = (displayArea.width - requestedContentSize.width)/2 + displayArea.x;
 
     debug("computeGeometry - showing centered on screen");
-    newGeom = {
+    newGeom = new Geometry({
       popoverOrigin: new Point(Math.max(minX, preferedX), Math.max(minY, preferedY)),
       anchorPoint: new Point(displayArea.width/2 + displayArea.x, displayArea.height/2 + displayArea.y),
       placement: Placement.CENTER,
@@ -173,9 +173,10 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
         width: preferedX < minX - 1,
         height: preferedY < minY - 1
       }
-    }
+    });
   }
 
+  debug("computeGeometry - final chosen geometry", newGeom);
   return newGeom;
 }
 
