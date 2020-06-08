@@ -21,7 +21,7 @@ import {
 } from 'react-native';
 import { Rect, Point, Size, getRectForRef, getArrowSize, getBorderRadius } from './Utility';
 import { MULTIPLE_POPOVER_WARNING, Placement, Mode, DEFAULT_BORDER_RADIUS, FIX_SHIFT } from './Constants';
-import { computeGeometry } from './Geometry';
+import { computeGeometry, Geometry } from './Geometry';
 
 const noop = () => {};
 
@@ -94,7 +94,14 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
   }
 
   static defaultProps = {
-    mode: Mode.RN_MODAL
+    mode: Mode.RN_MODAL,
+    onOpenStart: noop,
+    onOpenComplete: noop,
+    onRequestClose: noop,
+    onCloseStart: noop,
+    onCloseComplete: noop,
+    verticalOffset: 0,
+    debug: false
   }
 
   state = {
@@ -124,7 +131,8 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
           fromRef = this.sourceRef;
         }
       } else if (React.isValidElement(from)) {
-        sourceElement = React.cloneElement(from, { onPress: () => this.setState({ isVisible: true }) });
+        if (isVisible === undefined) sourceElement = React.cloneElement(from, { onPress: () => this.setState({ isVisible: true }) });
+        else sourceElement = from;
         fromRef = this.sourceRef;
       } else {
         console.warn('Popover: `from` prop is an invalid value. Pass a React element, Rect, RefObject, or function that returns a React element.');
@@ -226,6 +234,7 @@ class RNModalPopover extends Component<RNModalPopoverProps, ModalPopoverState> {
             onCloseStart();
             RNModalPopover.isShowingInModal = false;
           }}
+          onOpenStart={onOpenStart}
           getDisplayAreaOffset={async () => new Point(0, 0)}
           {...otherProps}
         />
@@ -261,7 +270,7 @@ class JSModalPopover extends Component<JSModalPopoverProps, ModalPopoverState> {
 
     if (visible) {
       return (
-        <View ref={this.containerRef}>
+        <View pointerEvents="box-none" style={[styles.container, {left: 0}]} ref={this.containerRef}>
           <AdaptivePopover
             onCloseComplete={() => {
               onCloseComplete();
@@ -269,7 +278,9 @@ class JSModalPopover extends Component<JSModalPopoverProps, ModalPopoverState> {
             }}
             getDisplayAreaOffset={async () => {
               const rect = await getRectForRef(this.containerRef)
-              return new Point(rect.x, rect.y + FIX_SHIFT);
+              console.log(rect);
+              console.log(new Point(rect.x, rect.y + FIX_SHIFT));
+              return new Point(rect.x, rect.y);
             }}
             {...otherProps}
           />
@@ -303,16 +314,6 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
     defaultDisplayArea: null,
     displayAreaOffset: null,
   }
-
-  static defaultProps = {
-    onOpenStart: noop,
-    onOpenComplete: noop,
-    onRequestClose: noop,
-    onCloseStart: noop,
-    onCloseComplete: noop,
-    debug: false
-  }
-
 
   getDisplayArea(): Rect {
     return this.state.shiftedDisplayArea || this.props.displayArea || this.state.defaultDisplayArea || new Rect(10, 10, Dimensions.get('window').width - 20, Dimensions.get('window').height - 20);
@@ -432,34 +433,35 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
   }
 
   async calculateRectFromRef() {
-    const { displayAreaOffset, fromRect }: Partial<AdaptivePopoverState> = this.state;
     const { fromRef }: Partial<AdaptivePopoverProps> = this.props;
-    let initialRect = fromRect || new Rect(0, 0, 0, 0);
+    let initialRect = this.state.fromRect || new Rect(0, 0, 0, 0);
+    const displayAreaOffset = this.state.displayAreaOffset || { x: 0, y: 0 };
 
+    this.debug('calculateRectFromRef - waiting for ref');
     let count = 0;
     while (!fromRef?.current) {
       await new Promise(resolve => setTimeout(resolve, 100));
       if (count++ > 20) return; // Timeout after 2 seconds
     }
 
-    this.debug('calculateRect - calculating from Ref');
-    const verticalOffset = this.props.verticalOffset + (displayAreaOffset ? -1 * displayAreaOffset!.y : 0);
-    const horizontalOffset = displayAreaOffset ? -1 * displayAreaOffset!.x : 0;
+    const verticalOffset = this.props.verticalOffset - displayAreaOffset!.y;
+    const horizontalOffset = -displayAreaOffset!.x;
 
+    this.debug('calculateRectFromRef - waiting for ref to move');
     let rect: Rect;
     count = 0;
     do {
       rect = await getRectForRef(fromRef);
+      rect = new Rect(rect.x + horizontalOffset, rect.y + verticalOffset, rect.width, rect.height);
       if (count++ > 20) return; // Timeout after 2 seconds
     } while (Rect.equals(rect, initialRect))
 
-    rect = new Rect(rect.x + horizontalOffset, rect.y + verticalOffset, rect.width, rect.height);
-    this.debug('calculateRect - calculated Rect', rect);
+    this.debug('calculateRectFromRef - calculated Rect', rect);
     this.setState({ fromRect: rect });
   }
 
   render() {
-    const { onOpenStart, onCloseStart, displayArea: _ignoreDisplayArea, fromRef, fromRect: _ignoreFromRect, ...otherProps } = this.props;
+    const { onOpenStart, onCloseStart, fromRef, ...otherProps } = this.props;
     const { fromRect } = this.state;
 
     // Don't render popover until we have an initial fromRect calculated for the view
@@ -467,16 +469,19 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
 
     return (
       <BasePopover
+        {...otherProps}
         displayArea={this.getDisplayArea()}
         fromRect={fromRect}
         onOpenStart={() => {
           onOpenStart();
+          this.debug("Setting up keyboard listeners");
           this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', this.keyboardDidShow.bind(this));
           this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', this.keyboardDidHide.bind(this));
           this.displayAreaStore = this.getDisplayArea();
         }}
         onCloseStart={() => {
           onCloseStart();
+          this.debug("Tearing down keyboard listeners");
           this.keyboardDidShowListener && this.keyboardDidShowListener.remove();
           this.keyboardDidHideListener && this.keyboardDidHideListener.remove();
           this.setState({ shiftedDisplayArea: null });
@@ -497,7 +502,6 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
             <View style={{flex: 1}} />
           </TouchableWithoutFeedback>
         )}
-        {...otherProps}
       />
     )
 
@@ -514,13 +518,9 @@ interface BasePopoverProps extends PopoverProps {
 
 interface BasePopoverState {
   requestedContentSize: Size | null;
-  forcedContentSize: Size | null;
-  viewLargerThanDisplayArea: { width: boolean, height: boolean };
-  anchorPoint: Point;
-  popoverOrigin: Point;
+  activeGeom: Geometry | undefined,
+  nextGeom: Geometry | undefined,
   forcedHeight: number | null;
-  placement: Placement;
-  isAwaitingShow: boolean;
   showing: boolean;
   animatedValues: {
     scale: Animated.Value,
@@ -549,16 +549,9 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
 
   state = {
     requestedContentSize: null,
-    forcedContentSize: null,
-    viewLargerThanDisplayArea: {
-      width: false,
-      height: false
-    },
-    anchorPoint: new Point(0, 0),
-    popoverOrigin: new Point(0, 0),
+    activeGeom: undefined,
+    nextGeom: undefined,
     forcedHeight: null,
-    placement: Placement.AUTO,
-    isAwaitingShow: true,
     visible: false, // Modal
     showing: false, // Popover itself
     fromRect: null,
@@ -575,8 +568,8 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
   private animateOutAfterShow: boolean = false;
 
   private popoverRef = React.createRef<View>();
+  private arrowRef = React.createRef<View>();
 
-  private measureContentTimeout: any;
   private handleGeomChangeTimeout: any;
 
   debug(line: string, obj?: any): void {
@@ -585,13 +578,30 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
   }
 
   componentDidMount() {
-
-    // Show popover if isVisible is initially true
-    if (this.props.isVisible) {
-      this.setState({ isAwaitingShow: true });
-    }
-
     this._isMounted = true;
+  }
+
+  componentDidUpdate(prevProps: BasePopoverProps) {
+    // Make sure a value we care about has actually changed
+    let importantProps = ["isVisible", "fromRect", "displayArea", "verticalOffset", "placement"]
+    if (!importantProps.reduce((acc, key) => acc || this.props[key] !== prevProps[key], false))
+      return;
+
+    if (this.props.isVisible !== prevProps.isVisible) {
+      if (this.props.isVisible) {
+        this.debug("componentDidUpdate - isVisible changed, now true");
+        // We want to start the show animation only when contentSize is known
+        // so that we can have some logic depending on the geometry
+        this.debug("componentDidUpdate - setting visible and awaiting calculations");
+      } else {
+        this.debug("componentDidUpdate - isVisible changed, now false");
+        if (this.state.showing) this.animateOut();
+        else this.animateOutAfterShow = true;
+        this.debug("componentDidUpdate - Hiding popover");
+      }
+    } else if (this.props.isVisible && prevProps.isVisible) {
+      this.handleGeomChange();
+    }
   }
 
   componentWillUnmount() {
@@ -612,71 +622,97 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       this.debug("measureContent - Skippting, waiting for resize to finish");
       return;
     }
-    if (!this.state.showing && !this.state.isAwaitingShow) {
-      this.debug("measureContent - Skipping because not showing");
-      return;
-    }
-
-    const lastRequestedContentSize: Rect | null = this.state.requestedContentSize;
 
     if (requestedContentSize.width && requestedContentSize.height) {
-      if (this.state.isAwaitingShow) {
-        this.debug("measureContent - Showing Popover - requestedContentSize", requestedContentSize);
-        let geom = this.computeGeometry({ requestedContentSize });
-        this.debug("measureContent - Showing Popover - geom", geom);
-
-        // If the view initially overflowed the display area, wait one more render cycle to test-render it within the display area to get
-        //  final calculations for popoverOrigin before show
-        if (geom.viewLargerThanDisplayArea.width || geom.viewLargerThanDisplayArea.height) {
-          this.debug("measureContent - Delaying showing popover because viewLargerThanDisplayArea");
-          this.setState({ ...geom, requestedContentSize });
-        } else {
-
-          setTimeout(this.props.onOpenStart);
-
-          this.debug("measureContent - Showing Popover - Animating In");
-          this.setState({ ...geom, requestedContentSize, isAwaitingShow: false }, () => this.animateIn());
-        }
-      } else if (lastRequestedContentSize !== null && (requestedContentSize.width !== lastRequestedContentSize!.width || requestedContentSize.height !== lastRequestedContentSize!.height)) {
-
-        // In the case of an animation within the popover that affects the popover size, this function will be called frequently throughout the duration
-        //   of the animation.  This will continuously schedule and then cancel the timeout until the last time this is called when the animation is complete.
-        // If this method is only called once, we are only introducing a 50ms lag into the process, so shouldn't be noticeable
-        clearTimeout(this.measureContentTimeout);
-        this.measureContentTimeout = setTimeout(() => {
-          this.debug("measureContent - new requestedContentSize: " + JSON.stringify(requestedContentSize) + " (used to be " + JSON.stringify(this.state.requestedContentSize) + ")");
-          this.handleGeomChange(requestedContentSize);
-        }, 50);
-      }
+      this.debug("measureContent - new requestedContentSize: " + JSON.stringify(requestedContentSize) + " (used to be " + JSON.stringify(this.state.requestedContentSize) + ")");
+      this.setState({ requestedContentSize }, () => this.handleGeomChange());
     }
   }
 
-  computeGeometry({ requestedContentSize }: { requestedContentSize: Size }) {
-    const { placement: previousPlacement } = this.state;
-    const { arrowStyle, popoverStyle, fromRect, displayArea, placement } = this.props;
+  // Many factors may cause the geometry to change.  This function collects all of them, waiting for 200ms after the last change,
+  //  then takes action, either bringing up the popover or moving it to its new location
+  handleGeomChange() {
+    if (this.handleGeomChangeTimeout) clearTimeout(this.handleGeomChangeTimeout);
 
-    this.debug("computeGeometry - displayArea", displayArea);
-    this.debug("computeGeometry - fromRect", fromRect);
-    this.debug("computeGeometry - placement", placement.toString());
+    if (!this.state.requestedContentSize) {
+      // this function will be called again once we have a requested content size, so safe to ignore for now
+      this.debug("handleGeomChange - no requestedContentSize, exiting...");
+      return;
+    }
 
-    return computeGeometry({
-      requestedContentSize,
-      placement,
-      fromRect,
-      displayArea,
-      arrowStyle,
-      popoverStyle,
-      debug: this.debug.bind(this),
-      previousPlacement
-    });
+    this.debug("handleGeomChange - waiting 200ms to accumulate all changes");
+    this.handleGeomChangeTimeout = setTimeout(() => {
+      const { activeGeom, animatedValues, requestedContentSize }: Partial<BasePopoverState> = this.state;
+      const { arrowStyle, popoverStyle, fromRect, displayArea, placement, onOpenStart } = this.props;
+
+      if (requestedContentSize) {
+        this.debug("handleGeomChange - requestedContentSize", requestedContentSize);
+
+        this.debug("handleGeomChange - displayArea", displayArea);
+        this.debug("handleGeomChange - fromRect", fromRect);
+        this.debug("handleGeomChange - placement", placement.toString());
+
+        const geom = computeGeometry({
+          requestedContentSize,
+          placement,
+          fromRect,
+          displayArea,
+          arrowStyle,
+          popoverStyle,
+          debug: this.debug.bind(this),
+          previousPlacement: this.getGeom().placement
+        });
+
+        this.setState({ nextGeom: geom, requestedContentSize }, () => {
+          if (geom.viewLargerThanDisplayArea.width || geom.viewLargerThanDisplayArea.height) {
+            // If the view initially overflowed the display area, wait one more render cycle to test-render it within the display area to get
+            //  final calculations for popoverOrigin before show
+            this.debug("handleGeomChange - delaying showing popover because viewLargerThanDisplayArea");
+          } else if (!activeGeom) {
+            this.debug("handleGeomChange - animating in");
+            setTimeout(onOpenStart);
+            this.animateIn();
+          } else if (activeGeom && !Geometry.equals(activeGeom, geom)) {
+            let moveTo = new Point(geom.popoverOrigin.x, geom.popoverOrigin.y);
+            this.debug("handleGeomChange - Triggering popover move to", moveTo);
+            this.animateTo({
+              values: animatedValues,
+              fade: 1,
+              scale: 1,
+              translatePoint: moveTo,
+              easing: Easing.inOut(Easing.quad),
+              geom
+            });
+          } else {
+            this.debug("handleGeomChange - no change");
+          }
+        });
+      }
+    }, 200);
   }
 
   getPolarity () {
     return I18nManager.isRTL ? -1 : 1;
   }
 
+  getGeom(): Geometry {
+    const { activeGeom, nextGeom }: Partial<BasePopoverState> = this.state;
+    if (activeGeom) return activeGeom!;
+    if (nextGeom) return nextGeom!;
+    return new Geometry({
+      popoverOrigin: new Point(0, 0),
+      anchorPoint: new Point(0, 0),
+      placement: Placement.AUTO,
+      forcedContentSize: null,
+      viewLargerThanDisplayArea: {
+        width: false,
+        height: false
+      }
+    });
+  }
+
   getArrowDynamicStyle() {
-    const { placement } = this.state;
+    const { placement } = this.getGeom();
     const { arrowStyle, popoverStyle } = this.props;
     const {  width, height } = this.getCalculatedArrowDims();
 
@@ -714,7 +750,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
   }
 
   getCalculatedArrowDims(): Size {
-    const { placement } = this.state;
+    const { placement } = this.getGeom();
     const arrowSize = getArrowSize(placement, this.props.arrowStyle);
     switch(placement) {
       case Placement.LEFT:
@@ -729,8 +765,9 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
     return arrowSize;
   }
 
-  getArrowTranslateLocation(translatePoint: Point | null = null): Point {
-    const { anchorPoint, placement, forcedContentSize, viewLargerThanDisplayArea, requestedContentSize }: Partial<BasePopoverState> = this.state;
+  getArrowTranslateLocation(translatePoint: Point | null = null, geom: Geometry): Point {
+    const { requestedContentSize }: Partial<BasePopoverState> = this.state;
+    const { anchorPoint, placement, forcedContentSize, viewLargerThanDisplayArea } = geom;
     const { width: arrowWidth, height: arrowHeight } = this.getCalculatedArrowDims();
 
     let viewWidth = 0;
@@ -768,7 +805,8 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
   }
 
   getTranslateOrigin() {
-    const {forcedContentSize, viewLargerThanDisplayArea, requestedContentSize, popoverOrigin, anchorPoint}: Partial<BasePopoverState> = this.state;
+    const { requestedContentSize }: Partial<BasePopoverState> = this.state;
+    const { forcedContentSize, viewLargerThanDisplayArea, popoverOrigin, anchorPoint} = this.getGeom();
 
     let viewWidth = 0;
     if (viewLargerThanDisplayArea.width && forcedContentSize !== null && forcedContentSize!.width)
@@ -795,75 +833,6 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
     return new Point(popoverOrigin.x + shiftHorizantal, popoverOrigin.y + shiftVertical);
   }
 
-  componentDidUpdate(prevProps: BasePopoverProps) {
-    const { fromRect } = this.props;
-
-    // Make sure a value we care about has actually changed
-    let importantProps = ["isVisible", "fromRect", "displayArea", "verticalOffset", "placement"]
-    if (!importantProps.reduce((acc, key) => acc || this.props[key] !== prevProps[key], false))
-      return;
-
-    if (this.props.isVisible !== prevProps.isVisible) {
-      if (this.props.isVisible) {
-        this.debug("componentDidUpdate - isVisible changed, now true");
-        // We want to start the show animation only when contentSize is known
-        // so that we can have some logic depending on the geometry
-        this.debug("componentDidUpdate - setting visible and awaiting calculations");
-        this.setState({ isAwaitingShow: true });
-      } else {
-        this.debug("componentDidUpdate - isVisible changed, now false");
-        if (this.state.showing) this.animateOut();
-        else this.animateOutAfterShow = true;
-        this.debug("componentDidUpdate - Hiding popover");
-      }
-    } else if (this.props.isVisible && prevProps.isVisible) {
-      const { displayArea }: Partial<BasePopoverProps> = this.props;
-      if (
-          (fromRect && prevProps.fromRect && !Rect.equals(prevProps.fromRect, fromRect))
-          || (this.props.displayArea && !prevProps.displayArea)
-          || (displayArea && prevProps.displayArea && !Rect.equals(displayArea, prevProps.displayArea))
-        ) {
-        this.handleGeomChange();
-      }
-    }
-  }
-
-  handleGeomChange(inRequestedContentSize?: Size) {
-    const { forcedContentSize, popoverOrigin, animatedValues, requestedContentSize: lastRequestedContentSize }: Partial<BasePopoverState> = this.state;
-
-    if (!inRequestedContentSize && !lastRequestedContentSize) return;
-    let requestedContentSize: Size = inRequestedContentSize || lastRequestedContentSize!;
-
-    this.debug("handleGeomChange - requestedContentSize", requestedContentSize);
-
-    if (this.handleGeomChangeTimeout) clearTimeout(this.handleGeomChangeTimeout);
-    this.handleGeomChangeTimeout = setTimeout(() => {
-      let geom = this.computeGeometry({ requestedContentSize });
-
-      if (
-        !Point.equals(geom.popoverOrigin, popoverOrigin) ||
-        (!geom.forcedContentSize && forcedContentSize) ||
-        (!forcedContentSize && geom.forcedContentSize) ||
-        (geom.forcedContentSize && forcedContentSize && !Size.equals(geom.forcedContentSize, forcedContentSize))
-      ) {
-        this.setState({ ...geom, requestedContentSize}, () => {
-          let moveTo = new Point(geom.popoverOrigin.x, geom.popoverOrigin.y);
-          this.debug("handleGeomChange - Triggering popover move to", moveTo);
-          this.animateTo({
-            values: animatedValues,
-            fade: 1,
-            scale: 1,
-            translatePoint: moveTo,
-            easing: Easing.inOut(Easing.quad)
-          });
-        });
-      } else {
-        this.debug("handleGeomChange - No change");
-      }
-    }, 200);
-
-  }
-
   animateOut() {
     setTimeout(this.props.onCloseStart);
 
@@ -875,42 +844,48 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       scale: 0,
       translatePoint: this.getTranslateOrigin(),
       callback: () => {
-        if (this._isMounted) this.setState({ forcedContentSize: null }, this.props.onCloseComplete)
-        else this.props.onCloseComplete();
+        this.props.onCloseComplete();
       },
-      easing: Easing.inOut(Easing.quad)
+      easing: Easing.inOut(Easing.quad),
+      geom: this.getGeom()
     });
   }
 
   animateIn() {
-    var values = this.state.animatedValues;
+    const nextGeom: any = this.state.nextGeom;
+    if (nextGeom instanceof Geometry) {
+      var values = this.state.animatedValues;
 
-    // Should grow from anchor point
-    let translateStart = this.getTranslateOrigin()
-    translateStart.y += (FIX_SHIFT*2) // Temp fix for useNativeDriver issue
-    values.translate.setValue(translateStart);
-    const translatePoint = new Point(this.state.popoverOrigin.x, this.state.popoverOrigin.y);
-    values.translateArrow.setValue(this.getArrowTranslateLocation(translatePoint));
+      // Should grow from anchor point
+      let translateStart = this.getTranslateOrigin()
+      translateStart.y += (FIX_SHIFT*2) // Temp fix for useNativeDriver issue
+      values.translate.setValue(translateStart);
+      const translatePoint = new Point(nextGeom.popoverOrigin.x, nextGeom.popoverOrigin.y);
+      values.translateArrow.setValue(this.getArrowTranslateLocation(translatePoint, nextGeom));
 
-    this.animateTo({
-      values,
-      fade: 1,
-      scale: 1,
-      translatePoint,
-      easing: Easing.out(Easing.back(1)),
-      callback: () => {
-        if (this._isMounted) {
-          this.setState({ showing: true });
-          if (this.popoverRef)
-            setTimeout(() => getRectForRef(this.popoverRef).then((rect: Rect) => this.debug("animateIn - onOpenComplete - Calculated Popover Rect", rect)));
+      this.animateTo({
+        values,
+        fade: 1,
+        scale: 1,
+        translatePoint,
+        easing: Easing.out(Easing.back(1)),
+        geom: nextGeom,
+        callback: () => {
+          if (this._isMounted) {
+            this.setState({ showing: true });
+            if (this.props.debug || DEBUG) {
+              setTimeout(() => getRectForRef(this.popoverRef).then((rect: Rect) => this.debug("animateIn - onOpenComplete - Calculated Popover Rect", rect)));
+              setTimeout(() => getRectForRef(this.arrowRef).then((rect: Rect) => this.debug("animateIn - onOpenComplete - Calculated Arrow Rect", rect)));
+            }
+          }
+          setTimeout(this.props.onOpenComplete);
+          if (this.animateOutAfterShow || !this._isMounted) {
+            this.animateOut();
+            this.animateOutAfterShow = false;
+          }
         }
-        setTimeout(this.props.onOpenComplete);
-        if (this.animateOutAfterShow || !this._isMounted) {
-          this.animateOut();
-          this.animateOutAfterShow = false;
-        }
-      }
-    })
+      });
+    }
   }
 
   animateTo(
@@ -926,10 +901,11 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
         translate: Animated.ValueXY,
         fade: Animated.Value,
         translateArrow: Animated.ValueXY
-      }
+      },
+      geom: Geometry
     }
   ) {
-    const { fade, translatePoint, scale, callback, easing, values } = args;
+    const { fade, translatePoint, scale, callback, easing, values, geom } = args;
     const commonConfig = {
       duration: 300,
       easing,
@@ -942,7 +918,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       return;
     }
 
-    const newArrowLocation = this.getArrowTranslateLocation(translatePoint);
+    const newArrowLocation = this.getArrowTranslateLocation(translatePoint, geom);
 
     translatePoint.y = translatePoint.y + (FIX_SHIFT*2) // Temp fix for useNativeDriver issue
 
@@ -969,12 +945,15 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       })
     ]).start(() => {
       this.animating = false;
+      this.setState({ activeGeom: this.state.nextGeom });
       if (callback) callback();
     });
   }
 
   render() {
-    var { animatedValues, forcedContentSize, isAwaitingShow } = this.state;
+    const geom = this.getGeom();
+
+    var { animatedValues, nextGeom }: Partial<BasePopoverState> = this.state;
     const { popoverStyle } = this.props;
     const { width: arrowWidth, height: arrowHeight } = this.getCalculatedArrowDims();
 
@@ -1022,8 +1001,6 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
     };
 
     let popoverViewStyle = {
-      maxWidth: (forcedContentSize || { width: null }).width,
-      maxHeight: (forcedContentSize || { height: null }).height,
       position: 'absolute',
       ...styles.dropShadow,
       ...styles.popoverContent,
@@ -1035,6 +1012,12 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
         {perspective: 1000}
       ]
     };
+
+    // We want to always use next here, because the we need this to re-render before we can animate to the correct spot for the active.
+    if (nextGeom) {
+      popoverViewStyle.maxWidth = ((nextGeom as Geometry).forcedContentSize || { width: null }).width || undefined;
+      popoverViewStyle.maxHeight = ((nextGeom as Geometry).forcedContentSize || { height: null }).height || undefined;
+    }
 
     return (
       <View pointerEvents="box-none" style={[styles.container, {left: 0}]}>
@@ -1058,8 +1041,8 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
               {this.props.children}
             </Animated.View>
 
-            {!isAwaitingShow && this.state.placement !== Placement.CENTER &&
-              <Animated.View style={arrowViewStyle}>
+            {geom.placement !== Placement.CENTER &&
+              <Animated.View style={arrowViewStyle} ref={this.arrowRef}>
                 <Animated.View style={arrowInnerStyle} />
               </Animated.View>
             }

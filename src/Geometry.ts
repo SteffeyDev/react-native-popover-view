@@ -27,7 +27,7 @@ type ComputeGeometryAutoProps = ComputeGeometryDirectionProps & {
   previousPlacement: Placement;
 };
 
-type GeometryType = {
+export class Geometry {
   popoverOrigin: Point;
   anchorPoint: Point;
   placement: Placement;
@@ -36,9 +36,37 @@ type GeometryType = {
     width: boolean,
     height: boolean
   }
+  constructor(
+    { popoverOrigin, anchorPoint, placement, forcedContentSize, viewLargerThanDisplayArea }:
+    {
+      popoverOrigin: Point;
+      anchorPoint: Point;
+      placement: Placement;
+      forcedContentSize: Size | null;
+      viewLargerThanDisplayArea: {
+        width: boolean,
+        height: boolean
+      }
+    }
+  ) {
+    this.popoverOrigin = popoverOrigin;
+    this.anchorPoint = anchorPoint;
+    this.placement = placement;
+    this.forcedContentSize = forcedContentSize;
+    this.viewLargerThanDisplayArea = viewLargerThanDisplayArea;
+  }
+  static equals(a: Geometry, b: Geometry): boolean {
+    return Point.equals(a.popoverOrigin, b.popoverOrigin) &&
+      Point.equals(a.anchorPoint, b.anchorPoint) &&
+      a.placement === b.placement &&
+      a.forcedContentSize?.width === b.forcedContentSize?.width &&
+      a.forcedContentSize?.height === b.forcedContentSize?.height &&
+      a.viewLargerThanDisplayArea?.width === b.viewLargerThanDisplayArea?.width &&
+      a.viewLargerThanDisplayArea?.height === b.viewLargerThanDisplayArea?.height;
+  }
 }
 
-export function computeGeometry(options: ComputeGeometryProps) {
+export function computeGeometry(options: ComputeGeometryProps): Geometry {
   const { requestedContentSize, placement, displayArea, debug, popoverStyle } = options;
 
   let newGeom = null;
@@ -151,7 +179,7 @@ export function computeGeometry(options: ComputeGeometryProps) {
   return newGeom;
 }
 
-function computeTopGeometry({ displayArea, fromRect, requestedContentSize, arrowStyle, borderRadius }: ComputeGeometryDirectionProps): GeometryType {
+function computeTopGeometry({ displayArea, fromRect, requestedContentSize, arrowStyle, borderRadius }: ComputeGeometryDirectionProps): Geometry {
   const arrowSize = getArrowSize(Placement.TOP, arrowStyle);
   let minY = displayArea.y;
   let preferedY = fromRect.y - requestedContentSize.height - arrowSize.height;
@@ -183,16 +211,16 @@ function computeTopGeometry({ displayArea, fromRect, requestedContentSize, arrow
   anchorPoint.x = Math.max(anchorPoint.x, arrowSize.width / 2 + borderRadius);
   anchorPoint.x = Math.min(anchorPoint.x, displayArea.x + displayArea.width - (arrowSize.width / 2) - borderRadius);
 
-  return {
+  return new Geometry({
     popoverOrigin,
     anchorPoint,
     placement: Placement.TOP,
     forcedContentSize,
     viewLargerThanDisplayArea
-  }
+  });
 }
 
-function computeBottomGeometry({ displayArea, fromRect, requestedContentSize, arrowStyle, borderRadius }: ComputeGeometryDirectionProps): GeometryType {
+function computeBottomGeometry({ displayArea, fromRect, requestedContentSize, arrowStyle, borderRadius }: ComputeGeometryDirectionProps): Geometry {
   const arrowSize = getArrowSize(Placement.BOTTOM, arrowStyle);
   let preferedY = fromRect.y + fromRect.height + arrowSize.height;
 
@@ -223,16 +251,16 @@ function computeBottomGeometry({ displayArea, fromRect, requestedContentSize, ar
   anchorPoint.x = Math.max(anchorPoint.x, arrowSize.width / 2 + borderRadius);
   anchorPoint.x = Math.min(anchorPoint.x, displayArea.x + displayArea.width - (arrowSize.width / 2) - borderRadius);
 
-  return {
+  return new Geometry({
     popoverOrigin,
     anchorPoint,
     placement: Placement.BOTTOM,
     forcedContentSize,
     viewLargerThanDisplayArea
-  }
+  });
 }
 
-function computeLeftGeometry({ displayArea, fromRect, requestedContentSize, borderRadius, arrowStyle }: ComputeGeometryDirectionProps): GeometryType {
+function computeLeftGeometry({ displayArea, fromRect, requestedContentSize, borderRadius, arrowStyle }: ComputeGeometryDirectionProps): Geometry {
   const arrowSize = getArrowSize(Placement.LEFT, arrowStyle);
 
   let forcedContentSize = {
@@ -265,16 +293,16 @@ function computeLeftGeometry({ displayArea, fromRect, requestedContentSize, bord
   anchorPoint.y = Math.max(anchorPoint.y, arrowSize.height / 2 + borderRadius);
   anchorPoint.y = Math.min(anchorPoint.y, displayArea.y + displayArea.height - (arrowSize.height / 2) - borderRadius);
 
-  return {
+  return new Geometry({
     popoverOrigin,
     anchorPoint,
     placement: Placement.LEFT,
     forcedContentSize,
     viewLargerThanDisplayArea
-  }
+  });
 }
 
-function computeRightGeometry({ displayArea, fromRect, requestedContentSize, arrowStyle, borderRadius }: ComputeGeometryDirectionProps): GeometryType {
+function computeRightGeometry({ displayArea, fromRect, requestedContentSize, arrowStyle, borderRadius }: ComputeGeometryDirectionProps): Geometry {
   const arrowSize = getArrowSize(Placement.RIGHT, arrowStyle);
   let horizontalSpace = displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width;
 
@@ -307,16 +335,16 @@ function computeRightGeometry({ displayArea, fromRect, requestedContentSize, arr
   anchorPoint.y = Math.max(anchorPoint.y, arrowSize.height / 2 + borderRadius);
   anchorPoint.y = Math.min(anchorPoint.y, displayArea.y + displayArea.height - (arrowSize.height / 2) - borderRadius);
 
-  return {
+  return new Geometry({
     popoverOrigin,
     anchorPoint,
     placement: Placement.RIGHT,
     forcedContentSize,
     viewLargerThanDisplayArea
-  }
+  });
 }
 
-function computeAutoGeometry(options: ComputeGeometryAutoProps): GeometryType {
+function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry {
   const { displayArea, requestedContentSize, fromRect, previousPlacement, debug, arrowStyle } = options
 
   // Keep same placement if possible (left/right)

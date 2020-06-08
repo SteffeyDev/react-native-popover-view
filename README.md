@@ -243,6 +243,7 @@ function App() {
           <Text>Press here to open popover!</Text>
         </TouchableOpacity>
       )}>
+      <>
         <Text>This is the contents of the popover</Text>
         <TouchableOpacity onPress={() => setShowPopover(false)}>
           <Text>Dismiss</Text>
