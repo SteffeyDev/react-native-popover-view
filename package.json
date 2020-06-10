@@ -1,7 +1,7 @@
 {
   "name": "react-native-popover-view",
   "version": "3.0.0",
-  "description": "A <Popover /> component for react-native",
+  "description": "A <Popover /> component for react-native iOS, Android, and Web",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "author": "Peter Steffey <steffeydev@icloud.com> (https://github.com/steffeydev)",

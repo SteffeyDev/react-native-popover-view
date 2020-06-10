@@ -4,13 +4,12 @@
 [![npm version](http://img.shields.io/npm/dm/react-native-popover-view.svg?style=flat-square)](https://npmjs.org/package/react-native-popover-view "View this project on npm")
 [![npm licence](http://img.shields.io/npm/l/react-native-popover-view.svg?style=flat-square)](https://npmjs.org/package/react-native-popover-view "View this project on npm")
 
-A well-tested, adaptable, lightweight `<Popover>` component for react-native.
+A well-tested, adaptable, lightweight `<Popover>` component for react-native.  Works on iOS, Android, and Web.
 
 It is written entirely in TypeScript, but uses [React Native's native driver](https://facebook.github.io/react-native/blog/2017/02/14/using-native-driver-for-animated.html) for responsive animations, even when the JS thread is busy.
 
 The `<Popover>` is able to handle dynamic content and adapt to screen size changes while showing, and will move out of the way for on-screen keyboards automatically.
 
-Great for use in Tablets; you can put entire views that you would normally show in a modal (on a smaller device) into a popover, optionally give it an anchor point, and have it float on top of all of the other views.
 
 ##### Table of Contents
 * [Features](#features)
@@ -30,6 +29,7 @@ Great for use in Tablets; you can put entire views that you would normally show 
 * Adapts to changing content size
 * Automatically detects best placement on screen
 * Moves to stay visible on orientation change or when entering split-screen mode
+* Great for use in Tablets; you can put entire views that you would normally show in a modal (on a smaller device) into a popover, optionally give it an anchor point, and have it float on top of all of the other views.
 
 ## <a name="demo"/>Demo App
 
