@@ -348,6 +348,20 @@ If on an **Android device**, try adding these props to the component whose `ref`
 
 See https://github.com/facebook/react-native/issues/3282 and https://github.com/SteffeyDev/react-native-popover-view/issues/28 for more info.
 
+#### Android vertical positioning incorrect
+
+Depending on how your app is configured, you may need to use the following `verticalOffset` prop to correctly position the popover on Android:
+```
+import { Platform, StatusBar, ... } from 'react-native';
+
+...
+
+  <Popover
+    {...otherProps}
+    verticalOffset={Platform.OS === 'android' ? -StatusBar.currentHeight : 0 }
+  />
+```
+
 ## <a name="upgrading" />Upgrading
 
 #### `2.x` to `3.0`

@@ -49,10 +49,14 @@ export class Rect {
 }
 
 export function getRectForRef(ref: any): Promise<Rect> {
-  return new Promise(resolve => {
-    NativeModules.UIManager.measure(findNodeHandle(ref.current), (_x: any, _y: any, width: number, height: number, x: number, y: number) => {
-      resolve(new Rect(x, y, width, height));
-    })
+  return new Promise((resolve, reject) => {
+    if (ref.current) {
+      NativeModules.UIManager.measure(findNodeHandle(ref.current), (_x: any, _y: any, width: number, height: number, x: number, y: number) => {
+        resolve(new Rect(x, y, width, height));
+      })
+    } else {
+      reject();
+    }
   });
 }
 

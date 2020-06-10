@@ -69,10 +69,10 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
     isVisible: PropTypes.bool,
 
     // anchor
-    from: PropTypes.oneOf([PropTypes.instanceOf(Rect), PropTypes.func, PropTypes.node]),
+    from: PropTypes.oneOfType([PropTypes.instanceOf(Rect), PropTypes.func, PropTypes.node, PropTypes.shape({ current: PropTypes.any })]),
 
     // config
-    displayArea: PropTypes.oneOf([PropTypes.instanceOf(Rect), PropTypes.exact({ x: PropTypes.number, y: PropTypes.number, width: PropTypes.number, height: PropTypes.number })]),
+    displayArea: PropTypes.oneOfType([PropTypes.instanceOf(Rect), PropTypes.exact({ x: PropTypes.number, y: PropTypes.number, width: PropTypes.number, height: PropTypes.number })]),
     placement: PropTypes.oneOf([Placement.LEFT, Placement.RIGHT, Placement.TOP, Placement.BOTTOM, Placement.AUTO, Placement.CENTER]),
     animationConfig: PropTypes.object,
     verticalOffset: PropTypes.number,
@@ -278,8 +278,6 @@ class JSModalPopover extends Component<JSModalPopoverProps, ModalPopoverState> {
             }}
             getDisplayAreaOffset={async () => {
               const rect = await getRectForRef(this.containerRef)
-              console.log(rect);
-              console.log(new Point(rect.x, rect.y + FIX_SHIFT));
               return new Point(rect.x, rect.y);
             }}
             {...otherProps}
@@ -331,6 +329,8 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
   private keyboardDidShowListener: any;
   private keyboardDidHideListener: any;
 
+  private _isMounted: boolean = false;
+
   componentDidMount() {
     Dimensions.addEventListener('change', this.handleResizeEvent)
     if (this.props.fromRect)
@@ -338,10 +338,14 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
     else if (this.props.fromRef) {
       this.calculateRectFromRef();
     }
+    this._isMounted = true;
   }
 
   componentWillUnmount() {
+    this._isMounted = false;
     Dimensions.removeEventListener('change', this.handleResizeEvent)
+    this.keyboardDidShowListener && this.keyboardDidShowListener.remove();
+    this.keyboardDidHideListener && this.keyboardDidHideListener.remove();
   }
 
   componentDidUpdate(prevProps: AdaptivePopoverProps) {
@@ -384,6 +388,8 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
   }
 
   async setDefaultDisplayArea(newDisplayArea: Rect) {
+    if (!this._isMounted) return;
+
     const { defaultDisplayArea }: Partial<AdaptivePopoverState> = this.state;
     // When the popover is closing and the display area's onLayout event is called, the width/height values may be zero
     // which causes a bad display area for the first mount when the popover re-opens
@@ -484,6 +490,8 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
           this.debug("Tearing down keyboard listeners");
           this.keyboardDidShowListener && this.keyboardDidShowListener.remove();
           this.keyboardDidHideListener && this.keyboardDidHideListener.remove();
+          this.keyboardDidShowListener = null;
+          this.keyboardDidHideListener = null;
           this.setState({ shiftedDisplayArea: null });
         }}
         skipMeasureContent={() => this.waitForResizeToFinish}
@@ -870,8 +878,8 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
           if (this._isMounted) {
             this.setState({ showing: true });
             if (this.props.debug || DEBUG) {
-              setTimeout(() => getRectForRef(this.popoverRef).then((rect: Rect) => this.debug("animateIn - onOpenComplete - Calculated Popover Rect", rect)));
-              setTimeout(() => getRectForRef(this.arrowRef).then((rect: Rect) => this.debug("animateIn - onOpenComplete - Calculated Arrow Rect", rect)));
+              setTimeout(() => this.popoverRef.current && getRectForRef(this.popoverRef).then((rect: Rect) => this.debug("animateIn - onOpenComplete - Calculated Popover Rect", rect)));
+              setTimeout(() => this.arrowRef.current && getRectForRef(this.arrowRef).then((rect: Rect) => this.debug("animateIn - onOpenComplete - Calculated Arrow Rect", rect)));
             }
           }
           setTimeout(this.props.onOpenComplete);
