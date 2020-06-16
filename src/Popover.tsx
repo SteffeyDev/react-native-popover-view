@@ -33,28 +33,28 @@ interface PopoverProps {
   isVisible?: boolean;
 
   // config
-  placement: Placement;
+  placement?: Placement;
   animationConfig?: Partial<Animated.TimingAnimationConfig>;
-  verticalOffset: number;
+  verticalOffset?: number;
   safeAreaInsets?: SafeAreaViewProps["forceInset"];
 
   // style
-  popoverStyle: StyleProp<ViewStyle>;
-  arrowStyle: StyleProp<ViewStyle>;
-  backgroundStyle: StyleProp<ViewStyle>;
+  popoverStyle?: StyleProp<ViewStyle>;
+  arrowStyle?: StyleProp<ViewStyle>;
+  backgroundStyle?: StyleProp<ViewStyle>;
 
   // lifecycle
-  onOpenStart: () => void;
-  onOpenComplete: () => void;
-  onRequestClose: () => void;
-  onCloseStart: () => void;
-  onCloseComplete: () => void;
+  onOpenStart?: () => void;
+  onOpenComplete?: () => void;
+  onRequestClose?: () => void;
+  onCloseStart?: () => void;
+  onCloseComplete?: () => void;
 
   debug?: boolean;
 }
 
 interface PublicPopoverProps extends PopoverProps {
-  mode: Mode;
+  mode?: Mode;
   displayArea?: Rect;
   from?: Rect | RefObject<View> | ((sourceRef: RefObject<View>, openPopover: () => void) => ReactNode) | ReactNode;
 }
@@ -149,7 +149,7 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
       fromRef,
       isVisible: actualIsVisible,
       onRequestClose: () => {
-        onRequestClose();
+        onRequestClose && onRequestClose();
         this.setState({ isVisible: false });
       }
     }
@@ -215,11 +215,11 @@ class RNModalPopover extends Component<RNModalPopoverProps, ModalPopoverState> {
         visible={visible}
         statusBarTranslucent={statusBarTranslucent}
         onShow={() => {
-          onOpenStart();
+          onOpenStart && onOpenStart();
           RNModalPopover.isShowingInModal = true;
         }}
         onDismiss={() => { // Will only be called on iOS for some reason
-          onCloseComplete();
+          onCloseComplete && onCloseComplete();
         }}
         onRequestClose={onRequestClose}>
         <AdaptivePopover
@@ -227,11 +227,11 @@ class RNModalPopover extends Component<RNModalPopoverProps, ModalPopoverState> {
           onCloseComplete={() => {
             this.setState({ visible: false });
             if (!isIOS) {
-              onCloseComplete();
+              onCloseComplete && onCloseComplete();
             }
           }}
           onCloseStart={() => {
-            onCloseStart();
+            onCloseStart && onCloseStart();
             RNModalPopover.isShowingInModal = false;
           }}
           onOpenStart={onOpenStart}
@@ -273,7 +273,7 @@ class JSModalPopover extends Component<JSModalPopoverProps, ModalPopoverState> {
         <View pointerEvents="box-none" style={[styles.container, {left: 0}]} ref={this.containerRef}>
           <AdaptivePopover
             onCloseComplete={() => {
-              onCloseComplete();
+              onCloseComplete && onCloseComplete();
               this.setState({ visible: false });
             }}
             getDisplayAreaOffset={async () => {
@@ -450,7 +450,7 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
       if (count++ > 20) return; // Timeout after 2 seconds
     }
 
-    const verticalOffset = this.props.verticalOffset - displayAreaOffset!.y;
+    const verticalOffset = (this.props.verticalOffset || 0) - displayAreaOffset!.y;
     const horizontalOffset = -displayAreaOffset!.x;
 
     this.debug('calculateRectFromRef - waiting for ref to move');
@@ -479,14 +479,14 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
         displayArea={this.getDisplayArea()}
         fromRect={fromRect}
         onOpenStart={() => {
-          onOpenStart();
+          onOpenStart && onOpenStart();
           this.debug("Setting up keyboard listeners");
           this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', this.keyboardDidShow.bind(this));
           this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', this.keyboardDidHide.bind(this));
           this.displayAreaStore = this.getDisplayArea();
         }}
         onCloseStart={() => {
-          onCloseStart();
+          onCloseStart && onCloseStart();
           this.debug("Tearing down keyboard listeners");
           this.keyboardDidShowListener && this.keyboardDidShowListener.remove();
           this.keyboardDidHideListener && this.keyboardDidHideListener.remove();
@@ -654,7 +654,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
 
         this.debug("handleChange - displayArea", displayArea);
         this.debug("handleChange - fromRect", fromRect);
-        this.debug("handleChange - placement", placement.toString());
+        if (placement) this.debug("handleChange - placement", placement.toString());
 
         const geom = computeGeometry({
           requestedContentSize,
@@ -848,7 +848,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       scale: 0,
       translatePoint: this.getTranslateOrigin(),
       callback: () => {
-        this.props.onCloseComplete();
+        this.props.onCloseComplete && this.props.onCloseComplete();
       },
       easing: Easing.inOut(Easing.quad),
       geom: this.getGeom()

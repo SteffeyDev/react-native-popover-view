@@ -9,8 +9,8 @@ type ComputeGeometryBaseProps = {
 }
 
 type ComputeGeometryProps = ComputeGeometryBaseProps & {
-  placement: Placement;
-  previousPlacement: Placement;
+  placement?: Placement;
+  previousPlacement?: Placement;
   fromRect: Rect | null;
   arrowStyle: StyleProp<ViewStyle>;
   popoverStyle: StyleProp<ViewStyle>;
@@ -24,7 +24,7 @@ type ComputeGeometryDirectionProps = ComputeGeometryBaseProps & {
 }
 
 type ComputeGeometryAutoProps = ComputeGeometryDirectionProps & {
-  previousPlacement: Placement;
+  previousPlacement?: Placement;
 };
 
 export class Geometry {
