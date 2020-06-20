@@ -421,7 +421,7 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
 
   keyboardDidHide() {
     this.debug("keyboardDidHide");
-    this.setState({ shiftedDisplayArea: null });
+    if (this._isMounted) this.setState({ shiftedDisplayArea: null });
   }
 
   shiftForKeyboard(keyboardHeight: number) {
@@ -463,7 +463,7 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
     } while (Rect.equals(rect, initialRect))
 
     this.debug('calculateRectFromRef - calculated Rect', rect);
-    this.setState({ fromRect: rect });
+    if (this._isMounted) this.setState({ fromRect: rect });
   }
 
   render() {
@@ -492,7 +492,7 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
           this.keyboardDidHideListener && this.keyboardDidHideListener.remove();
           this.keyboardDidShowListener = null;
           this.keyboardDidHideListener = null;
-          this.setState({ shiftedDisplayArea: null });
+          if (this._isMounted) this.setState({ shiftedDisplayArea: null });
         }}
         skipMeasureContent={() => this.waitForResizeToFinish}
         safeAreaViewContents={(
