@@ -201,12 +201,12 @@ function computeTopGeometry({ displayArea, fromRect, requestedContentSize, arrow
   let minX = displayArea.x;
   let preferedX = fromRect.x + (fromRect.width - viewWidth) / 2;
 
-  var popoverOrigin = new Point(
+  const popoverOrigin = new Point(
     Math.min(maxX, Math.max(minX, preferedX)),
     Math.max(minY, preferedY)
   );
 
-  var anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y);
+  let anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y);
 
   // Make sure the arrow isn't cut off
   anchorPoint.x = Math.max(anchorPoint.x, arrowSize.width / 2 + borderRadius);
@@ -241,12 +241,12 @@ function computeBottomGeometry({ displayArea, fromRect, requestedContentSize, ar
   let minX = displayArea.x;
   let preferedX = fromRect.x + (fromRect.width - viewWidth) / 2;
 
-  var popoverOrigin = new Point(
+  const popoverOrigin = new Point(
     Math.min(maxX, Math.max(minX, preferedX)),
     preferedY
   );
 
-  var anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y + fromRect.height);
+  let anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y + fromRect.height);
 
   // Make sure the arrow isn't cut off
   anchorPoint.x = Math.max(anchorPoint.x, arrowSize.width / 2 + borderRadius);
@@ -283,12 +283,12 @@ function computeLeftGeometry({ displayArea, fromRect, requestedContentSize, bord
   let minY = displayArea.y;
   let maxY = (displayArea.height - viewHeight) + displayArea.y;
 
-  var popoverOrigin = new Point(
+  const popoverOrigin = new Point(
     preferedX,
     Math.min(Math.max(minY, preferedY), maxY)
   );
 
-  var anchorPoint = new Point(fromRect.x, fromRect.y + fromRect.height / 2.0);
+  let anchorPoint = new Point(fromRect.x, fromRect.y + fromRect.height / 2.0);
 
   // Make sure the arrow isn't cut off
   anchorPoint.y = Math.max(anchorPoint.y, arrowSize.height / 2 + borderRadius);
@@ -325,12 +325,12 @@ function computeRightGeometry({ displayArea, fromRect, requestedContentSize, arr
   let minY = displayArea.y;
   let maxY = (displayArea.height - viewHeight) + displayArea.y;
 
-  var popoverOrigin = new Point(
+  const popoverOrigin = new Point(
     preferedX,
     Math.min(Math.max(minY, preferedY), maxY)
   );
 
-  var anchorPoint = new Point(fromRect.x + fromRect.width, fromRect.y + fromRect.height / 2.0);
+  let anchorPoint = new Point(fromRect.x + fromRect.width, fromRect.y + fromRect.height / 2.0);
 
   // Make sure the arrow isn't cut off
   anchorPoint.y = Math.max(anchorPoint.y, arrowSize.height / 2 + borderRadius);

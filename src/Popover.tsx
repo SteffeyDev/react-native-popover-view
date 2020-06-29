@@ -858,7 +858,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
   animateIn() {
     const nextGeom: any = this.state.nextGeom;
     if (nextGeom instanceof Geometry) {
-      var values = this.state.animatedValues;
+      const values = this.state.animatedValues;
 
       // Should grow from anchor point
       let translateStart = this.getTranslateOrigin()
@@ -957,7 +957,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
   render() {
     const geom = this.getGeom();
 
-    var { animatedValues, nextGeom }: Partial<BasePopoverState> = this.state;
+    const { animatedValues, nextGeom }: Partial<BasePopoverState> = this.state;
     const { popoverStyle } = this.props;
     const { width: arrowWidth, height: arrowHeight } = this.getCalculatedArrowDims();
 
@@ -967,7 +967,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       extrapolate: 'clamp',
     })
 
-    var arrowViewStyle = {
+    const arrowViewStyle = {
       position: 'absolute',
       top: 0,
       ...(I18nManager.isRTL ? { right: 0 } : { left: 0 }),
