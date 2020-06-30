@@ -349,9 +349,8 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
   }
 
   componentDidUpdate(prevProps: AdaptivePopoverProps) {
-
     // Make sure a value we care about has actually changed
-    let importantProps = ["from", "displayArea"]
+    const importantProps = ["from", "displayArea"]
     if (!importantProps.reduce((acc, key) => acc || this.props[key] !== prevProps[key], false))
       return;
 
@@ -440,7 +439,7 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
 
   async calculateRectFromRef() {
     const { fromRef }: Partial<AdaptivePopoverProps> = this.props;
-    let initialRect = this.state.fromRect || new Rect(0, 0, 0, 0);
+    const initialRect = this.state.fromRect || new Rect(0, 0, 0, 0);
     const displayAreaOffset = this.state.displayAreaOffset || { x: 0, y: 0 };
 
     this.debug('calculateRectFromRef - waiting for ref');
@@ -587,7 +586,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
 
   componentDidUpdate(prevProps: BasePopoverProps) {
     // Make sure a value we care about has actually changed
-    let importantProps = ["isVisible", "fromRect", "displayArea", "verticalOffset", "placement"]
+    const importantProps = ["isVisible", "fromRect", "displayArea", "verticalOffset", "placement"]
     if (!importantProps.reduce((acc, key) => acc || this.props[key] !== prevProps[key], false))
       return;
 
@@ -677,7 +676,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
             setTimeout(onOpenStart);
             this.animateIn();
           } else if (activeGeom && !Geometry.equals(activeGeom, geom)) {
-            let moveTo = new Point(geom.popoverOrigin.x, geom.popoverOrigin.y);
+            const moveTo = new Point(geom.popoverOrigin.x, geom.popoverOrigin.y);
             this.debug("handleChange - Triggering popover move to", moveTo);
             this.animateTo({
               values: animatedValues,
@@ -858,10 +857,10 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
   animateIn() {
     const nextGeom: any = this.state.nextGeom;
     if (nextGeom instanceof Geometry) {
-      var values = this.state.animatedValues;
+      const values = this.state.animatedValues;
 
       // Should grow from anchor point
-      let translateStart = this.getTranslateOrigin()
+      const translateStart = this.getTranslateOrigin()
       translateStart.y += (FIX_SHIFT*2) // Temp fix for useNativeDriver issue
       values.translate.setValue(translateStart);
       const translatePoint = new Point(nextGeom.popoverOrigin.x, nextGeom.popoverOrigin.y);
@@ -957,17 +956,17 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
   render() {
     const geom = this.getGeom();
 
-    var { animatedValues, nextGeom }: Partial<BasePopoverState> = this.state;
+    const { animatedValues, nextGeom }: Partial<BasePopoverState> = this.state;
     const { popoverStyle } = this.props;
     const { width: arrowWidth, height: arrowHeight } = this.getCalculatedArrowDims();
 
-    let arrowScale = animatedValues.scale.interpolate({
+    const arrowScale = animatedValues.scale.interpolate({
       inputRange: [0, 1],
       outputRange: [0, 1],
       extrapolate: 'clamp',
     })
 
-    var arrowViewStyle = {
+    const arrowViewStyle = {
       position: 'absolute',
       top: 0,
       ...(I18nManager.isRTL ? { right: 0 } : { left: 0 }),
@@ -980,18 +979,18 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       ]
     };
 
-    let arrowInnerStyle = [
+    const arrowInnerStyle = [
       styles.arrow,
       this.getArrowDynamicStyle()
     ];
 
     // Temp fix for useNativeDriver issue
-    let backgroundShift = animatedValues.fade.interpolate({
+    const backgroundShift = animatedValues.fade.interpolate({
       inputRange: [0, 0.0001, 1],
       outputRange: [0, FIX_SHIFT, FIX_SHIFT]
     })
 
-    let backgroundStyle = {
+    const backgroundStyle = {
       ...styles.background,
       transform: [
         {translateY: backgroundShift}
@@ -999,7 +998,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       ...StyleSheet.flatten(this.props.backgroundStyle)
     };
 
-    let containerStyle = {
+    const containerStyle = {
       ...styles.container,
       opacity: animatedValues.fade
     };

@@ -106,22 +106,22 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
 
     // If the popover will be restricted and the view that the popover is showing from is sufficiently large, try to show the popover inside the view
     if (newGeom && (newGeom.viewLargerThanDisplayArea.width || newGeom.viewLargerThanDisplayArea.height)) {
-      let fromRectHeightVisible = fromRect.y < displayArea.y
+      const fromRectHeightVisible = fromRect.y < displayArea.y
         ? fromRect.height - (displayArea.y - fromRect.y)
         : displayArea.y + displayArea.height - fromRect.y;
       if (fromRect.width > requestedContentSize.width && fromRectHeightVisible > requestedContentSize.height) {
-        let preferedX = Math.max(fromRect.x + 10, fromRect.x + (fromRect.width - requestedContentSize.width)/2);
-        let preferedY = Math.max(fromRect.y + 10, fromRect.y + (fromRect.height - requestedContentSize.height)/2);
+        const preferredX = Math.max(fromRect.x + 10, fromRect.x + (fromRect.width - requestedContentSize.width)/2);
+        const preferredY = Math.max(fromRect.y + 10, fromRect.y + (fromRect.height - requestedContentSize.height)/2);
 
-        let constrainedX = Math.max(preferedX, displayArea.x);
+        let constrainedX = Math.max(preferredX, displayArea.x);
         if (constrainedX + requestedContentSize.width > displayArea.x + displayArea.width)
           constrainedX = displayArea.x + displayArea.width - requestedContentSize.width;
 
-        let constrainedY = Math.max(preferedY, displayArea.y);
+        let constrainedY = Math.max(preferredY, displayArea.y);
         if (constrainedY + requestedContentSize.height > displayArea.y + displayArea.height)
           constrainedY = displayArea.y + displayArea.height - requestedContentSize.height;
 
-        let forcedContentSize = {
+        const forcedContentSize = {
           width: Math.min(fromRect.width - 20, displayArea.width),
           height: Math.min(fromRect.height - 20, displayArea.height)
         }
@@ -182,31 +182,31 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
 
 function computeTopGeometry({ displayArea, fromRect, requestedContentSize, arrowStyle, borderRadius }: ComputeGeometryDirectionProps): Geometry {
   const arrowSize = getArrowSize(Placement.TOP, arrowStyle);
-  let minY = displayArea.y;
-  let preferedY = fromRect.y - requestedContentSize.height - arrowSize.height;
+  const minY = displayArea.y;
+  const preferredY = fromRect.y - requestedContentSize.height - arrowSize.height;
 
-  let forcedContentSize = {
+  const forcedContentSize = {
     height: (fromRect.y - arrowSize.height - displayArea.y),
     width: displayArea.width
   }
 
-  let viewLargerThanDisplayArea = {
-    height: preferedY < minY - 1,
+  const viewLargerThanDisplayArea = {
+    height: preferredY < minY - 1,
     width: requestedContentSize.width > displayArea.width + 1
   }
 
-  let viewWidth = viewLargerThanDisplayArea.width ? forcedContentSize.width : requestedContentSize.width;
+  const viewWidth = viewLargerThanDisplayArea.width ? forcedContentSize.width : requestedContentSize.width;
 
-  let maxX = displayArea.x + displayArea.width - viewWidth;
-  let minX = displayArea.x;
-  let preferedX = fromRect.x + (fromRect.width - viewWidth) / 2;
+  const maxX = displayArea.x + displayArea.width - viewWidth;
+  const minX = displayArea.x;
+  const preferredX = fromRect.x + (fromRect.width - viewWidth) / 2;
 
-  var popoverOrigin = new Point(
-    Math.min(maxX, Math.max(minX, preferedX)),
-    Math.max(minY, preferedY)
+  const popoverOrigin = new Point(
+    Math.min(maxX, Math.max(minX, preferredX)),
+    Math.max(minY, preferredY)
   );
 
-  var anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y);
+  let anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y);
 
   // Make sure the arrow isn't cut off
   anchorPoint.x = Math.max(anchorPoint.x, arrowSize.width / 2 + borderRadius);
@@ -241,12 +241,12 @@ function computeBottomGeometry({ displayArea, fromRect, requestedContentSize, ar
   let minX = displayArea.x;
   let preferedX = fromRect.x + (fromRect.width - viewWidth) / 2;
 
-  var popoverOrigin = new Point(
+  const popoverOrigin = new Point(
     Math.min(maxX, Math.max(minX, preferedX)),
     preferedY
   );
 
-  var anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y + fromRect.height);
+  let anchorPoint = new Point(fromRect.x + fromRect.width / 2.0, fromRect.y + fromRect.height);
 
   // Make sure the arrow isn't cut off
   anchorPoint.x = Math.max(anchorPoint.x, arrowSize.width / 2 + borderRadius);
@@ -283,12 +283,12 @@ function computeLeftGeometry({ displayArea, fromRect, requestedContentSize, bord
   let minY = displayArea.y;
   let maxY = (displayArea.height - viewHeight) + displayArea.y;
 
-  var popoverOrigin = new Point(
+  const popoverOrigin = new Point(
     preferedX,
     Math.min(Math.max(minY, preferedY), maxY)
   );
 
-  var anchorPoint = new Point(fromRect.x, fromRect.y + fromRect.height / 2.0);
+  let anchorPoint = new Point(fromRect.x, fromRect.y + fromRect.height / 2.0);
 
   // Make sure the arrow isn't cut off
   anchorPoint.y = Math.max(anchorPoint.y, arrowSize.height / 2 + borderRadius);
@@ -325,12 +325,12 @@ function computeRightGeometry({ displayArea, fromRect, requestedContentSize, arr
   let minY = displayArea.y;
   let maxY = (displayArea.height - viewHeight) + displayArea.y;
 
-  var popoverOrigin = new Point(
+  const popoverOrigin = new Point(
     preferedX,
     Math.min(Math.max(minY, preferedY), maxY)
   );
 
-  var anchorPoint = new Point(fromRect.x + fromRect.width, fromRect.y + fromRect.height / 2.0);
+  let anchorPoint = new Point(fromRect.x + fromRect.width, fromRect.y + fromRect.height / 2.0);
 
   // Make sure the arrow isn't cut off
   anchorPoint.y = Math.max(anchorPoint.y, arrowSize.height / 2 + borderRadius);
