@@ -825,15 +825,15 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
 
 
     const popoverCenter = new Point(popoverOrigin.x + (viewWidth / 2), popoverOrigin.y + (viewHeight / 2));
-    const shiftHorizantal = anchorPoint.x - popoverCenter.x;
+    const shiftHorizontal = anchorPoint.x - popoverCenter.x;
     const shiftVertical = anchorPoint.y - popoverCenter.y;
 
     this.debug("getTranslateOrigin - popoverOrigin", popoverOrigin);
-    this.debug("getTranslateOrigin - popoverSize", {width: viewWidth, height: viewWidth});
+    this.debug("getTranslateOrigin - popoverSize", {width: viewWidth, height: viewHeight});
     this.debug("getTranslateOrigin - anchorPoint", anchorPoint);
-    this.debug("getTranslateOrigin - shift", {hoizontal: shiftHorizantal, vertical: shiftVertical});
+    this.debug("getTranslateOrigin - shift", {hoizontal: shiftHorizontal, vertical: shiftVertical});
 
-    return new Point(popoverOrigin.x + shiftHorizantal, popoverOrigin.y + shiftVertical);
+    return new Point(popoverOrigin.x + shiftHorizontal, popoverOrigin.y + shiftVertical);
   }
 
   animateOut() {
