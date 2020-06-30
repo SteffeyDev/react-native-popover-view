@@ -17,7 +17,8 @@ import {
   StyleSheet,
   I18nManager,
   EasingFunction,
-  LayoutChangeEvent
+  LayoutChangeEvent,
+  ViewPropTypes
 } from 'react-native';
 import { Rect, Point, Size, getRectForRef, getArrowSize, getBorderRadius } from './Utility';
 import { MULTIPLE_POPOVER_WARNING, Placement, Mode, DEFAULT_BORDER_RADIUS, FIX_SHIFT } from './Constants';
@@ -79,9 +80,9 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
     safeAreaInsets: PropTypes.object,
 
     // style
-    popoverStyle: PropTypes.object,
-    arrowStyle: PropTypes.object,
-    backgroundStyle: PropTypes.object,
+    popoverStyle: ViewPropTypes.style,
+    arrowStyle: ViewPropTypes.style,
+    backgroundStyle: ViewPropTypes.style,
 
     // lifecycle
     onOpenStart: PropTypes.func,
