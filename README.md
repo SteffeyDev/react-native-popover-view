@@ -262,7 +262,7 @@ If you are not using functional components and hooks yet, you can still use clas
 import React, { createRef } from 'react';
 import Popover from 'react-native-popover-view';
 
-class App() {
+class App extends React.Component {
   constructor(props) {
     super(props);
 
