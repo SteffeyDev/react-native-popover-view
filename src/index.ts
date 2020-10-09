@@ -1,3 +1,3 @@
-export { default as default } from './Popover.js'
+export { default as default } from './Popover'
 export { Placement as PopoverPlacement, Mode as PopoverMode } from './Constants';
-export { Rect as Rect, Size as Size } from './Utility.js'
+export { Rect as Rect, Size as Size } from './Utility'
