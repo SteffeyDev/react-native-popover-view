@@ -18,8 +18,7 @@ import {
   I18nManager,
   EasingFunction,
   LayoutChangeEvent,
-  ViewPropTypes,
-  EmitterSubscription
+  ViewPropTypes
 } from 'react-native';
 import { Rect, Point, Size, getRectForRef, getArrowSize, getBorderRadius } from './Utility';
 import { MULTIPLE_POPOVER_WARNING, Placement, Mode, DEFAULT_BORDER_RADIUS, FIX_SHIFT } from './Constants';
@@ -328,8 +327,8 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
   private skipNextDefaultDisplayArea: boolean = false;
   private displayAreaStore: Rect | undefined;
 
-  private keyboardDidShowListener: EmitterSubscription | null = null;
-  private keyboardDidHideListener: EmitterSubscription | null = null;
+  private keyboardDidShowListener: any;
+  private keyboardDidHideListener: any;
 
   private _isMounted: boolean = false;
 
@@ -348,8 +347,6 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
     Dimensions.removeEventListener('change', this.handleResizeEvent)
     this.keyboardDidShowListener && this.keyboardDidShowListener.remove();
     this.keyboardDidHideListener && this.keyboardDidHideListener.remove();
-    this.keyboardDidHideListener = null;
-    this.keyboardDidShowListener = null;
   }
 
   componentDidUpdate(prevProps: AdaptivePopoverProps) {
