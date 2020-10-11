@@ -838,7 +838,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
   animateOut() {
     setTimeout(this.props.onCloseStart);
 
-    this.setState({ showing: false });
+    if (this._isMounted) this.setState({ showing: false });
 
     this.animateTo({
       values: this.state.animatedValues,
@@ -947,7 +947,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       })
     ]).start(() => {
       this.animating = false;
-      this.setState({ activeGeom: this.state.nextGeom });
+      if (this._isMounted) this.setState({ activeGeom: this.state.nextGeom });
       if (callback) callback();
     });
   }
@@ -1038,7 +1038,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
             
             <Animated.View style={popoverViewStyle} ref={this.popoverRef} onLayout={(evt: LayoutChangeEvent) => {
               const layout = { ...evt.nativeEvent.layout };
-              setTimeout(() => this.measureContent(layout), 10);
+              setTimeout(() => this._isMounted && this.measureContent(layout), 10);
             }}>
               {this.props.children}
             </Animated.View>
