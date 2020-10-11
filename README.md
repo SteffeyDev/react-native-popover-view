@@ -4,7 +4,7 @@
 [![npm version](http://img.shields.io/npm/dm/react-native-popover-view.svg?style=flat-square)](https://npmjs.org/package/react-native-popover-view "View this project on npm")
 [![npm licence](http://img.shields.io/npm/l/react-native-popover-view.svg?style=flat-square)](https://npmjs.org/package/react-native-popover-view "View this project on npm")
 
-A well-tested, adaptable, lightweight `<Popover>` component for react-native.  Works and tested on iOS and Android.  Might work on Web, but not officially supported.
+A well-tested, adaptable, lightweight `<Popover>` component for react-native.  Tested and working on iOS and Android.  May work on Web, but not officially supported.
 
 It is written entirely in TypeScript, but uses [React Native's native driver](https://facebook.github.io/react-native/blog/2017/02/14/using-native-driver-for-animated.html) for responsive animations, even when the JS thread is busy.
 
@@ -29,7 +29,7 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
 * Adapts to changing content size
 * Automatically detects best placement on screen
 * Moves to stay visible on orientation change or when entering split-screen mode
-* Great for use in Tablets; you can put entire views that you would normally show in a modal (on a smaller device) into a popover, optionally give it an anchor point, and have it float on top of all of the other views.
+* Great for use in Tablets: you can put entire views that you would normally show in a modal (on a smaller device) into a popover, optionally give it an anchor point, and have it float on top of all of the other views.
 
 ## <a name="demo"/>Demo App
 
@@ -168,7 +168,7 @@ function App() {
         <Text>Press here to open popover!</Text>
       </TouchableOpacity>
       <Popover from={new Rect(5, 100, 20, 40)} isVisible={showPopover} onRequestClose={() => setShowPopover(false)}>
-        <Text>This popover will stay centered on the screen, even when the device is rotated!</Text>
+        <Text>This is the contents of the popover</Text>
       </Popover>
     </>
   );
@@ -192,7 +192,7 @@ function App() {
         <Text>Press here to open popover!</Text>
       </TouchableOpacity>
       <Popover isVisible={showPopover} onRequestClose={() => setShowPopover(false)}>
-        <Text>This is the contents of the popover</Text>
+        <Text>This popover will stay centered on the screen, even when the device is rotated!</Text>
       </Popover>
     </>
   );
