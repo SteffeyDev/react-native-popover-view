@@ -14,6 +14,7 @@ type ComputeGeometryProps = ComputeGeometryBaseProps & {
   fromRect: Rect | null;
   arrowStyle: StyleProp<ViewStyle>;
   popoverStyle: StyleProp<ViewStyle>;
+  arrowShift?: number;
 }
 
 type ComputeGeometryDirectionProps = ComputeGeometryBaseProps & {
@@ -67,12 +68,12 @@ export class Geometry {
 }
 
 export function computeGeometry(options: ComputeGeometryProps): Geometry {
-  const { requestedContentSize, placement, displayArea, debug, popoverStyle } = options;
+  const { requestedContentSize, placement, displayArea, debug, popoverStyle, arrowShift } = options;
 
   let newGeom = null;
 
-  if (options.fromRect && options.fromRect instanceof Rect) {
-    const fromRect = Rect.clone(options.fromRect); // Make copy so doesn't modify original
+  const fromRect = options.fromRect ? Rect.clone(options.fromRect) : null; // Make copy so doesn't modify original
+  if (fromRect && options.fromRect instanceof Rect) {
 
     // Check to see if fromRect is outside of displayArea, and adjust if it is
     if (fromRect.x > displayArea.x + displayArea.width) fromRect.x = displayArea.x + displayArea.width;
@@ -174,6 +175,13 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
         height: preferedY < minY - 1
       }
     });
+  }
+
+  if (arrowShift && fromRect) {
+    if (newGeom.placement === Placement.BOTTOM || newGeom.placement === Placement.TOP)
+      newGeom.anchorPoint.x += arrowShift * 0.5 * fromRect.width;
+    else
+      newGeom.anchorPoint.y += arrowShift * 0.5 * fromRect.height;
   }
 
   debug("computeGeometry - final chosen geometry", newGeom);

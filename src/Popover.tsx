@@ -45,6 +45,7 @@ interface PopoverProps {
   popoverStyle?: StyleProp<ViewStyle>;
   arrowStyle?: StyleProp<ViewStyle>;
   backgroundStyle?: StyleProp<ViewStyle>;
+  arrowShift: number;
 
   // lifecycle
   onOpenStart?: () => void;
@@ -91,6 +92,7 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
     popoverStyle: stylePropType,
     arrowStyle: stylePropType,
     backgroundStyle: stylePropType,
+    arrowShift: PropTypes.number,
 
     // lifecycle
     onOpenStart: PropTypes.func,
@@ -653,7 +655,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
     this.debug("handleChange - waiting 100ms to accumulate all changes");
     this.handleChangeTimeout = setTimeout(() => {
       const { activeGeom, animatedValues, requestedContentSize }: Partial<BasePopoverState> = this.state;
-      const { arrowStyle, popoverStyle, fromRect, displayArea, placement, onOpenStart } = this.props;
+      const { arrowStyle, popoverStyle, fromRect, displayArea, placement, onOpenStart, arrowShift } = this.props;
 
       if (requestedContentSize) {
         this.debug("handleChange - requestedContentSize", requestedContentSize);
@@ -669,6 +671,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
           displayArea,
           arrowStyle,
           popoverStyle,
+          arrowShift,
           debug: this.debug.bind(this),
           previousPlacement: this.getGeom().placement
         });
