@@ -17,18 +17,20 @@ import {
   StyleSheet,
   I18nManager,
   EasingFunction,
-  LayoutChangeEvent,
-  ViewPropTypes
+  LayoutChangeEvent
 } from 'react-native';
 import { Rect, Point, Size, getRectForRef, getArrowSize, getBorderRadius } from './Utility';
-import { MULTIPLE_POPOVER_WARNING, Placement, Mode, DEFAULT_BORDER_RADIUS, FIX_SHIFT } from './Constants';
+import { MULTIPLE_POPOVER_WARNING, Placement, Mode, DEFAULT_BORDER_RADIUS, FIX_SHIFT as ORIGINAL_FIX_SHIFT } from './Constants';
 import { computeGeometry, Geometry } from './Geometry';
 
 const noop = () => {};
 
 const isIOS = Platform.OS === 'ios';
+const isWeb = Platform.OS === 'web';
 
 const DEBUG = false;
+
+const FIX_SHIFT = isWeb ? 0 : ORIGINAL_FIX_SHIFT;
 
 interface PopoverProps {
   isVisible?: boolean;
@@ -64,6 +66,12 @@ interface PublicPopoverState {
   isVisible: boolean;
 }
 
+// React Native Web does not export ViewPropTypes, so this is a workaround
+const stylePropType =
+  isWeb
+    ? PropTypes.object
+    : require('react-native').ViewPropTypes.style
+
 export default class Popover extends Component<PublicPopoverProps, PublicPopoverState> {
   static propTypes = {
     // display
@@ -80,9 +88,9 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
     safeAreaInsets: PropTypes.object,
 
     // style
-    popoverStyle: ViewPropTypes.style,
-    arrowStyle: ViewPropTypes.style,
-    backgroundStyle: ViewPropTypes.style,
+    popoverStyle: stylePropType,
+    arrowStyle: stylePropType,
+    backgroundStyle: stylePropType,
 
     // lifecycle
     onOpenStart: PropTypes.func,
@@ -911,7 +919,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
     const commonConfig = {
       duration: 300,
       easing,
-      useNativeDriver: true,
+      useNativeDriver: !isWeb,
       ...this.props.animationConfig
     };
 
