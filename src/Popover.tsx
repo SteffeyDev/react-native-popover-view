@@ -45,7 +45,7 @@ interface PopoverProps {
   popoverStyle?: StyleProp<ViewStyle>;
   arrowStyle?: StyleProp<ViewStyle>;
   backgroundStyle?: StyleProp<ViewStyle>;
-  arrowShift: number;
+  arrowShift?: number;
 
   // lifecycle
   onOpenStart?: () => void;
