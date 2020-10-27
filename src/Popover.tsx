@@ -33,7 +33,7 @@ const DEBUG = false;
 const FIX_SHIFT = isWeb ? 0 : ORIGINAL_FIX_SHIFT;
 
 interface PopoverProps {
-  isVisible: boolean;
+  isVisible?: boolean;
 
   // config
   placement?: Placement;

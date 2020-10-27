@@ -294,7 +294,7 @@ class App extends React.Component {
 
 Prop              | Type     | Optional | Default     | Description
 ----------------- | -------- | -------- | ----------- | -----------
-isVisible         | bool     | No       | false       | Show/Hide the popover
+isVisible         | bool     | Yes      | false       | Show/Hide the popover
 mode              | string   | Yes      | 'rn-modal'  | One of: 'rn-modal', 'js-modal', 'tooltip'. See [Mode](#mode) section below for details.
 from              | element OR ref OR rect | Yes      | null        | Either a React element, a function that returns a React element, a `ref` created from `React.createRef` or `React.useRef`, or a Rect object created by `new Rect(x, y, width, height)`.
 displayArea       | rect     | Yes      | rect | Area where the popover is allowed to be displayed
