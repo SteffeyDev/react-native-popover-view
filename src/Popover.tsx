@@ -33,7 +33,7 @@ const DEBUG = false;
 const FIX_SHIFT = isWeb ? 0 : ORIGINAL_FIX_SHIFT;
 
 interface PopoverProps {
-  isVisible?: boolean;
+  isVisible: boolean;
 
   // config
   placement?: Placement;
@@ -45,7 +45,7 @@ interface PopoverProps {
   popoverStyle?: StyleProp<ViewStyle>;
   arrowStyle?: StyleProp<ViewStyle>;
   backgroundStyle?: StyleProp<ViewStyle>;
-  arrowShift: number;
+  arrowShift?: number;
 
   // lifecycle
   onOpenStart?: () => void;
