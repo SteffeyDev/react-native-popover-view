@@ -313,6 +313,7 @@ onRequestClose    | function | Yes      |             | Callback to be fired whe
 onCloseStart      | function | Yes      |             | Callback to be fired when the popover starts closing (before animation)
 onCloseComplete   | function | Yes      |             | Callback to be fired when the popover is finished closing (after animation)
 debug             | bool     | Yes      | false       | Set this to `true` to turn on debug logging to the console.  This is useful for figuring out why a Popover isn't showing.
+placementPriority | array    | Yes      | ['bottom', 'top']       | Preferred positions list for popover placement. Overridden by `placement` prop
 
 If no `from` is provided, the popover will float in the center of the screen.
 
