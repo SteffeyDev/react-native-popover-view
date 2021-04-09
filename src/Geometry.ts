@@ -6,6 +6,7 @@ type ComputeGeometryBaseProps = {
   requestedContentSize: Size;
   displayArea: Rect;
   debug: (line: string, obj?: any) => void;
+  placementPriority?: Array<string>;
 }
 
 type ComputeGeometryProps = ComputeGeometryBaseProps & {
@@ -354,7 +355,7 @@ function computeRightGeometry({ displayArea, fromRect, requestedContentSize, arr
 }
 
 function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry {
-  const { displayArea, requestedContentSize, fromRect, previousPlacement, debug, arrowStyle } = options
+  const { displayArea, requestedContentSize, fromRect, previousPlacement, debug, arrowStyle, placementPriority } = options
 
   // Keep same placement if possible (left/right)
   if (previousPlacement === Placement.LEFT || previousPlacement === Placement.RIGHT) {
@@ -374,24 +375,75 @@ function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry {
     if (!geom.viewLargerThanDisplayArea.height) return geom;
   }
 
-  // Otherwise, find the place that can fit it best (try left/right but default to top/bottom as that will typically have more space
+  // Otherwise, find the place that can fit it best (try left/right but default to top/bottom as that will typically have more space)
   const arrowSize = getArrowSize(Placement.LEFT, arrowStyle);
 
-  // If it fits on left, choose left
-  if (fromRect.x - displayArea.x - arrowSize.width >= requestedContentSize.width) { // We could fit it on the left side
-    debug("computeAutoGeometry - could fit on left side");
-    return computeLeftGeometry(options);
+  // generating list of all possible sides with validity
+  const spaceList = {
+    left: {
+      size: fromRect.x - displayArea.x - arrowSize.width,
+      isValid: fromRect.x - displayArea.x - arrowSize.width >= requestedContentSize.width
+    },
+    right: {
+      size: displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width,
+      isValid: displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width >= requestedContentSize.width
+    },
+    top: {
+      size: fromRect.y - displayArea.y,
+      isValid: fromRect.y - displayArea.y - 50 >= requestedContentSize.height
+    },
+    bottom: {
+      size: displayArea.y + displayArea.height - (fromRect.y + fromRect.height),
+      isValid: displayArea.y + displayArea.height - (fromRect.y + fromRect.height) >= requestedContentSize.height
+    }
   }
 
-  // If it fits on right, choose right
-  if (displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width >= requestedContentSize.width) { // We could fit it on the right side
-    debug("computeAutoGeometry - could fit on right side");
-    return computeRightGeometry(options);
-  }
+  debug("computeAutoGeometry - List of availabe space and placement priority", {spaceList, placementPriority});
 
-  // We could fit it on the top or bottom, need to figure out which is better
-  let topSpace = fromRect.y - displayArea.y;
-  let bottomSpace = displayArea.y + displayArea.height - (fromRect.y + fromRect.height);
-  debug("computeAutoGeometry - Top/bottom picking best, top space", topSpace);
-  return (topSpace - 50) > bottomSpace ? computeTopGeometry(options) : computeBottomGeometry(options);
+  const bestPlacementPosition = findBestPlacement(spaceList, placementPriority);
+
+  debug("computeAutoGeometry - Found best postition for placement", bestPlacementPosition);
+
+  switch(bestPlacementPosition){
+    case 'left': return computeLeftGeometry(options);
+    case 'right': return computeRightGeometry(options);
+    case 'bottom': return computeBottomGeometry(options);
+    case 'top': return computeTopGeometry(options);
+  }
+}
+
+const findBestPlacement = (spaceList:object, placementPriority?:Array<string>) => {
+  let bestPlacement = '';
+  // check if priotiry list exist and valid space (default to top/bottom as that will typically have more space - by placementPriority)
+  if(placementPriority && placementPriority?.length > 0){
+    bestPlacement = tryPriorityPlacement(spaceList, placementPriority);
+  }
+  // if priority palcement fails, fall back to best palcement
+  if(bestPlacement === ''){
+    bestPlacement = '';
+    Object.keys(spaceList).map(side=>{
+      // select first best side
+      if(bestPlacement === '' && spaceList[side]?.isValid){
+        bestPlacement = side;
+      }
+      // select best side based on space available and validity
+      if(spaceList[side]?.isValid && (spaceList[side]?.size > spaceList[bestPlacement]?.size)){
+        bestPlacement = side;
+      }
+    });
+  }
+  return bestPlacement;
+}
+
+const tryPriorityPlacement = (spaceList:object, placementPriority?:Array<string>) => {
+  // check all priorities and find the first best
+  if(placementPriority && placementPriority?.length > 0){
+    for(let i = 0; i < placementPriority.length; ++i){
+      const item = placementPriority[i];
+      if(spaceList[item]?.isValid){
+        return item;
+      }
+    }
+  }
+  return '';
 }
