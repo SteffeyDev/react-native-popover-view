@@ -353,7 +353,7 @@ function computeRightGeometry({ displayArea, fromRect, requestedContentSize, arr
   });
 }
 
-function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry {
+function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry | null {
   const { displayArea, requestedContentSize, fromRect, previousPlacement, debug, arrowStyle } = options
 
   // Keep same placement if possible (left/right)
@@ -378,22 +378,22 @@ function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry {
   const arrowSize = getArrowSize(Placement.LEFT, arrowStyle);
 
   // generating list of all possible sides with validity
-  const spaceList = {
-    left: {
-      size: fromRect.x - displayArea.x - arrowSize.width,
-      isValid: fromRect.x - displayArea.x - arrowSize.width >= requestedContentSize.width,
+  const spaceList: Record<Placement, PlacementOption> = {
+    [Placement.LEFT]: {
+      sizeAvailable: fromRect.x - displayArea.x - arrowSize.width,
+      sizeRequested: requestedContentSize.width,
     },
-    right: {
-      size: displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width,
-      isValid: displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width >= requestedContentSize.width,
+    [Placement.RIGHT]: {
+      sizeAvailable: displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width,
+      sizeRequested: requestedContentSize.width,
     },
-    top: {
-      size: fromRect.y - displayArea.y,
-      isValid: fromRect.y - displayArea.y - 50 >= requestedContentSize.height,
+    [Placement.TOP]: {
+      sizeAvailable: fromRect.y - displayArea.y - arrowSize.width,
+      sizeRequested: requestedContentSize.height,
     },
-    bottom: {
-      size: displayArea.y + displayArea.height - (fromRect.y + fromRect.height),
-      isValid: displayArea.y + displayArea.height - (fromRect.y + fromRect.height) >= requestedContentSize.height,
+    [Placement.BOTTOM]: {
+      sizeAvailable: displayArea.y + displayArea.height - (fromRect.y + fromRect.height) - arrowSize.width,
+      sizeRequested: requestedContentSize.height,
     },
   };
 
@@ -403,26 +403,25 @@ function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry {
 
   debug('computeAutoGeometry - Found best postition for placement', bestPlacementPosition);
 
-  // When bestPlacement is not available, placement occur in middle of the screen
   switch (bestPlacementPosition){
-    case 'left': return computeLeftGeometry(options);
-    case 'right': return computeRightGeometry(options);
-    case 'bottom': return computeBottomGeometry(options);
-    case 'top': return computeTopGeometry(options);
+    case Placement.LEFT: return computeLeftGeometry(options);
+    case Placement.RIGHT: return computeRightGeometry(options);
+    case Placement.RIGHT: return computeBottomGeometry(options);
+    case Placement.TOP: return computeTopGeometry(options);
+    // When bestPlacement is not available, return nothing so popover will be placed in middle of screen
+    default: return null;
   }
 }
 
-const findBestPlacement = (spaceList:object) => {
-  let bestPlacement = '';
-  Object.keys(spaceList).map(side=>{
-    // select first best side
-    if (bestPlacement === '' && spaceList[side]?.isValid){
-      bestPlacement = side;
-    }
-    // select best side based on space available and validity
-    else if (spaceList[side]?.isValid && (spaceList[side]?.size > spaceList[bestPlacement]?.size)){
-      bestPlacement = side;
-    }
-  });
-  return bestPlacement;
+type PlacementOption = {
+  sizeRequested: boolean;
+  sizeAvailable: number;
+}
+function findBestPlacement(spaceList: Record<Placement, PlacementOption>): Placement | null {
+  return Object.entries(spaceList).reduce((bestPlacement, [placement, { size, sizeAvailable }]) =>
+    sizeRequested <= sizeAvailable && (!bestPlacement || sizeAvailable > spaceList[bestPlacement].sizeAvailable)
+      // If it can fit, and this is the first one to fit or it fits better than the last one, use this placement
+      ? placement
+      : bestPlacement
+  , null);
 };
