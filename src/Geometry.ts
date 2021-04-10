@@ -374,24 +374,55 @@ function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry {
     if (!geom.viewLargerThanDisplayArea.height) return geom;
   }
 
-  // Otherwise, find the place that can fit it best (try left/right but default to top/bottom as that will typically have more space
+  // Otherwise, find the place that can fit it best (try left/right but default to top/bottom as that will typically have more space)
   const arrowSize = getArrowSize(Placement.LEFT, arrowStyle);
 
-  // If it fits on left, choose left
-  if (fromRect.x - displayArea.x - arrowSize.width >= requestedContentSize.width) { // We could fit it on the left side
-    debug("computeAutoGeometry - could fit on left side");
-    return computeLeftGeometry(options);
-  }
+  // generating list of all possible sides with validity
+  const spaceList = {
+    left: {
+      size: fromRect.x - displayArea.x - arrowSize.width,
+      isValid: fromRect.x - displayArea.x - arrowSize.width >= requestedContentSize.width,
+    },
+    right: {
+      size: displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width,
+      isValid: displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width >= requestedContentSize.width,
+    },
+    top: {
+      size: fromRect.y - displayArea.y,
+      isValid: fromRect.y - displayArea.y - 50 >= requestedContentSize.height,
+    },
+    bottom: {
+      size: displayArea.y + displayArea.height - (fromRect.y + fromRect.height),
+      isValid: displayArea.y + displayArea.height - (fromRect.y + fromRect.height) >= requestedContentSize.height,
+    },
+  };
 
-  // If it fits on right, choose right
-  if (displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width >= requestedContentSize.width) { // We could fit it on the right side
-    debug("computeAutoGeometry - could fit on right side");
-    return computeRightGeometry(options);
-  }
+  debug('computeAutoGeometry - List of availabe space', spaceList);
 
-  // We could fit it on the top or bottom, need to figure out which is better
-  let topSpace = fromRect.y - displayArea.y;
-  let bottomSpace = displayArea.y + displayArea.height - (fromRect.y + fromRect.height);
-  debug("computeAutoGeometry - Top/bottom picking best, top space", topSpace);
-  return (topSpace - 50) > bottomSpace ? computeTopGeometry(options) : computeBottomGeometry(options);
+  const bestPlacementPosition = findBestPlacement(spaceList);
+
+  debug('computeAutoGeometry - Found best postition for placement', bestPlacementPosition);
+
+  // When bestPlacement is not available, placement occur in middle of the screen
+  switch (bestPlacementPosition){
+    case 'left': return computeLeftGeometry(options);
+    case 'right': return computeRightGeometry(options);
+    case 'bottom': return computeBottomGeometry(options);
+    case 'top': return computeTopGeometry(options);
+  }
 }
+
+const findBestPlacement = (spaceList:object) => {
+  let bestPlacement = '';
+  Object.keys(spaceList).map(side=>{
+    // select first best side
+    if (bestPlacement === '' && spaceList[side]?.isValid){
+      bestPlacement = side;
+    }
+    // select best side based on space available and validity
+    else if (spaceList[side]?.isValid && (spaceList[side]?.size > spaceList[bestPlacement]?.size)){
+      bestPlacement = side;
+    }
+  });
+  return bestPlacement;
+};
