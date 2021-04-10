@@ -40,7 +40,6 @@ interface PopoverProps {
   animationConfig?: Partial<Animated.TimingAnimationConfig>;
   verticalOffset?: number;
   safeAreaInsets?: SafeAreaViewProps["forceInset"];
-  placementPriority?: Array<string>;
 
   // style
   popoverStyle?: StyleProp<ViewStyle>;
@@ -88,7 +87,6 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
     animationConfig: PropTypes.object,
     verticalOffset: PropTypes.number,
     safeAreaInsets: PropTypes.object,
-    placementPriority: PropTypes.array,
 
     // style
     popoverStyle: stylePropType,
@@ -115,7 +113,6 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
     onCloseComplete: noop,
     verticalOffset: 0,
     debug: false,
-    placementPriority: ["bottom","top"]
   }
 
   state = {
@@ -658,7 +655,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
     this.debug("handleChange - waiting 100ms to accumulate all changes");
     this.handleChangeTimeout = setTimeout(() => {
       const { activeGeom, animatedValues, requestedContentSize }: Partial<BasePopoverState> = this.state;
-      const { arrowStyle, popoverStyle, fromRect, displayArea, placement, onOpenStart, arrowShift, placementPriority } = this.props;
+      const { arrowStyle, popoverStyle, fromRect, displayArea, placement, onOpenStart, arrowShift } = this.props;
 
       if (requestedContentSize) {
         this.debug("handleChange - requestedContentSize", requestedContentSize);
@@ -677,7 +674,6 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
           arrowShift,
           debug: this.debug.bind(this),
           previousPlacement: this.getGeom().placement,
-          placementPriority
         });
 
         this.setState({ nextGeom: geom, requestedContentSize }, () => {

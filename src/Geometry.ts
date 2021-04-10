@@ -6,7 +6,6 @@ type ComputeGeometryBaseProps = {
   requestedContentSize: Size;
   displayArea: Rect;
   debug: (line: string, obj?: any) => void;
-  placementPriority?: Array<string>;
 }
 
 type ComputeGeometryProps = ComputeGeometryBaseProps & {
@@ -355,7 +354,7 @@ function computeRightGeometry({ displayArea, fromRect, requestedContentSize, arr
 }
 
 function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry {
-  const { displayArea, requestedContentSize, fromRect, previousPlacement, debug, arrowStyle, placementPriority } = options
+  const { displayArea, requestedContentSize, fromRect, previousPlacement, debug, arrowStyle } = options
 
   // Keep same placement if possible (left/right)
   if (previousPlacement === Placement.LEFT || previousPlacement === Placement.RIGHT) {
@@ -382,29 +381,30 @@ function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry {
   const spaceList = {
     left: {
       size: fromRect.x - displayArea.x - arrowSize.width,
-      isValid: fromRect.x - displayArea.x - arrowSize.width >= requestedContentSize.width
+      isValid: fromRect.x - displayArea.x - arrowSize.width >= requestedContentSize.width,
     },
     right: {
       size: displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width,
-      isValid: displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width >= requestedContentSize.width
+      isValid: displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width >= requestedContentSize.width,
     },
     top: {
       size: fromRect.y - displayArea.y,
-      isValid: fromRect.y - displayArea.y - 50 >= requestedContentSize.height
+      isValid: fromRect.y - displayArea.y - 50 >= requestedContentSize.height,
     },
     bottom: {
       size: displayArea.y + displayArea.height - (fromRect.y + fromRect.height),
-      isValid: displayArea.y + displayArea.height - (fromRect.y + fromRect.height) >= requestedContentSize.height
-    }
-  }
+      isValid: displayArea.y + displayArea.height - (fromRect.y + fromRect.height) >= requestedContentSize.height,
+    },
+  };
 
-  debug("computeAutoGeometry - List of availabe space and placement priority", {spaceList, placementPriority});
+  debug('computeAutoGeometry - List of availabe space', spaceList);
 
-  const bestPlacementPosition = findBestPlacement(spaceList, placementPriority);
+  const bestPlacementPosition = findBestPlacement(spaceList);
 
-  debug("computeAutoGeometry - Found best postition for placement", bestPlacementPosition);
+  debug('computeAutoGeometry - Found best postition for placement', bestPlacementPosition);
 
-  switch(bestPlacementPosition){
+  // When bestPlacement is not available, placement occur in middle of the screen
+  switch (bestPlacementPosition){
     case 'left': return computeLeftGeometry(options);
     case 'right': return computeRightGeometry(options);
     case 'bottom': return computeBottomGeometry(options);
@@ -412,38 +412,17 @@ function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry {
   }
 }
 
-const findBestPlacement = (spaceList:object, placementPriority?:Array<string>) => {
+const findBestPlacement = (spaceList:object) => {
   let bestPlacement = '';
-  // check if priotiry list exist and valid space (default to top/bottom as that will typically have more space - by placementPriority)
-  if(placementPriority && placementPriority?.length > 0){
-    bestPlacement = tryPriorityPlacement(spaceList, placementPriority);
-  }
-  // if priority palcement fails, fall back to best palcement
-  if(bestPlacement === ''){
-    bestPlacement = '';
-    Object.keys(spaceList).map(side=>{
-      // select first best side
-      if(bestPlacement === '' && spaceList[side]?.isValid){
-        bestPlacement = side;
-      }
-      // select best side based on space available and validity
-      if(spaceList[side]?.isValid && (spaceList[side]?.size > spaceList[bestPlacement]?.size)){
-        bestPlacement = side;
-      }
-    });
-  }
-  return bestPlacement;
-}
-
-const tryPriorityPlacement = (spaceList:object, placementPriority?:Array<string>) => {
-  // check all priorities and find the first best
-  if(placementPriority && placementPriority?.length > 0){
-    for(let i = 0; i < placementPriority.length; ++i){
-      const item = placementPriority[i];
-      if(spaceList[item]?.isValid){
-        return item;
-      }
+  Object.keys(spaceList).map(side=>{
+    // select first best side
+    if (bestPlacement === '' && spaceList[side]?.isValid){
+      bestPlacement = side;
     }
-  }
-  return '';
-}
+    // select best side based on space available and validity
+    else if (spaceList[side]?.isValid && (spaceList[side]?.size > spaceList[bestPlacement]?.size)){
+      bestPlacement = side;
+    }
+  });
+  return bestPlacement;
+};
