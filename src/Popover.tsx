@@ -112,7 +112,7 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
     onCloseStart: noop,
     onCloseComplete: noop,
     verticalOffset: 0,
-    debug: false,
+    debug: false
   }
 
   state = {
@@ -673,7 +673,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
           popoverStyle,
           arrowShift,
           debug: this.debug.bind(this),
-          previousPlacement: this.getGeom().placement,
+          previousPlacement: this.getGeom().placement
         });
 
         this.setState({ nextGeom: geom, requestedContentSize }, () => {
