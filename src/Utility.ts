@@ -1,4 +1,4 @@
-import { NativeModules, findNodeHandle, StyleProp, ViewStyle, StyleSheet } from 'react-native'
+import { NativeModules, findNodeHandle, StyleProp, ViewStyle, StyleSheet } from 'react-native';
 import { Placement, DEFAULT_ARROW_SIZE, DEFAULT_BORDER_RADIUS } from './Constants';
 
 export class Point {
@@ -22,7 +22,8 @@ export class Size {
   }
 
   static equals(a: Size, b: Size): boolean {
-    return (Math.round(a.width) === Math.round(b.width) && Math.round(a.height) === Math.round(b.height));
+    return Math.round(a.width) === Math.round(b.width) &&
+      Math.round(a.height) === Math.round(b.height);
   }
 }
 
@@ -40,65 +41,83 @@ export class Rect {
   }
 
   static equals(a: Rect, b: Rect): boolean {
-    return (Math.round(a.x) === Math.round(b.x) && Math.round(a.y) === Math.round(b.y) && Math.round(a.width) === Math.round(b.width) && Math.round(a.height) === Math.round(b.height));
+    return (Math.round(a.x) === Math.round(b.x) &&
+      Math.round(a.y) === Math.round(b.y) &&
+      Math.round(a.width) === Math.round(b.width) &&
+      Math.round(a.height) === Math.round(b.height));
   }
 
-  static clone(rect: Rect) {
+  static clone(rect: Rect): Rect {
     return new Rect(rect.x, rect.y, rect.width, rect.height);
   }
 }
 
-export function getRectForRef(ref: any): Promise<Rect> {
+export function getRectForRef(ref: RefObject): Promise<Rect> {
   return new Promise((resolve, reject) => {
     if (ref.current) {
-      NativeModules.UIManager.measure(findNodeHandle(ref.current), (_x: any, _y: any, width: number, height: number, x: number, y: number) => {
-        resolve(new Rect(x, y, width, height));
-      })
+      NativeModules.UIManager.measure(
+        findNodeHandle(ref.current),
+        (_, _, width: number, height: number, x: number, y: number) =>
+          resolve(new Rect(x, y, width, height))
+      );
     } else {
-      reject();
+      reject(new Error('getRectForRef - current is not set'));
     }
   });
 }
 
-export async function waitForChange(getFirst: () => Promise<Rect>, getSecond: () => Promise<Rect>) {
-  let count = 0; // Failsafe so that the interval doesn't run forever
+export async function waitForChange(
+  getFirst: () => Promise<Rect>,
+  getSecond: () => Promise<Rect>
+): void {
+  // Failsafe so that the interval doesn't run forever
+  let count = 0;
   let first, second;
-  do  {
+  do {
     first = await getFirst();
     second = await getSecond();
-    await new Promise(resolve => setTimeout(resolve, 100));
-    count++
+    await new Promise(resolve => {
+      setTimeout(resolve, 100);
+    });
+    count++;
     if (count++ > 20) {
       throw new Error('waitForChange - Timed out waiting for change (waited 2 seconds)');
     }
-  } while (Rect.equals(first, second))
+  } while (Rect.equals(first, second));
 }
 
-export async function waitForNewRect(ref: any, initialRect: Rect): Promise<Rect> {
-  await waitForChange(() => getRectForRef(ref), () => Promise.resolve(initialRect))
-  return await getRectForRef(ref);
+export async function waitForNewRect(ref: RefObject, initialRect: Rect): Promise<Rect> {
+  await waitForChange(() => getRectForRef(ref), () => Promise.resolve(initialRect));
+  const rect = await getRectForRef(ref);
+  return rect;
 }
 
 export function sizeChanged(a: Size | null, b: Size | null): boolean {
   if (!a || !b) return false;
-  return (Math.round(a.width) !== Math.round(b.width) || Math.round(a.height) !== Math.round(b.height));
+  return Math.round(a.width) !== Math.round(b.width) ||
+    Math.round(a.height) !== Math.round(b.height);
 }
 
 export function rectChanged(a: Rect | null, b: Rect | null): boolean {
   if (!a || !b) return false;
-  return (Math.round(a.x) !== Math.round(b.x) || Math.round(a.y) !== Math.round(b.y) || Math.round(a.width) !== Math.round(b.width) || Math.round(a.height) !== Math.round(b.height));
+  return Math.round(a.x) !== Math.round(b.x) ||
+    Math.round(a.y) !== Math.round(b.y) ||
+    Math.round(a.width) !== Math.round(b.width) ||
+    Math.round(a.height) !== Math.round(b.height);
 }
 
 export function pointChanged(a: Point, b: Point): boolean {
   return (Math.round(a.x) !== Math.round(b.x) || Math.round(a.y) !== Math.round(b.y));
 }
 
-export function getArrowSize(placement: Placement, arrowStyle: StyleProp<ViewStyle>) {
-  let width = StyleSheet.flatten(arrowStyle).width;
-  if (typeof width !== "number") width = DEFAULT_ARROW_SIZE.width;
-  let height = StyleSheet.flatten(arrowStyle).height;
-  if (typeof height !== "number") height = DEFAULT_ARROW_SIZE.height;
-  switch(placement) {
+export function getArrowSize(
+  placement: Placement,
+  arrowStyle: StyleProp<ViewStyle>
+): Promise<Size> {
+  let { width, height } = StyleSheet.flatten(arrowStyle);
+  if (typeof width !== 'number') ({ width } = DEFAULT_ARROW_SIZE);
+  if (typeof height !== 'number') ({ height } = DEFAULT_ARROW_SIZE);
+  switch (placement) {
     case Placement.LEFT:
     case Placement.RIGHT:
       return new Size(height, width);
