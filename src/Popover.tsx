@@ -369,11 +369,15 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
     displayAreaOffset: null
   }
 
-  getDisplayArea(): Rect {
-    return this.state.shiftedDisplayArea ||
-      this.props.displayArea ||
+  getUnshiftedDisplayArea(): Rect {
+    return this.props.displayArea ||
       this.state.defaultDisplayArea ||
       new Rect(10, 10, Dimensions.get('window').width - 20, Dimensions.get('window').height - 20);
+  }
+
+  getDisplayArea(): Rect {
+    return this.state.shiftedDisplayArea ||
+      this.getUnshiftedDisplayArea();
   }
 
   /*
@@ -507,7 +511,7 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
   }
 
   shiftForKeyboard(keyboardHeight: number) {
-    const displayArea = this.getDisplayArea();
+    const displayArea = this.getUnshiftedDisplayArea();
 
     const absoluteVerticalCutoff =
       Dimensions.get('window').height - keyboardHeight - (isIOS ? 10 : 40);
