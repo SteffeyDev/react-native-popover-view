@@ -1130,6 +1130,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
 
     const containerStyle = {
       ...styles.container,
+      top: -1 * FIX_SHIFT,
       opacity: animatedValues.fade
     };
 
