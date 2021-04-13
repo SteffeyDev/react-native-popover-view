@@ -325,7 +325,7 @@ class JSModalPopover extends Component<JSModalPopoverProps, ModalPopoverState> {
       return (
         <View
           pointerEvents="box-none"
-          style={[styles.container, { left: 0 }]}
+          style={[styles.container, { top: 0 }]}
           ref={this.containerRef}>
           <AdaptivePopover
             onCloseComplete={() => {
