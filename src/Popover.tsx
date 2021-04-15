@@ -913,7 +913,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       }
     }
     // eslint-disable-next-line
-    return new Point(arrowX, (FIX_SHIFT * 2) /* Temp fix for useNativeDriver issue */ + arrowY);
+    return new Point(arrowX, FIX_SHIFT /* Temp fix for useNativeDriver issue */ + arrowY);
   }
 
   getTranslateOrigin() {
@@ -977,7 +977,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       // Should grow from anchor point
       const translateStart = this.getTranslateOrigin();
       // eslint-disable-next-line
-      translateStart.y += (FIX_SHIFT * 2) // Temp fix for useNativeDriver issue
+      translateStart.y += FIX_SHIFT // Temp fix for useNativeDriver issue
       values.translate.setValue(translateStart);
       const translatePoint = new Point(nextGeom.popoverOrigin.x, nextGeom.popoverOrigin.y);
       values.translateArrow.setValue(this.getArrowTranslateLocation(translatePoint, nextGeom));
@@ -1046,7 +1046,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
     const newArrowLocation = this.getArrowTranslateLocation(translatePoint, geom);
 
     // eslint-disable-next-line
-    translatePoint.y = translatePoint.y + (FIX_SHIFT * 2) // Temp fix for useNativeDriver issue
+    translatePoint.y = translatePoint.y + FIX_SHIFT // Temp fix for useNativeDriver issue
 
     if (!fade && fade !== 0) {
       console.log('Popover: Fade value is null');
