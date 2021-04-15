@@ -325,7 +325,7 @@ class JSModalPopover extends Component<JSModalPopoverProps, ModalPopoverState> {
       return (
         <View
           pointerEvents="box-none"
-          style={[styles.container, { left: 0 }]}
+          style={styles.container}
           ref={this.containerRef}>
           <AdaptivePopover
             onCloseComplete={() => {
@@ -369,11 +369,15 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
     displayAreaOffset: null
   }
 
-  getDisplayArea(): Rect {
-    return this.state.shiftedDisplayArea ||
-      this.props.displayArea ||
+  getUnshiftedDisplayArea(): Rect {
+    return this.props.displayArea ||
       this.state.defaultDisplayArea ||
       new Rect(10, 10, Dimensions.get('window').width - 20, Dimensions.get('window').height - 20);
+  }
+
+  getDisplayArea(): Rect {
+    return this.state.shiftedDisplayArea ||
+      this.getUnshiftedDisplayArea();
   }
 
   /*
@@ -507,7 +511,7 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
   }
 
   shiftForKeyboard(keyboardHeight: number) {
-    const displayArea = this.getDisplayArea();
+    const displayArea = this.getUnshiftedDisplayArea();
 
     const absoluteVerticalCutoff =
       Dimensions.get('window').height - keyboardHeight - (isIOS ? 10 : 40);
@@ -1154,7 +1158,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
     }
 
     return (
-      <View pointerEvents="box-none" style={[styles.container, { left: 0 }]}>
+      <View pointerEvents="box-none" style={[styles.container, { top: -1 * FIX_SHIFT }]}>
         <SafeAreaView
           pointerEvents="none"
           forceInset={this.props.safeAreaInsets}
@@ -1194,7 +1198,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
 
 const styles = StyleSheet.create({
   container: {
-    top: -1 * FIX_SHIFT,
+    top: 0,
     bottom: 0,
     left: 0,
     right: 0,
