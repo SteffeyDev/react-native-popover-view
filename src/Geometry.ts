@@ -1,5 +1,5 @@
 import { StyleProp, ViewStyle } from 'react-native';
-import { Placement } from './Constants';
+import { Placement } from './Types';
 import { Rect, Size, Point, getArrowSize, getBorderRadius } from './Utility';
 
 type ComputeGeometryBaseProps = {
@@ -464,7 +464,9 @@ function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry | null
   const arrowSize = getArrowSize(Placement.LEFT, arrowStyle);
 
   // generating list of all possible sides with validity
-  const spaceList: Record<Placement, PlacementOption> = {
+  debug('computeAutoGeometry - displayArea', displayArea);
+  debug('computeAutoGeometry - fromRect', fromRect);
+  const spaceList: SpaceList = {
     [Placement.LEFT]: {
       sizeAvailable: fromRect.x - displayArea.x - arrowSize.width,
       sizeRequested: requestedContentSize.width
@@ -494,26 +496,33 @@ function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry | null
   switch (bestPlacementPosition) {
     case Placement.LEFT: return computeLeftGeometry(options);
     case Placement.RIGHT: return computeRightGeometry(options);
-    case Placement.Bottom: return computeBottomGeometry(options);
+    case Placement.BOTTOM: return computeBottomGeometry(options);
     case Placement.TOP: return computeTopGeometry(options);
     // Return nothing so popover will be placed in middle of screen
     default: return null;
   }
 }
 
+type SpaceList = Record<
+  Placement.LEFT | Placement.RIGHT | Placement.TOP | Placement.BOTTOM,
+  PlacementOption
+>
 type PlacementOption = {
-  sizeRequested: boolean;
+  sizeRequested: number;
   sizeAvailable: number;
 }
-function findBestPlacement(spaceList: Record<Placement, PlacementOption>): Placement | null {
-  return Object.entries(spaceList).reduce(
-    (bestPlacement, [placement, { sizeRequested, sizeAvailable }]) => (
+function findBestPlacement(spaceList: SpaceList): Placement | null {
+  return Object.keys(spaceList).reduce(
+    (bestPlacement, placement) => (
       // If it can fit, and is the first one or fits better than the last one, use this placement
-      sizeRequested <= sizeAvailable &&
-        (!bestPlacement || sizeAvailable > spaceList[bestPlacement].sizeAvailable)
-        ? placement
+      spaceList[placement].sizeRequested <= spaceList[placement].sizeAvailable &&
+        (
+          !bestPlacement ||
+          spaceList[placement].sizeAvailable > spaceList[bestPlacement].sizeAvailable
+        )
+        ? placement as Placement
         : bestPlacement
     ),
-    null
+    null as Placement | null
   );
 }

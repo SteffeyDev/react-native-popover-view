@@ -1,6 +1,5 @@
 import React, { Component, RefObject, ReactNode, ReactElement } from 'react';
 import PropTypes from 'prop-types';
-import SafeAreaView, { SafeAreaViewProps } from 'react-native-safe-area-view';
 import {
   Platform,
   Dimensions,
@@ -18,14 +17,9 @@ import {
   LayoutChangeEvent
 } from 'react-native';
 import { Rect, Point, Size, getRectForRef, getArrowSize, getBorderRadius } from './Utility';
-import {
-  MULTIPLE_POPOVER_WARNING,
-  Placement,
-  Mode,
-  DEFAULT_BORDER_RADIUS,
-  FIX_SHIFT as ORIGINAL_FIX_SHIFT
-} from './Constants';
 import { computeGeometry, Geometry } from './Geometry';
+import { Insets, Placement, Mode } from './Types';
+import { MULTIPLE_POPOVER_WARNING, DEFAULT_BORDER_RADIUS } from './Constants';
 
 const isIOS = Platform.OS === 'ios';
 const isWeb = Platform.OS === 'web';
@@ -34,7 +28,7 @@ const DEBUG = false;
 
 const FIX_SHIFT = isWeb
   ? 0
-  : ORIGINAL_FIX_SHIFT;
+  : Dimensions.get('window').height * 2;
 
 interface PopoverProps {
   isVisible?: boolean;
@@ -43,7 +37,8 @@ interface PopoverProps {
   placement?: Placement;
   animationConfig?: Partial<Animated.TimingAnimationConfig>;
   verticalOffset?: number;
-  safeAreaInsets?: SafeAreaViewProps['forceInset'];
+  displayArea?: Rect;
+  displayAreaInsets?: Insets;
 
   // style
   popoverStyle?: StyleProp<ViewStyle>;
@@ -63,7 +58,6 @@ interface PopoverProps {
 
 interface PublicPopoverProps extends PopoverProps {
   mode?: Mode;
-  displayArea?: Rect;
   from?:
     | Rect
     | RefObject<View>
@@ -105,6 +99,12 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
         height: PropTypes.number
       })
     ]),
+    displayAreaInsets: PropTypes.shape({
+      left: PropTypes.number,
+      right: PropTypes.number,
+      top: PropTypes.number,
+      bottom: PropTypes.number
+    }),
     placement: PropTypes.oneOf([
       Placement.LEFT,
       Placement.RIGHT,
@@ -115,7 +115,6 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
     ]),
     animationConfig: PropTypes.object,
     verticalOffset: PropTypes.number,
-    safeAreaInsets: PropTypes.object,
 
     // style
     popoverStyle: stylePropType,
@@ -133,10 +132,20 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
     debug: PropTypes.bool
   }
 
-  static defaultProps = {
+  static defaultProps: Partial<PublicPopoverProps> = {
     mode: Mode.RN_MODAL,
+    placement: Placement.AUTO,
     verticalOffset: 0,
-    debug: false
+    popoverStyle: {},
+    arrowStyle: {},
+    backgroundStyle: {},
+    debug: false,
+    displayAreaInsets: {
+      left: 10,
+      right: 10,
+      top: 20,
+      bottom: 20
+    }
   }
 
   state = {
@@ -372,12 +381,22 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
   getUnshiftedDisplayArea(): Rect {
     return this.props.displayArea ||
       this.state.defaultDisplayArea ||
-      new Rect(10, 10, Dimensions.get('window').width - 20, Dimensions.get('window').height - 20);
+      new Rect(0, 0, Dimensions.get('window').width, Dimensions.get('window').height);
   }
 
+  // Apply insets and shifts if needed
   getDisplayArea(): Rect {
-    return this.state.shiftedDisplayArea ||
-      this.getUnshiftedDisplayArea();
+    const { displayAreaInsets } = this.props;
+    const displayArea = this.state.shiftedDisplayArea || this.getUnshiftedDisplayArea();
+    if (displayAreaInsets) {
+      return new Rect(
+        displayArea.x + (displayAreaInsets.left ?? 0),
+        displayArea.x + (displayAreaInsets.top ?? 0),
+        displayArea.width - (displayAreaInsets.left ?? 0) - (displayAreaInsets.right ?? 0),
+        displayArea.height - (displayAreaInsets.top ?? 0) - (displayAreaInsets.bottom ?? 0)
+      );
+    }
+    return displayArea;
   }
 
   /*
@@ -480,7 +499,10 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
         const displayAreaOffset = await this.props.getDisplayAreaOffset();
         this.debug('setDefaultDisplayArea - displayAreaOffset', displayAreaOffset);
         await new Promise(resolve => {
-          this.setState({ defaultDisplayArea: newDisplayArea, displayAreaOffset }, resolve);
+          this.setState(
+            { defaultDisplayArea: newDisplayArea, displayAreaOffset },
+            () => resolve(null)
+          );
         });
 
         /*
@@ -500,7 +522,8 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
     }
   }
 
-  keyboardDidShow(e: KeyboardEvent) {
+  // Custom type here, as KeyboardEvent type does not contain endCoordinates
+  keyboardDidShow(e: { endCoordinates: { height: number } }) {
     this.debug(`keyboardDidShow - keyboard height: ${e.endCoordinates.height}`);
     this.shiftForKeyboard(e.endCoordinates.height);
   }
@@ -586,30 +609,18 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
           if (this._isMounted) this.setState({ shiftedDisplayArea: null });
         }}
         skipMeasureContent={() => this.waitForResizeToFinish}
-        safeAreaViewContents={(
-          <TouchableWithoutFeedback
-            style={{ flex: 1 }}
-            onLayout={evt => this.setDefaultDisplayArea(new Rect(
-              evt.nativeEvent.layout.x + 10,
-              evt.nativeEvent.layout.y + 10,
-              evt.nativeEvent.layout.width - 20,
-              evt.nativeEvent.layout.height - 20
-            ))}
-          >
-            <View style={{ flex: 1 }} />
-          </TouchableWithoutFeedback>
-        )}
+        onDisplayAreaChanged={rect => this.setDefaultDisplayArea(rect)}
       />
     );
 
   }
 }
 
-interface BasePopoverProps extends PopoverProps {
+interface BasePopoverProps extends Omit<PopoverProps, 'displayAreaInsets'> {
   displayArea: Rect;
   showBackground?: boolean;
   fromRect: Rect | null;
-  safeAreaViewContents: ReactNode;
+  onDisplayAreaChanged: (rect: Rect) => void;
   skipMeasureContent: () => boolean;
 }
 
@@ -628,17 +639,7 @@ interface BasePopoverState {
 
 
 class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
-  static defaultProps = {
-    showBackground: true,
-    placement: Placement.AUTO,
-    verticalOffset: 0,
-    popoverStyle: {},
-    arrowStyle: {},
-    backgroundStyle: {},
-    debug: false
-  }
-
-  state = {
+  state: BasePopoverState = {
     requestedContentSize: null,
     activeGeom: undefined,
     nextGeom: undefined,
@@ -658,7 +659,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
   private popoverRef = React.createRef<View>();
   private arrowRef = React.createRef<View>();
 
-  private handleChangeTimeout: number;
+  private handleChangeTimeout?: ReturnType<typeof setTimeout>;
 
   debug(line: string, obj?: unknown): void {
     if (DEBUG || this.props.debug)
@@ -877,7 +878,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
   }
 
   getArrowTranslateLocation(translatePoint: Point | null = null, geom: Geometry): Point {
-    const { requestedContentSize }: Partial<BasePopoverState> = this.state;
+    const { requestedContentSize } = this.state;
     const { anchorPoint, placement, forcedContentSize, viewLargerThanDisplayArea } = geom;
     const { width: arrowWidth, height: arrowHeight } = this.getCalculatedArrowDims();
 
@@ -917,7 +918,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
   }
 
   getTranslateOrigin() {
-    const { requestedContentSize }: Partial<BasePopoverState> = this.state;
+    const { requestedContentSize } = this.state;
     const {
       forcedContentSize,
       viewLargerThanDisplayArea,
@@ -971,7 +972,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
 
   animateIn() {
     const { nextGeom } = this.state;
-    if (nextGeom instanceof Geometry) {
+    if (nextGeom !== undefined && nextGeom instanceof Geometry) {
       const values = this.state.animatedValues;
 
       // Should grow from anchor point
@@ -1099,7 +1100,8 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
     });
 
     const arrowViewStyle = {
-      position: 'absolute',
+      // eslint-disable-next-line
+      position: 'absolute' as "absolute",
       top: 0,
       ...(I18nManager.isRTL ? { right: 0 } : { left: 0 }),
       width: arrowWidth,
@@ -1134,7 +1136,6 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
     };
 
     const popoverViewStyle = {
-      position: 'absolute',
       ...styles.dropShadow,
       ...styles.popoverContent,
       ...StyleSheet.flatten(popoverStyle),
@@ -1159,15 +1160,17 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
 
     return (
       <View pointerEvents="box-none" style={[styles.container, { top: -1 * FIX_SHIFT }]}>
-        <SafeAreaView
-          pointerEvents="none"
-          forceInset={this.props.safeAreaInsets}
-          style={{ position: 'absolute', top: FIX_SHIFT, left: 0, right: 0, bottom: 0 }}>
-          {this.props.safeAreaViewContents}
-        </SafeAreaView>
-
+        <View
+          style={[styles.container, { top: FIX_SHIFT, flex: 1 }]}
+          onLayout={evt => this.props.onDisplayAreaChanged(new Rect(
+            evt.nativeEvent.layout.x,
+            evt.nativeEvent.layout.y - FIX_SHIFT,
+            evt.nativeEvent.layout.width,
+            evt.nativeEvent.layout.height
+          ))}
+        />
         <Animated.View pointerEvents="box-none" style={containerStyle}>
-          {this.props.showBackground && (
+          {this.props.showBackground !== false && (
             <TouchableWithoutFeedback onPress={this.props.onRequestClose}>
               <Animated.View style={backgroundStyle} />
             </TouchableWithoutFeedback>
@@ -1221,6 +1224,7 @@ const styles = StyleSheet.create({
     zIndex: 1000
   },
   popoverContent: {
+    position: 'absolute',
     backgroundColor: 'white',
     borderBottomColor: '#333438',
     borderRadius: DEFAULT_BORDER_RADIUS,

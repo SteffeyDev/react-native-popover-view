@@ -17,6 +17,7 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
 * [Installation](#installation)
 * [Usage](#usage)
 * [Props](#props)
+* [Usage with Safe Area Context](#safeArea)
 * [Troubleshooting](#troubleshooting)
 * [Upgrading](#upgrading)
 * [Contributing](#contributing)
@@ -292,27 +293,29 @@ class App extends React.Component {
 
 ## <a name="props"/>Props
 
-Prop              | Type     | Optional | Default     | Description
------------------ | -------- | -------- | ----------- | -----------
-isVisible         | bool     | Yes      | false       | Show/Hide the popover
-mode              | string   | Yes      | 'rn-modal'  | One of: 'rn-modal', 'js-modal', 'tooltip'. See [Mode](#mode) section below for details.
-from              | element OR ref OR rect | Yes      | null        | Either a React element, a function that returns a React element, a `ref` created from `React.createRef` or `React.useRef`, or a Rect object created by `new Rect(x, y, width, height)`.
-displayArea       | rect     | Yes      | rect | Area where the popover is allowed to be displayed
-placement         | string   | Yes      | 'auto'      | How to position the popover - top &#124; bottom &#124; left &#124; right &#124; center &#124; auto. When 'auto' is specified, it will determine the ideal placement so that the popover is fully visible within `displayArea`.
-animationConfig   | object   | Yes      |             | An object containing any configuration options that can be passed to Animated.timing (e.g. `{ duration: 600, easing: Easing.inOut(Easing.quad) }`).  The configuration options you pass will override the defaults for all animations.
-verticalOffset    | number   | Yes      | 0           | The amount to vertically shift the popover on the screen.  In certain Android configurations, you may need to apply a `verticalOffset` of `-StatusBar.currentHeight` for the popover to originate from the correct place.
-statusBarTranslucent | bool  | Yes      | null        | For 'rn-modal' mode only. Determines whether the background should go under the status bar. Passed through to RN `Modal` component, see [their docs](https://reactnative.dev/docs/modal#statusbartranslucent-1) as well.
-safeAreaInsets    | object   | Yes      | null        | Inset configuration for the `SafeAreaView` wrapping the modal. This may be useful if you use popovers within views that render into the safe areas insets. Passed through to the `SafeAreaView` component, see [their docs](https://github.com/react-native-community/react-native-safe-area-view#forceinset) for usage.
-popoverStyle      | object   | Yes      | {}          | The style of the popover itself. You can override the `borderRadius`, `backgroundColor`, or any other [`style` prop for a `View`](https://facebook.github.io/react-native/docs/view-style-props.html).
-backgroundStyle   | object   | Yes      | {}          | The style of the background that fades in.
-arrowStyle        | object   | Yes      | {}          | The style of the arrow that points to the rect. Supported options are `width`, `height`, and `backgroundColor`. You can use `{backgroundColor: 'transparent'}` to hide the arrow completely.
-arrowShift        | number   | Yes      | 0           | How much to shift the arrow to either side, as a multiplier. `-1` will shift it all the way to the left (or top) corner of the source view, while `1` will shift all the way to the right (or bottom) corner.  A value of `0.5` or `-0.8` will shift it partly to one side.
-onOpenStart       | function | Yes      |             | Callback to be fired when the open animation starts (before animation)
-onOpenComplete    | function | Yes      |             | Callback to be fired when the open animation ends (after animation)
-onRequestClose    | function | Yes      |             | Callback to be fired when the user taps outside the popover (on the background) or taps the "hardware" back button on Android
-onCloseStart      | function | Yes      |             | Callback to be fired when the popover starts closing (before animation)
-onCloseComplete   | function | Yes      |             | Callback to be fired when the popover is finished closing (after animation)
-debug             | bool     | Yes      | false       | Set this to `true` to turn on debug logging to the console.  This is useful for figuring out why a Popover isn't showing.
+All props are optional
+
+Prop              | Type     | Default     | Description
+----------------- | -------- | ----------- | -----------
+isVisible         | bool     | false       | Show/Hide the popover
+mode              | string   | 'rn-modal'  | One of: 'rn-modal', 'js-modal', 'tooltip'. See [Mode](#mode) section below for details.
+from              | element OR  | Yes      | null        | Either a React element, a function that returns a React element, a `ref` created from `React.createRef` or `React.useRef`, or a Rect object created by `new Rect(x, y, width, height)`.
+displayArea       | rect     | rect | Area where the popover is allowed to be displayed
+placement         | string   | 'auto'      | How to position the popover - top &#124; bottom &#124; left &#124; right &#124; center &#124; auto. When 'auto' is specified, it will determine the ideal placement so that the popover is fully visible within `displayArea`.
+animationConfig   | object   |             | An object containing any configuration options that can be passed to Animated.timing (e.g. `{ duration: 600, easing: Easing.inOut(Easing.quad) }`).  The configuration options you pass will override the defaults for all animations.
+verticalOffset    | number   | 0           | The amount to vertically shift the popover on the screen.  In certain Android configurations, you may need to apply a `verticalOffset` of `-StatusBar.currentHeight` for the popover to originate from the correct place.
+statusBarTranslucent | bool  | null        | For 'rn-modal' mode only. Determines whether the background should go under the status bar. Passed through to RN `Modal` component, see [their docs](https://reactnative.dev/docs/modal#statusbartranslucent-1) as well.
+displayAreaInsets | object   | { left: 10, right: 10, top: 20, bottom: 20 } | Insets to apply to the display area.  The Popover will not be allowed to go beyond the display area minus the insets.
+popoverStyle      | object   | {}          | The style of the popover itself. You can override the `borderRadius`, `backgroundColor`, or any other [`style` prop for a `View`](https://facebook.github.io/react-native/docs/view-style-props.html).
+backgroundStyle   | object   | {}          | The style of the background that fades in.
+arrowStyle        | object   | {}          | The style of the arrow that points to the rect. Supported options are `width`, `height`, and `backgroundColor`. You can use `{backgroundColor: 'transparent'}` to hide the arrow completely.
+arrowShift        | number   | 0           | How much to shift the arrow to either side, as a multiplier. `-1` will shift it all the way to the left (or top) corner of the source view, while `1` will shift all the way to the right (or bottom) corner.  A value of `0.5` or `-0.8` will shift it partly to one side.
+onOpenStart       | function |             | Callback to be fired when the open animation starts (before animation)
+onOpenComplete    | function |             | Callback to be fired when the open animation ends (after animation)
+onRequestClose    | function |             | Callback to be fired when the user taps outside the popover (on the background) or taps the "hardware" back button on Android
+onCloseStart      | function |             | Callback to be fired when the popover starts closing (before animation)
+onCloseComplete   | function |             | Callback to be fired when the popover is finished closing (after animation)
+debug             | bool     | false       | Set this to `true` to turn on debug logging to the console.  This is useful for figuring out why a Popover isn't showing.
 
 If no `from` is provided, the popover will float in the center of the screen.
 
@@ -334,6 +337,22 @@ Shows the popover in the space provided, filling the `Popover` component's paren
 #### Tooltip
 
 Shows the `Popover` without taking over the screen, no background is faded in and taps to the area around the popover fall through to those views (as expected).  The `onRequestClose` callback will never be called, so the `Popover` will have to be dismissed some other way.
+
+## Usage with Safe Area Context
+
+Some devices have notches or other screen features that create zones where you might want to avoid showing a `Popover`.  To do so, follow the instructions to setup [`react-native-safe-area-context`](https://github.com/th3rdwave/react-native-safe-area-context), then use the provided hooks to pass the safe area insets straight to the `displayAreaInsets` prop:
+
+```jsx
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Popover from 'react-native-popover-view';
+
+function PopoverSafeWrapper(props) {
+  const insets = useSafeAreaInsets();
+  return (
+    <Popover {...props} displayAreaInsets={insets} />
+  );
+}
+```
 
 ---
 
@@ -364,6 +383,10 @@ import { Platform, StatusBar, ... } from 'react-native';
 ```
 
 ## <a name="upgrading" />Upgrading
+
+#### `3.x` to `4.0`
+
+Removed internal safe area view; if you want the Popover to avoid showing behind notches on some devices, follow the instructions: [Usage with Safe Area Context](#safeArea).
 
 #### `2.x` to `3.0`
 
