@@ -1,0 +1,12 @@
+diff --git a/node_modules/@types/react-native/index.d.ts b/node_modules/@types/react-native/index.d.ts
+index 3bddc54..51c48ba 100644
+--- a/node_modules/@types/react-native/index.d.ts
++++ b/node_modules/@types/react-native/index.d.ts
+@@ -4847,6 +4847,7 @@ export interface ModalBaseProps {
+      * The `onShow` prop allows passing a function that will be called once the modal has been shown.
+      */
+     onShow?: (event: NativeSyntheticEvent<any>) => void;
++    statusBarTranslucent?: boolean;
+ }
+ 
+ export interface ModalPropsIOS {
