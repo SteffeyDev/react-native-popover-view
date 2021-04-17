@@ -396,7 +396,11 @@ Version 0.6 brought some large changes, increasing efficiency, stability, and fl
 
 Pull requests are welcome; if you find that you are having to bend over backwards to make this work for you, feel free to open an issue or PR!  Of course, try to keep the same coding style if possible and I'll try to get back to you as soon as I can.
 
+All changes should be made on the `develop` branch, and PR's should be submitted to that branch.  This is used so that features and documentations updates don't go "live" until we release the version on NPM.
+
 Use `yarn build` to build the `dist` folder (compile TypeScript to JavaScript), and use `yarn watch` to continuously build on save.
+
+Use `yarn lint` to check for linting errors before submitting a PR.
 
 ## <a name="credits"/>Credits
 
