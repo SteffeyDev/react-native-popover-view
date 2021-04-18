@@ -414,13 +414,14 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
   private _isMounted = false;
 
   componentDidMount() {
+    this.handleResizeEvent = this.handleResizeEvent.bind(this);
+    this.keyboardDidHide = this.keyboardDidHide.bind(this);
+    this.keyboardDidShow = this.keyboardDidShow.bind(this);
+
     Dimensions.addEventListener('change', this.handleResizeEvent);
     if (this.props.fromRect) this.setState({ fromRect: this.props.fromRect });
     else if (this.props.fromRef) this.calculateRectFromRef();
     this._isMounted = true;
-
-    this.keyboardDidHide = this.keyboardDidHide.bind(this);
-    this.keyboardDidShow = this.keyboardDidShow.bind(this);
   }
 
   componentWillUnmount() {
@@ -441,8 +442,10 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
       prevProps.fromRect &&
       !Rect.equals(this.props.fromRect, prevProps.fromRect)
     ) {
+      this.debug('componentDidUpdate - fromRect changed', this.props.fromRect);
       this.setState({ fromRect: this.props.fromRect });
     } else if (this.props.fromRef) {
+      this.debug('componentDidUpdate - fromRef changed');
       this.calculateRectFromRef();
     }
 
@@ -460,6 +463,7 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
           !Rect.equals(this.getDisplayArea(), this.displayAreaStore)
         )
       ) {
+        this.debug('componentDidUpdate - displayArea changed', this.getDisplayArea());
         this.displayAreaStore = this.getDisplayArea();
       }
     }
@@ -694,8 +698,8 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
     if (this.state.showing) {
       this.animateOut();
     } else {
-      setTimeout(this.props.onCloseStart);
-      setTimeout(this.props.onCloseComplete);
+      if (this.props.onCloseStart) setTimeout(this.props.onCloseStart);
+      if (this.props.onCloseComplete) setTimeout(this.props.onCloseComplete);
     }
   }
 
@@ -777,7 +781,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
             this.debug('handleChange - delaying showing popover because viewLargerThanDisplayArea');
           } else if (!activeGeom) {
             this.debug('handleChange - animating in');
-            setTimeout(onOpenStart);
+            if (onOpenStart) setTimeout(onOpenStart);
             this.animateIn();
           } else if (activeGeom && !Geometry.equals(activeGeom, geom)) {
             const moveTo = new Point(geom.popoverOrigin.x, geom.popoverOrigin.y);
@@ -953,7 +957,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
   }
 
   animateOut() {
-    setTimeout(this.props.onCloseStart);
+    if (this.props.onCloseStart) setTimeout(this.props.onCloseStart);
 
     if (this._isMounted) this.setState({ showing: false });
 
@@ -1004,7 +1008,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
               );
             }
           }
-          setTimeout(this.props.onOpenComplete);
+          if (this.props.onOpenComplete) setTimeout(this.props.onOpenComplete);
           if (this.animateOutAfterShow || !this._isMounted) {
             this.animateOut();
             this.animateOutAfterShow = false;

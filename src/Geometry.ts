@@ -83,8 +83,8 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
       fromRect.x = displayArea.x + displayArea.width;
     if (fromRect.y > displayArea.y + displayArea.height)
       fromRect.y = displayArea.y + displayArea.height;
-    if (fromRect.x < 0) fromRect.x = -1 * fromRect.width;
-    if (fromRect.y < 0) fromRect.y = -1 * fromRect.height;
+    if (fromRect.x + fromRect.width < 0) fromRect.x = -1 * fromRect.width;
+    if (fromRect.y + fromRect.height < 0) fromRect.y = -1 * fromRect.height;
 
     const borderRadius = getBorderRadius(popoverStyle);
 
@@ -234,8 +234,8 @@ function computeTopGeometry({
   };
 
   const viewLargerThanDisplayArea = {
-    height: preferredY < minY - 1,
-    width: requestedContentSize.width > displayArea.width + 1
+    height: preferredY <= minY - 1,
+    width: requestedContentSize.width >= displayArea.width + 1
   };
 
   const viewWidth = viewLargerThanDisplayArea.width
@@ -285,8 +285,8 @@ function computeBottomGeometry({
   };
 
   const viewLargerThanDisplayArea = {
-    height: preferedY + requestedContentSize.height > displayArea.y + displayArea.height + 1,
-    width: requestedContentSize.width > displayArea.width + 1
+    height: preferedY + requestedContentSize.height >= displayArea.y + displayArea.height + 1,
+    width: requestedContentSize.width >= displayArea.width + 1
   };
 
   const viewWidth = viewLargerThanDisplayArea.width
@@ -335,8 +335,8 @@ function computeLeftGeometry({
   };
 
   const viewLargerThanDisplayArea = {
-    height: requestedContentSize.height > displayArea.height + 1,
-    width: requestedContentSize.width > fromRect.x - displayArea.x - arrowSize.width + 1
+    height: requestedContentSize.height >= displayArea.height + 1,
+    width: requestedContentSize.width >= fromRect.x - displayArea.x - arrowSize.width + 1
   };
 
   const viewWidth = viewLargerThanDisplayArea.width
@@ -392,8 +392,8 @@ function computeRightGeometry({
   };
 
   const viewLargerThanDisplayArea = {
-    height: requestedContentSize.height > displayArea.height + 1,
-    width: requestedContentSize.width > horizontalSpace + 1
+    height: requestedContentSize.height >= displayArea.height + 1,
+    width: requestedContentSize.width >= horizontalSpace + 1
   };
 
   const viewHeight = viewLargerThanDisplayArea.height
