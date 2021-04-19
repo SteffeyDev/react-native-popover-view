@@ -249,21 +249,27 @@ class RNModalPopover extends Component<RNModalPopoverProps, ModalPopoverState> {
     }
   }
 
-  componentDidUpdate(prevProps: RNModalPopoverProps) {
+  componentDidUpdate(prevProps: RNModalPopoverProps, prevState: ModalPopoverState) {
     if (this.props.isVisible && !prevProps.isVisible) {
       if (RNModalPopover.isShowingInModal) console.warn(MULTIPLE_POPOVER_WARNING);
       else this.setState({ visible: true });
+    }
+
+    if (!this.state.visible && prevState.visible && this.props.onCloseComplete) {
+      /*
+       * Don't run this callback until after update, so that <Modal> is no longer active
+       * Need to wait 50ms to make sure <Modal> is completely gone, in case
+       * we want to show another popover immediately after
+       */
+      setTimeout(this.props.onCloseComplete, 50);
     }
   }
 
   render() {
     const {
       statusBarTranslucent,
-      onOpenStart,
       onCloseStart,
-      onCloseComplete,
-      onRequestClose,
-      ...otherProps
+      onRequestClose
     } = this.props;
     const { visible } = this.state;
 
@@ -275,29 +281,18 @@ class RNModalPopover extends Component<RNModalPopoverProps, ModalPopoverState> {
         visible={visible}
         statusBarTranslucent={statusBarTranslucent}
         onShow={() => {
-          if (onOpenStart) onOpenStart();
           RNModalPopover.isShowingInModal = true;
         }}
-        // Will only be called on iOS for some reason
-        onDismiss={() => {
-          if (onCloseComplete) onCloseComplete();
-        }}
+        // Handles android back button
         onRequestClose={onRequestClose}>
         <AdaptivePopover
-          onRequestClose={onRequestClose}
-          onCloseComplete={() => {
-            this.setState({ visible: false });
-            if (!isIOS) {
-              if (onCloseComplete) onCloseComplete();
-            }
-          }}
+          {...this.props}
           onCloseStart={() => {
-            if (onCloseStart) onCloseStart();
             RNModalPopover.isShowingInModal = false;
+            if (onCloseStart) onCloseStart();
           }}
-          onOpenStart={onOpenStart}
+          onCloseComplete={() => this.setState({ visible: false })}
           getDisplayAreaOffset={() => Promise.resolve(new Point(0, 0))}
-          {...otherProps}
         />
       </Modal>
     );
@@ -327,7 +322,7 @@ class JSModalPopover extends Component<JSModalPopoverProps, ModalPopoverState> {
   }
 
   render() {
-    const { onCloseComplete, ...otherProps } = this.props;
+    const { onCloseComplete } = this.props;
     const { visible } = this.state;
 
     if (visible) {
@@ -337,6 +332,7 @@ class JSModalPopover extends Component<JSModalPopoverProps, ModalPopoverState> {
           style={styles.container}
           ref={this.containerRef}>
           <AdaptivePopover
+            {...this.props}
             onCloseComplete={() => {
               if (onCloseComplete) onCloseComplete();
               this.setState({ visible: false });
@@ -345,7 +341,6 @@ class JSModalPopover extends Component<JSModalPopoverProps, ModalPopoverState> {
               const rect = await getRectForRef(this.containerRef);
               return new Point(rect.x, rect.y);
             }}
-            {...otherProps}
           />
         </View>
       );
@@ -697,9 +692,6 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
 
     if (this.state.showing) {
       this.animateOut();
-    } else {
-      if (this.props.onCloseStart) setTimeout(this.props.onCloseStart);
-      if (this.props.onCloseComplete) setTimeout(this.props.onCloseComplete);
     }
   }
 
@@ -966,9 +958,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       fade: 0,
       scale: 0,
       translatePoint: this.getTranslateOrigin(),
-      callback: () => {
-        if (this.props.onCloseComplete) this.props.onCloseComplete();
-      },
+      callback: () => setTimeout(this.props.onCloseComplete),
       easing: Easing.inOut(Easing.quad),
       geom: this.getGeom()
     });
