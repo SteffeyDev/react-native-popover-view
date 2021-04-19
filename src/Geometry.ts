@@ -1,6 +1,7 @@
 import { StyleProp, ViewStyle } from 'react-native';
 import { Placement } from './Types';
 import { Rect, Size, Point, getArrowSize, getBorderRadius } from './Utility';
+import { POPOVER_MARGIN } from './Constants';
 
 type ComputeGeometryBaseProps = {
   requestedContentSize: Size;
@@ -224,6 +225,14 @@ function computeTopGeometry({
   arrowStyle,
   borderRadius
 }: ComputeGeometryDirectionProps): Geometry {
+  // Apply a margin on non-arrow sides
+  displayArea = new Rect(
+    displayArea.x + POPOVER_MARGIN,
+    displayArea.y + POPOVER_MARGIN,
+    displayArea.width - (POPOVER_MARGIN * 2),
+    displayArea.height
+  );
+
   const arrowSize = getArrowSize(Placement.TOP, arrowStyle);
   const minY = displayArea.y;
   const preferredY = fromRect.y - requestedContentSize.height - arrowSize.height;
@@ -276,6 +285,14 @@ function computeBottomGeometry({
   arrowStyle,
   borderRadius
 }: ComputeGeometryDirectionProps): Geometry {
+  // Apply a margin on non-arrow sides
+  displayArea = new Rect(
+    displayArea.x + POPOVER_MARGIN,
+    displayArea.y,
+    displayArea.width - (POPOVER_MARGIN * 2),
+    displayArea.height - POPOVER_MARGIN
+  );
+
   const arrowSize = getArrowSize(Placement.BOTTOM, arrowStyle);
   const preferedY = fromRect.y + fromRect.height + arrowSize.height;
 
@@ -327,6 +344,14 @@ function computeLeftGeometry({
   borderRadius,
   arrowStyle
 }: ComputeGeometryDirectionProps): Geometry {
+  // Apply a margin on non-arrow sides
+  displayArea = new Rect(
+    displayArea.x + POPOVER_MARGIN,
+    displayArea.y + POPOVER_MARGIN,
+    displayArea.width,
+    displayArea.height - (POPOVER_MARGIN * 2)
+  );
+
   const arrowSize = getArrowSize(Placement.LEFT, arrowStyle);
 
   const forcedContentSize = {
@@ -382,6 +407,14 @@ function computeRightGeometry({
   arrowStyle,
   borderRadius
 }: ComputeGeometryDirectionProps): Geometry {
+  // Apply a margin on non-arrow sides
+  displayArea = new Rect(
+    displayArea.x,
+    displayArea.y + POPOVER_MARGIN,
+    displayArea.width - POPOVER_MARGIN,
+    displayArea.height - (POPOVER_MARGIN * 2)
+  );
+
   const arrowSize = getArrowSize(Placement.RIGHT, arrowStyle);
   const horizontalSpace =
     displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width;
@@ -403,8 +436,8 @@ function computeRightGeometry({
   const preferedX = fromRect.x + fromRect.width + arrowSize.width;
 
   const preferedY = fromRect.y + ((fromRect.height - viewHeight) / 2);
-  const minY = displayArea.y;
-  const maxY = (displayArea.height - viewHeight) + displayArea.y;
+  const minY = displayArea.y + POPOVER_MARGIN;
+  const maxY = (displayArea.height - viewHeight) + displayArea.y - POPOVER_MARGIN;
 
   const popoverOrigin = new Point(
     preferedX,

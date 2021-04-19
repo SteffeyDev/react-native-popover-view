@@ -2,3 +2,4 @@ export const MULTIPLE_POPOVER_WARNING = `Popover Warning - Can't Show - Attempte
 
 export const DEFAULT_ARROW_SIZE = { width: 16, height: 8 };
 export const DEFAULT_BORDER_RADIUS = 3;
+export const POPOVER_MARGIN = 10;

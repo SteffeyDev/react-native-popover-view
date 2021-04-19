@@ -300,15 +300,15 @@ Prop              | Type     | Default     | Description
 isVisible         | bool     | false       | Show/Hide the popover
 mode              | string   | 'rn-modal'  | One of: 'rn-modal', 'js-modal', 'tooltip'. See [Mode](#mode) section below for details.
 from              | element OR  | Yes      | null        | Either a React element, a function that returns a React element, a `ref` created from `React.createRef` or `React.useRef`, or a Rect object created by `new Rect(x, y, width, height)`.
-displayArea       | rect     | rect | Area where the popover is allowed to be displayed
+displayArea       | rect     |             | Area where the popover is allowed to be displayed.  By default, this will be automatically calculated to be the size of the display, or the size of the parent component if mode is not 'rn-modal'.
 placement         | string   | 'auto'      | How to position the popover - top &#124; bottom &#124; left &#124; right &#124; center &#124; auto. When 'auto' is specified, it will determine the ideal placement so that the popover is fully visible within `displayArea`.
 animationConfig   | object   |             | An object containing any configuration options that can be passed to Animated.timing (e.g. `{ duration: 600, easing: Easing.inOut(Easing.quad) }`).  The configuration options you pass will override the defaults for all animations.
 verticalOffset    | number   | 0           | The amount to vertically shift the popover on the screen.  In certain Android configurations, you may need to apply a `verticalOffset` of `-StatusBar.currentHeight` for the popover to originate from the correct place.
-statusBarTranslucent | bool  | null        | For 'rn-modal' mode only. Determines whether the background should go under the status bar. Passed through to RN `Modal` component, see [their docs](https://reactnative.dev/docs/modal#statusbartranslucent-1) as well.
-displayAreaInsets | object   | { left: 10, right: 10, top: 20, bottom: 20 } | Insets to apply to the display area.  The Popover will not be allowed to go beyond the display area minus the insets.
-popoverStyle      | object   | {}          | The style of the popover itself. You can override the `borderRadius`, `backgroundColor`, or any other [`style` prop for a `View`](https://facebook.github.io/react-native/docs/view-style-props.html).
-backgroundStyle   | object   | {}          | The style of the background that fades in.
-arrowStyle        | object   | {}          | The style of the arrow that points to the rect. Supported options are `width`, `height`, and `backgroundColor`. You can use `{backgroundColor: 'transparent'}` to hide the arrow completely.
+statusBarTranslucent | bool  |             | For 'rn-modal' mode only. Determines whether the background should go under the status bar. Passed through to RN `Modal` component, see [their docs](https://reactnative.dev/docs/modal#statusbartranslucent-1) as well.
+displayAreaInsets | object   |             | Insets to apply to the display area.  The Popover will not be allowed to go beyond the display area minus the insets.
+popoverStyle      | object   |             | The style of the popover itself. You can override the `borderRadius`, `backgroundColor`, or any other [`style` prop for a `View`](https://facebook.github.io/react-native/docs/view-style-props.html).
+backgroundStyle   | object   |             | The style of the background that fades in.
+arrowStyle        | object   |             | The style of the arrow that points to the rect. Supported options are `width`, `height`, and `backgroundColor`. You can use `{backgroundColor: 'transparent'}` to hide the arrow completely.
 arrowShift        | number   | 0           | How much to shift the arrow to either side, as a multiplier. `-1` will shift it all the way to the left (or top) corner of the source view, while `1` will shift all the way to the right (or bottom) corner.  A value of `0.5` or `-0.8` will shift it partly to one side.
 onOpenStart       | function |             | Callback to be fired when the open animation starts (before animation)
 onOpenComplete    | function |             | Callback to be fired when the open animation ends (after animation)

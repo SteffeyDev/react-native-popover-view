@@ -139,13 +139,7 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
     popoverStyle: {},
     arrowStyle: {},
     backgroundStyle: {},
-    debug: false,
-    displayAreaInsets: {
-      left: 10,
-      right: 10,
-      top: 20,
-      bottom: 20
-    }
+    debug: false
   }
 
   state = {
@@ -814,10 +808,10 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
     });
   }
 
-  getArrowDynamicStyle() {
-    const { placement } = this.getGeom();
+  getArrowDynamicStyle(geom?: Geometry) {
+    const { placement } = geom || this.getGeom();
     const { arrowStyle, popoverStyle } = this.props;
-    const { width, height } = this.getCalculatedArrowDims();
+    const { width, height } = this.getCalculatedArrowDims(geom);
 
     const backgroundColor = StyleSheet.flatten(arrowStyle).backgroundColor ||
       StyleSheet.flatten(popoverStyle).backgroundColor ||
@@ -857,8 +851,8 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
     };
   }
 
-  getCalculatedArrowDims(): Size {
-    const { placement } = this.getGeom();
+  getCalculatedArrowDims(geom?: Geometry): Size {
+    const { placement } = geom || this.getGeom();
     const arrowSize = getArrowSize(placement, this.props.arrowStyle);
     switch (placement) {
       case Placement.LEFT:
@@ -876,7 +870,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
   getArrowTranslateLocation(translatePoint: Point | null = null, geom: Geometry): Point {
     const { requestedContentSize } = this.state;
     const { anchorPoint, placement, forcedContentSize, viewLargerThanDisplayArea } = geom;
-    const { width: arrowWidth, height: arrowHeight } = this.getCalculatedArrowDims();
+    const { width: arrowWidth, height: arrowHeight } = this.getCalculatedArrowDims(geom);
 
     let viewWidth = 0;
     if (viewLargerThanDisplayArea.width && forcedContentSize?.width)
@@ -1171,6 +1165,12 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
           )}
 
           <View pointerEvents="box-none" style={{ top: 0, left: 0 }}>
+            {geom.placement !== Placement.CENTER &&
+              <Animated.View style={arrowViewStyle} ref={this.arrowRef}>
+                <Animated.View style={arrowInnerStyle} />
+              </Animated.View>
+            }
+
             <Animated.View
               style={popoverViewStyle}
               ref={this.popoverRef}
@@ -1180,12 +1180,6 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
               }}>
               {this.props.children}
             </Animated.View>
-
-            {geom.placement !== Placement.CENTER &&
-              <Animated.View style={arrowViewStyle} ref={this.arrowRef}>
-                <Animated.View style={arrowInnerStyle} />
-              </Animated.View>
-            }
           </View>
         </Animated.View>
       </View>

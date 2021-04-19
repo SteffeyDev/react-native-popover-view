@@ -132,7 +132,7 @@
         "no-new-wrappers": "error",
         "no-nonoctal-decimal-escape": "error",
         "no-octal-escape": "error",
-        "no-param-reassign": "error",
+        "no-param-reassign": "off",
         "no-plusplus": "off",
         "no-promise-executor-return": "error",
         "no-proto": "error",
