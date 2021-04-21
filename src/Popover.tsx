@@ -1090,6 +1090,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
     const arrowViewStyle = {
       // eslint-disable-next-line
       position: 'absolute' as "absolute",
+      zIndex: 1,
       top: 0,
       ...(I18nManager.isRTL ? { right: 0 } : { left: 0 }),
       width: arrowWidth,
