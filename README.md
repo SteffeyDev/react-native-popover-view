@@ -338,7 +338,7 @@ Shows the popover in the space provided, filling the `Popover` component's paren
 
 Shows the `Popover` without taking over the screen, no background is faded in and taps to the area around the popover fall through to those views (as expected).  The `onRequestClose` callback will never be called, so the `Popover` will have to be dismissed some other way.
 
-## Usage with Safe Area Context
+## <a name="safeArea" />Usage with Safe Area Context
 
 Some devices have notches or other screen features that create zones where you might want to avoid showing a `Popover`.  To do so, follow the instructions to setup [`react-native-safe-area-context`](https://github.com/th3rdwave/react-native-safe-area-context), then use the provided hooks to pass the safe area insets straight to the `displayAreaInsets` prop:
 
