@@ -26,6 +26,12 @@ const isWeb = Platform.OS === 'web';
 
 const DEBUG = false;
 
+/*
+ * FIX_SHIFT resolves an issue with useNativeDriver, where it would flash the 
+ * popover on and off really quickly, and then animate in normally. Now, because 
+ * of the shift, the flash happens off screen, and then it is shifted on screen 
+ * just before beginning the actual animation. 
+ */
 const FIX_SHIFT = isWeb
   ? 0
   : Dimensions.get('window').height * 2;
