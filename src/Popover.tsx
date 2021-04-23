@@ -1165,12 +1165,6 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
           )}
 
           <View pointerEvents="box-none" style={{ top: 0, left: 0 }}>
-            {geom.placement !== Placement.CENTER &&
-              <Animated.View style={arrowViewStyle} ref={this.arrowRef}>
-                <Animated.View style={arrowInnerStyle} />
-              </Animated.View>
-            }
-
             <Animated.View
               style={popoverViewStyle}
               ref={this.popoverRef}
@@ -1180,6 +1174,12 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
               }}>
               {this.props.children}
             </Animated.View>
+
+            {geom.placement !== Placement.CENTER &&
+              <Animated.View style={arrowViewStyle} ref={this.arrowRef}>
+                <Animated.View style={arrowInnerStyle} />
+              </Animated.View>
+            }
           </View>
         </Animated.View>
       </View>
