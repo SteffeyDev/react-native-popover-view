@@ -1,8 +1,11 @@
-## react-native-popover-view
+<div align='center'>
+  
+ ## react-native-popover-view
 
 [![npm version](http://img.shields.io/npm/v/react-native-popover-view.svg?style=flat-square)](https://npmjs.org/package/react-native-popover-view "View this project on npm")
 [![npm version](http://img.shields.io/npm/dm/react-native-popover-view.svg?style=flat-square)](https://npmjs.org/package/react-native-popover-view "View this project on npm")
 [![npm licence](http://img.shields.io/npm/l/react-native-popover-view.svg?style=flat-square)](https://npmjs.org/package/react-native-popover-view "View this project on npm")
+  </div>
 
 A well-tested, adaptable, lightweight `<Popover>` component for react-native.  Tested and working on iOS and Android.  May work on Web, but not officially supported.
 
