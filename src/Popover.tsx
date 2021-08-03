@@ -1155,6 +1155,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
     return (
       <View pointerEvents="box-none" style={[styles.container, { top: -1 * FIX_SHIFT }]}>
         <View
+          pointerEvents="box-none"
           style={[styles.container, { top: FIX_SHIFT, flex: 1 }]}
           onLayout={evt => this.props.onDisplayAreaChanged(new Rect(
             evt.nativeEvent.layout.x,
