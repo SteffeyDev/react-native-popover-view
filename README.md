@@ -129,7 +129,7 @@ function App() {
 
 ### Showing popover from a reference to an element
 
-If you need even more control (e.g. having the `Popover` and `Touchable` in complete different parts of the node heiarchy), you can just pass in a normal `ref`.
+If you need even more control (e.g. having the `Popover` and `Touchable` in complete different parts of the node hierarchy), you can just pass in a normal `ref`.
 
 ```jsx
 import React, { useRef, useState } from 'react';
