@@ -365,7 +365,6 @@ interface AdaptivePopoverProps extends PopoverProps {
   fromRef?: RefObject<View>;
   showBackground?: boolean;
   displayArea?: Rect;
-
   getDisplayAreaOffset: () => Promise<Point>;
 }
 
@@ -1040,20 +1039,20 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
 
   animateTo(
     args:
-      {
-        fade: number;
-        scale: number;
-        translatePoint: Point;
-        callback?: () => void;
-        easing: EasingFunction;
-        values: {
-          scale: Animated.Value,
-          translate: Animated.ValueXY,
-          fade: Animated.Value,
-          translateArrow: Animated.ValueXY
-        },
-        geom: Geometry
-      }
+    {
+      fade: number;
+      scale: number;
+      translatePoint: Point;
+      callback?: () => void;
+      easing: EasingFunction;
+      values: {
+        scale: Animated.Value,
+        translate: Animated.ValueXY,
+        fade: Animated.Value,
+        translateArrow: Animated.ValueXY
+      },
+      geom: Geometry
+    }
   ) {
     const { fade, translatePoint, scale, callback, easing, values, geom } = args;
     const commonConfig = {
