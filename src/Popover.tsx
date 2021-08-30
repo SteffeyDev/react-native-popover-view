@@ -14,7 +14,8 @@ import {
   StyleSheet,
   I18nManager,
   EasingFunction,
-  LayoutChangeEvent
+  LayoutChangeEvent,
+  EmitterSubscription
 } from 'react-native';
 import { Rect, Point, Size, getRectForRef, getArrowSize, getBorderRadius } from './Utility';
 import { computeGeometry, Geometry } from './Geometry';
@@ -407,6 +408,8 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
   private skipNextDefaultDisplayArea = false;
   private displayAreaStore: Rect | undefined;
   private _isMounted = false;
+  private keyboardDidHideSubscription: EmitterSubscription | null = null;
+  private keyboardDidShowSubscription: EmitterSubscription | null = null;
 
   componentDidMount() {
     this.handleResizeEvent = this.handleResizeEvent.bind(this);
@@ -422,8 +425,15 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
   componentWillUnmount() {
     this._isMounted = false;
     Dimensions.removeEventListener('change', this.handleResizeEvent);
-    Keyboard.removeListener('keyboardDidShow', this.keyboardDidShow);
-    Keyboard.removeListener('keyboardDidHide', this.keyboardDidHide);
+    if (this.keyboardDidShowSubscription !== null) {
+      this.keyboardDidShowSubscription.remove();
+      this.keyboardDidShowSubscription = null;
+    }
+
+    if (this.keyboardDidHideSubscription !== null) {
+      this.keyboardDidHideSubscription.remove();
+      this.keyboardDidHideSubscription = null;
+    }
   }
 
   componentDidUpdate(prevProps: AdaptivePopoverProps) {
@@ -596,15 +606,21 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
         onOpenStart={() => {
           if (onOpenStart) onOpenStart();
           this.debug('Setting up keyboard listeners');
-          Keyboard.addListener('keyboardDidShow', this.keyboardDidShow);
-          Keyboard.addListener('keyboardDidHide', this.keyboardDidHide);
+          this.keyboardDidShowSubscription = Keyboard.addListener('keyboardDidShow', this.keyboardDidShow);
+          this.keyboardDidHideSubscription = Keyboard.addListener('keyboardDidHide', this.keyboardDidHide);
           this.displayAreaStore = this.getDisplayArea();
         }}
         onCloseStart={() => {
           if (onCloseStart) onCloseStart();
           this.debug('Tearing down keyboard listeners');
-          Keyboard.removeListener('keyboardDidShow', this.keyboardDidShow);
-          Keyboard.removeListener('keyboardDidHide', this.keyboardDidHide);
+          if (this.keyboardDidShowSubscription !== null) {
+            this.keyboardDidShowSubscription.remove();
+            this.keyboardDidShowSubscription = null;
+          }
+          if (this.keyboardDidHideSubscription !== null) {
+            this.keyboardDidHideSubscription.remove();
+            this.keyboardDidHideSubscription = null;
+          }
           if (this._isMounted) this.setState({ shiftedDisplayArea: null });
         }}
         skipMeasureContent={() => this.waitForResizeToFinish}
