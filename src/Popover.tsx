@@ -425,12 +425,11 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
   componentWillUnmount() {
     this._isMounted = false;
     Dimensions.removeEventListener('change', this.handleResizeEvent);
-    // Typescript is struggling to identify `keyboardDidShowSubscription` can't be null
     if (this.keyboardDidShowSubscription !== null) {
       this.keyboardDidShowSubscription.remove();
       this.keyboardDidShowSubscription = null;
     }
-    // Typescript is struggling to identify `keyboardDidHideSubscription` can't be null
+
     if (this.keyboardDidHideSubscription !== null) {
       this.keyboardDidHideSubscription.remove();
       this.keyboardDidHideSubscription = null;
@@ -614,12 +613,10 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
         onCloseStart={() => {
           if (onCloseStart) onCloseStart();
           this.debug('Tearing down keyboard listeners');
-          // Typescript is struggling to identify `keyboardDidShowSubscription` can't be null
           if (this.keyboardDidShowSubscription !== null) {
             this.keyboardDidShowSubscription.remove();
             this.keyboardDidShowSubscription = null;
           }
-          // Typescript is struggling to identify `keyboardDidHideSubscription` can't be null
           if (this.keyboardDidHideSubscription !== null) {
             this.keyboardDidHideSubscription.remove();
             this.keyboardDidHideSubscription = null;
