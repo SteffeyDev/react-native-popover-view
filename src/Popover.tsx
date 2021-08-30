@@ -66,10 +66,10 @@ interface PopoverProps {
 interface PublicPopoverProps extends PopoverProps {
   mode?: Mode;
   from?:
-  | Rect
-  | RefObject<View>
-  | ((sourceRef: RefObject<View>, openPopover: () => void) => ReactNode)
-  | ReactNode;
+    | Rect
+    | RefObject<View>
+    | ((sourceRef: RefObject<View>, openPopover: () => void) => ReactNode)
+    | ReactNode;
 }
 
 interface PublicPopoverState {
@@ -427,14 +427,12 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
     Dimensions.removeEventListener('change', this.handleResizeEvent);
     // Typescript is struggling to identify `keyboardDidShowSubscription` can't be null
     if (this.keyboardDidShowSubscription !== null) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      (this.keyboardDidShowSubscription! as EmitterSubscription).remove();
+      this.keyboardDidShowSubscription.remove();
       this.keyboardDidShowSubscription = null;
     }
     // Typescript is struggling to identify `keyboardDidHideSubscription` can't be null
     if (this.keyboardDidHideSubscription !== null) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      (this.keyboardDidHideSubscription! as EmitterSubscription).remove();
+      this.keyboardDidHideSubscription.remove();
       this.keyboardDidHideSubscription = null;
     }
   }
@@ -618,14 +616,12 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
           this.debug('Tearing down keyboard listeners');
           // Typescript is struggling to identify `keyboardDidShowSubscription` can't be null
           if (this.keyboardDidShowSubscription !== null) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            (this.keyboardDidShowSubscription! as EmitterSubscription).remove();
+            this.keyboardDidShowSubscription.remove();
             this.keyboardDidShowSubscription = null;
           }
           // Typescript is struggling to identify `keyboardDidHideSubscription` can't be null
           if (this.keyboardDidHideSubscription !== null) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            (this.keyboardDidHideSubscription! as EmitterSubscription).remove();
+            this.keyboardDidHideSubscription.remove();
             this.keyboardDidHideSubscription = null;
           }
           if (this._isMounted) this.setState({ shiftedDisplayArea: null });
