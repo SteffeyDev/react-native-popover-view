@@ -59,6 +59,7 @@ interface PopoverProps {
   onRequestClose?: () => void;
   onCloseStart?: () => void;
   onCloseComplete?: () => void;
+  onPositionChange?: () => void;
 
   debug?: boolean;
 }
@@ -135,6 +136,7 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
     onRequestClose: PropTypes.func,
     onCloseStart: PropTypes.func,
     onCloseComplete: PropTypes.func,
+    onPositionChange: PropTypes.func,
 
     debug: PropTypes.bool
   }
@@ -757,7 +759,8 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
         displayArea,
         placement,
         onOpenStart,
-        arrowShift
+        arrowShift,
+        onPositionChange,
       } = this.props;
 
       if (requestedContentSize) {
@@ -800,7 +803,8 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
               scale: 1,
               translatePoint: moveTo,
               easing: Easing.inOut(Easing.quad),
-              geom
+              geom,
+              callback: onPositionChange
             });
           } else {
             this.debug('handleChange - no change');
