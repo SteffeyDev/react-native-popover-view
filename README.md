@@ -315,6 +315,7 @@ onOpenComplete    | function |             | Callback to be fired when the open 
 onRequestClose    | function |             | Callback to be fired when the user taps outside the popover (on the background) or taps the "hardware" back button on Android
 onCloseStart      | function |             | Callback to be fired when the popover starts closing (before animation)
 onCloseComplete   | function |             | Callback to be fired when the popover is finished closing (after animation)
+onPositionChange  | function |             | Callback to be fired when the popover position finishes moving position (after animation)
 debug             | bool     | false       | Set this to `true` to turn on debug logging to the console.  This is useful for figuring out why a Popover isn't showing.
 
 If no `from` is provided, the popover will float in the center of the screen.
