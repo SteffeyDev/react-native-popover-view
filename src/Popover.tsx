@@ -414,11 +414,14 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
   private keyboardDidShowSubscription: EmitterSubscription | null = null;
   private handleResizeEventSubscription: EmitterSubscription | null = null;
 
-  componentDidMount() {
+  constructor(props: AdaptivePopoverProps) {
+    super(props);
     this.handleResizeEvent = this.handleResizeEvent.bind(this);
     this.keyboardDidHide = this.keyboardDidHide.bind(this);
     this.keyboardDidShow = this.keyboardDidShow.bind(this);
+  }
 
+  componentDidMount() {
     this.handleResizeEventSubscription = Dimensions.addEventListener('change', this.handleResizeEvent);
     if (this.props.fromRect) this.setState({ fromRect: this.props.fromRect });
     else if (this.props.fromRef) this.calculateRectFromRef();
@@ -427,19 +430,15 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
 
   componentWillUnmount() {
     this._isMounted = false;
-    if (this.handleResizeEventSubscription !== null) {
-      this.handleResizeEventSubscription.remove();
-      this.handleResizeEventSubscription = null;
-    }
-    if (this.keyboardDidShowSubscription !== null) {
-      this.keyboardDidShowSubscription.remove();
-      this.keyboardDidShowSubscription = null;
-    }
 
-    if (this.keyboardDidHideSubscription !== null) {
-      this.keyboardDidHideSubscription.remove();
-      this.keyboardDidHideSubscription = null;
-    }
+    if (typeof this.handleResizeEventSubscription?.remove === 'function')
+      this.handleResizeEventSubscription?.remove();
+    else
+      // Backward-compatibility with RN <= 0.63
+      Dimensions.removeEventListener('change', this.handleResizeEvent);
+
+    this.keyboardDidShowSubscription?.remove();
+    this.keyboardDidHideSubscription?.remove();
   }
 
   componentDidUpdate(prevProps: AdaptivePopoverProps) {
@@ -764,7 +763,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
         placement,
         onOpenStart,
         arrowShift,
-        onPositionChange,
+        onPositionChange
       } = this.props;
 
       if (requestedContentSize) {
