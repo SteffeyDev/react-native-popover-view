@@ -410,13 +410,14 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
   private _isMounted = false;
   private keyboardDidHideSubscription: EmitterSubscription | null = null;
   private keyboardDidShowSubscription: EmitterSubscription | null = null;
+  private handleResizeEventSubscription: EmitterSubscription | null = null;
 
   componentDidMount() {
     this.handleResizeEvent = this.handleResizeEvent.bind(this);
     this.keyboardDidHide = this.keyboardDidHide.bind(this);
     this.keyboardDidShow = this.keyboardDidShow.bind(this);
 
-    Dimensions.addEventListener('change', this.handleResizeEvent);
+    this.handleResizeEventSubscription = Dimensions.addEventListener('change', this.handleResizeEvent);
     if (this.props.fromRect) this.setState({ fromRect: this.props.fromRect });
     else if (this.props.fromRef) this.calculateRectFromRef();
     this._isMounted = true;
@@ -424,7 +425,10 @@ class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverSta
 
   componentWillUnmount() {
     this._isMounted = false;
-    Dimensions.removeEventListener('change', this.handleResizeEvent);
+    if (this.handleResizeEventSubscription !== null) {
+      this.handleResizeEventSubscription.remove();
+      this.handleResizeEventSubscription = null;
+    }
     if (this.keyboardDidShowSubscription !== null) {
       this.keyboardDidShowSubscription.remove();
       this.keyboardDidShowSubscription = null;
