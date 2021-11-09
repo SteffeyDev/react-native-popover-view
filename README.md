@@ -4,9 +4,9 @@
 [![npm version](http://img.shields.io/npm/dm/react-native-popover-view.svg?style=flat-square)](https://npmjs.org/package/react-native-popover-view "View this project on npm")
 [![npm licence](http://img.shields.io/npm/l/react-native-popover-view.svg?style=flat-square)](https://npmjs.org/package/react-native-popover-view "View this project on npm")
 
-A well-tested, adaptable, lightweight `<Popover>` component for react-native.  Tested and working on iOS and Android.  May work on Web, but not officially supported.
+A well-tested, adaptable, lightweight `<Popover>` component for react-native with no third-party dependencies.  Tested and working on iOS and Android.  May work on Web, but not officially supported.
 
-It is written entirely in TypeScript, but uses [React Native's native driver](https://facebook.github.io/react-native/blog/2017/02/14/using-native-driver-for-animated.html) for responsive animations, even when the JS thread is busy.
+It is written entirely in TypeScript and uses [React Native's native driver](https://facebook.github.io/react-native/blog/2017/02/14/using-native-driver-for-animated.html) for responsive animations, even when the JS thread is busy.
 
 The `<Popover>` is able to handle dynamic content and adapt to screen size changes while showing, and will move out of the way for on-screen keyboards automatically.
 
