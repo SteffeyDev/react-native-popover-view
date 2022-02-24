@@ -383,6 +383,16 @@ import { Platform, StatusBar, ... } from 'react-native';
   />
 ```
 
+#### Error when passing a functional component to the `from` prop
+
+When passing a function component to the Popover `from` prop, you may see the following error:
+```
+Warning: Function components cannot be given refs. Attempts to access this ref will fail. Did you mean to use React.forwardRef()?
+```
+This is because the Popover component uses `ref` to find the position of the `from` component on the screen, so that it can position the Popover correctly.  Functional components don't have a `ref` like class components did, and thus causes this error.
+
+As the error suggests, modifying your functional component to use [React.forwardRef](https://reactjs.org/docs/forwarding-refs.html) will fix this error.  You should forward the ref to the underlying component that represents the bounds from which you want the Popover to show (usually the topmost component).
+
 ## <a name="upgrading" />Upgrading
 
 #### `3.x` to `4.0`
