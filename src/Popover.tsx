@@ -15,7 +15,8 @@ import {
   I18nManager,
   EasingFunction,
   LayoutChangeEvent,
-  EmitterSubscription
+  EmitterSubscription,
+  ViewPropTypes
 } from 'react-native';
 import { Rect, Point, Size, getRectForRef, getArrowSize, getBorderRadius } from './Utility';
 import { computeGeometry, Geometry } from './Geometry';
@@ -82,7 +83,7 @@ const stylePropType =
   isWeb
     ? PropTypes.object
     // eslint-disable-next-line
-    : require('react-native').ViewPropTypes.style
+    : ViewPropTypes.style
 
 export default class Popover extends Component<PublicPopoverProps, PublicPopoverState> {
   static propTypes = {
