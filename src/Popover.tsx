@@ -43,6 +43,7 @@ interface PopoverProps {
   // config
   placement?: Placement;
   animationConfig?: Partial<Animated.TimingAnimationConfig>;
+  offset?: number;
   verticalOffset?: number;
   displayArea?: Rect;
   displayAreaInsets?: Insets;
@@ -692,7 +693,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
 
   componentDidUpdate(prevProps: BasePopoverProps) {
     // Make sure a value we care about has actually changed
-    const importantProps = ['isVisible', 'fromRect', 'displayArea', 'verticalOffset', 'placement'];
+    const importantProps = ['isVisible', 'fromRect', 'displayArea', 'verticalOffset', 'offset', 'placement'];
     if (!importantProps.reduce((acc, key) => acc || this.props[key] !== prevProps[key], false))
       return;
 
@@ -763,7 +764,8 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
         placement,
         onOpenStart,
         arrowShift,
-        onPositionChange
+        onPositionChange,
+        offset
       } = this.props;
 
       if (requestedContentSize) {
@@ -782,7 +784,8 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
           popoverStyle,
           arrowShift,
           debug: this.debug.bind(this),
-          previousPlacement: this.getGeom().placement
+          previousPlacement: this.getGeom().placement,
+          offset
         });
 
         this.setState({ nextGeom: geom, requestedContentSize }, () => {

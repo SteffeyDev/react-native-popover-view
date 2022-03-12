@@ -7,6 +7,7 @@ type ComputeGeometryBaseProps = {
   requestedContentSize: Size;
   displayArea: Rect;
   debug: (line: string, obj?: unknown) => void;
+  offset?: number;
 }
 
 type ComputeGeometryProps = ComputeGeometryBaseProps & {
@@ -223,7 +224,8 @@ function computeTopGeometry({
   fromRect,
   requestedContentSize,
   arrowStyle,
-  borderRadius
+  borderRadius,
+  offset
 }: ComputeGeometryDirectionProps): Geometry {
   // Apply a margin on non-arrow sides
   displayArea = new Rect(
@@ -232,6 +234,8 @@ function computeTopGeometry({
     displayArea.width - (POPOVER_MARGIN * 2),
     displayArea.height
   );
+
+  if (offset) fromRect.y -= offset;
 
   const arrowSize = getArrowSize(Placement.TOP, arrowStyle);
   const minY = displayArea.y;
@@ -283,7 +287,8 @@ function computeBottomGeometry({
   fromRect,
   requestedContentSize,
   arrowStyle,
-  borderRadius
+  borderRadius,
+  offset
 }: ComputeGeometryDirectionProps): Geometry {
   // Apply a margin on non-arrow sides
   displayArea = new Rect(
@@ -292,6 +297,8 @@ function computeBottomGeometry({
     displayArea.width - (POPOVER_MARGIN * 2),
     displayArea.height - POPOVER_MARGIN
   );
+
+  if (offset) fromRect.y += offset;
 
   const arrowSize = getArrowSize(Placement.BOTTOM, arrowStyle);
   const preferedY = fromRect.y + fromRect.height + arrowSize.height;
@@ -342,7 +349,8 @@ function computeLeftGeometry({
   fromRect,
   requestedContentSize,
   borderRadius,
-  arrowStyle
+  arrowStyle,
+  offset
 }: ComputeGeometryDirectionProps): Geometry {
   // Apply a margin on non-arrow sides
   displayArea = new Rect(
@@ -351,6 +359,8 @@ function computeLeftGeometry({
     displayArea.width,
     displayArea.height - (POPOVER_MARGIN * 2)
   );
+
+  if (offset) fromRect.x -= offset;
 
   const arrowSize = getArrowSize(Placement.LEFT, arrowStyle);
 
@@ -405,7 +415,8 @@ function computeRightGeometry({
   fromRect,
   requestedContentSize,
   arrowStyle,
-  borderRadius
+  borderRadius,
+  offset
 }: ComputeGeometryDirectionProps): Geometry {
   // Apply a margin on non-arrow sides
   displayArea = new Rect(
@@ -414,6 +425,8 @@ function computeRightGeometry({
     displayArea.width - POPOVER_MARGIN,
     displayArea.height - (POPOVER_MARGIN * 2)
   );
+
+  if (offset) fromRect.x += offset;
 
   const arrowSize = getArrowSize(Placement.RIGHT, arrowStyle);
   const horizontalSpace =

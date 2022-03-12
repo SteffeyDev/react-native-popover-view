@@ -303,7 +303,7 @@ from              | element OR  | Yes      | null        | Either a React elemen
 displayArea       | rect     |             | Area where the popover is allowed to be displayed.  By default, this will be automatically calculated to be the size of the display, or the size of the parent component if mode is not 'rn-modal'.
 placement         | string   | 'auto'      | How to position the popover - top &#124; bottom &#124; left &#124; right &#124; center &#124; auto. When 'auto' is specified, it will determine the ideal placement so that the popover is fully visible within `displayArea`.
 animationConfig   | object   |             | An object containing any configuration options that can be passed to Animated.timing (e.g. `{ duration: 600, easing: Easing.inOut(Easing.quad) }`).  The configuration options you pass will override the defaults for all animations.
-verticalOffset    | number   | 0           | The amount to vertically shift the popover on the screen.  In certain Android configurations, you may need to apply a `verticalOffset` of `-StatusBar.currentHeight` for the popover to originate from the correct place.
+offset            | number   | 0           | The amount to shift the popover away from the source. Does not apply if the popover is centered.
 statusBarTranslucent | bool  |             | For 'rn-modal' mode only. Determines whether the background should go under the status bar. Passed through to RN `Modal` component, see [their docs](https://reactnative.dev/docs/modal#statusbartranslucent-1) as well.
 displayAreaInsets | object   |             | Insets to apply to the display area.  The Popover will not be allowed to go beyond the display area minus the insets.
 popoverStyle      | object   |             | The style of the popover itself. You can override the `borderRadius`, `backgroundColor`, or any other [`style` prop for a `View`](https://facebook.github.io/react-native/docs/view-style-props.html).
@@ -316,6 +316,7 @@ onRequestClose    | function |             | Callback to be fired when the user 
 onCloseStart      | function |             | Callback to be fired when the popover starts closing (before animation)
 onCloseComplete   | function |             | Callback to be fired when the popover is finished closing (after animation)
 onPositionChange  | function |             | Callback to be fired when the popover position finishes moving position (after animation)
+verticalOffset    | number   | 0           | The amount to vertically shift the popover on the screen, for use in correcting an occasional issue on Android.  In certain Android configurations, you may need to apply a `verticalOffset` of `-StatusBar.currentHeight` for the popover to originate from the correct place.  For shifting the popover in other situations, the `offset` prop should be used.
 debug             | bool     | false       | Set this to `true` to turn on debug logging to the console.  This is useful for figuring out why a Popover isn't showing.
 
 If no `from` is provided, the popover will float in the center of the screen.
