@@ -1152,10 +1152,18 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       opacity: animatedValues.fade
     };
 
+    const flattenedPopoverStyle = StyleSheet.flatten(popoverStyle);
     const popoverViewStyle = {
       ...styles.dropShadow,
       ...styles.popoverContent,
-      ...StyleSheet.flatten(popoverStyle),
+      ...flattenedPopoverStyle,
+      ...(
+        flattenedPopoverStyle.shadowColor ||
+        flattenedPopoverStyle.shadowOpacity ||
+        flattenedPopoverStyle.shadowRadius ||
+        flattenedPopoverStyle.shadowOffset
+          ? { overflow: 'visible' as const }
+          : {}),
       transform: [
         { translateX: animatedValues.translate.x },
         { translateY: animatedValues.translate.y },
