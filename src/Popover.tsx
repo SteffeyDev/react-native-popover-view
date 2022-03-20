@@ -709,6 +709,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
         this.debug('componentDidUpdate - Hiding popover');
       }
     } else if (this.props.isVisible && prevProps.isVisible) {
+      this.debug('componentDidUpdate - isVisible not changed, handling other changes');
       this.handleChange();
     }
   }
@@ -726,13 +727,21 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       console.warn(`Popover Warning - Can't Show - The Popover content has a width of 0, so there is nothing to present.`);
     if (!requestedContentSize.height) console.warn(`Popover Warning - Can't Show - The Popover content has a height of 0, so there is nothing to present.`);
     if (this.props.skipMeasureContent()) {
-      this.debug(`measureContent - Skippting, waiting for resize to finish`);
+      this.debug(`measureContent - Skipping, waiting for resize to finish`);
       return;
     }
 
     if (requestedContentSize.width && requestedContentSize.height) {
-      this.debug(`measureContent - new requestedContentSize: ${JSON.stringify(requestedContentSize)} (used to be ${JSON.stringify(this.state.requestedContentSize)})`);
-      this.setState({ requestedContentSize }, () => this.handleChange());
+      if (
+        !this.state.requestedContentSize ||
+        requestedContentSize.width !== this.state.requestedContentSize.width ||
+        requestedContentSize.height !== this.state.requestedContentSize.height
+      ) {
+        this.debug(`measureContent - new requestedContentSize: ${JSON.stringify(requestedContentSize)} (used to be ${JSON.stringify(this.state.requestedContentSize)})`);
+        this.setState({ requestedContentSize }, () => this.handleChange());
+      } else {
+        this.debug(`measureContent - Skipping, content size did not change`);
+      }
     }
   }
 
@@ -1120,7 +1129,11 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
                 style={contentWrapperStyle}
                 onLayout={(evt: LayoutChangeEvent) => {
                   const layout = { ...evt.nativeEvent.layout };
-                  setTimeout(() => this._isMounted && this.measureContent(layout), 10);
+                  setTimeout(
+                    () => this._isMounted &&
+                      this.measureContent({ width: layout.width, height: layout.height }),
+                    10
+                  );
                 }}>
                 {this.props.children}
               </View>
