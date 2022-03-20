@@ -37,30 +37,11 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     backgroundColor: 'rgba(0, 0, 0, 0.5)'
   },
-  contentContainer: {
-    flexDirection: 'column'
-  },
-  popoverContainer: {
-    position: 'absolute',
-    zIndex: 1000
-  },
   popoverContent: {
+    overflow: 'hidden',
     position: 'absolute',
     backgroundColor: 'white',
     borderBottomColor: '#333438',
     borderRadius: DEFAULT_BORDER_RADIUS
-  },
-  selectContainer: {
-    backgroundColor: '#f2f2f2',
-    position: 'absolute'
-  },
-  dropShadow: {
-    shadowColor: 'black',
-    shadowOffset: {
-      width: 0,
-      height: 2
-    },
-    shadowRadius: 2,
-    shadowOpacity: 0.8
   }
 });

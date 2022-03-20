@@ -407,7 +407,6 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
     const popoverViewStyle = {
       position: 'absolute' as const,
       ...requestedContentSize,
-      ...styles.dropShadow,
       shadowOffset,
       shadowColor,
       shadowOpacity,
@@ -430,7 +429,6 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
     };
 
     const contentWrapperStyle: ViewStyle = {
-      overflow: 'hidden',
       ...styles.popoverContent,
       ...otherPopoverStyles
     };
