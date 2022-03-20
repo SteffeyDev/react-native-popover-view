@@ -855,11 +855,13 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
 
   getTranslateOrigin() {
     const { requestedContentSize } = this.state;
+    const arrowSize = this.props.arrowSize || DEFAULT_ARROW_SIZE;
     const {
       forcedContentSize,
       viewLargerThanDisplayArea,
       popoverOrigin,
-      anchorPoint
+      anchorPoint,
+      placement
     } = this.getGeom();
 
     let viewWidth = 0;
@@ -874,11 +876,16 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
     else if (requestedContentSize?.height)
       viewHeight = requestedContentSize.height;
 
-
     const popoverCenter =
       new Point(popoverOrigin.x + (viewWidth / 2), popoverOrigin.y + (viewHeight / 2));
-    const shiftHorizontal = anchorPoint.x - popoverCenter.x;
-    const shiftVertical = anchorPoint.y - popoverCenter.y;
+
+    let shiftHorizontal = anchorPoint.x - popoverCenter.x;
+    if ([Placement.LEFT, Placement.RIGHT].includes(placement))
+      shiftHorizontal -= arrowSize.height / 2;
+
+    let shiftVertical = anchorPoint.y - popoverCenter.y;
+    if ([Placement.TOP, Placement.BOTTOM].includes(placement))
+      shiftVertical -= arrowSize.height / 2;
 
     this.debug('getTranslateOrigin - popoverOrigin', popoverOrigin);
     this.debug('getTranslateOrigin - popoverSize', { width: viewWidth, height: viewHeight });
