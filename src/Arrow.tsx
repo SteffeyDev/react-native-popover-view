@@ -1,7 +1,6 @@
 import React, { ForwardedRef, ReactElement } from 'react';
 import { View, ViewStyle } from 'react-native';
-import { Placement } from './Types';
-import { Size } from './Utility';
+import { Placement, Size } from './Types';
 
 export type ArrowProps = {
     placement: Placement,

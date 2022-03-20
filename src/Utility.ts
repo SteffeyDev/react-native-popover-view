@@ -1,58 +1,7 @@
 import { RefObject, ComponentClass, Component } from 'react';
 import { NativeModules, findNodeHandle, StyleProp, ViewStyle, StyleSheet } from 'react-native';
-import { Placement } from './Types';
+import { Placement, Point, Rect, Size } from './Types';
 import { DEFAULT_ARROW_SIZE, DEFAULT_BORDER_RADIUS } from './Constants';
-
-export class Point {
-  x: number;
-  y: number;
-  constructor(x: number, y: number) {
-    this.x = x;
-    this.y = y;
-  }
-  static equals(a: Point, b: Point): boolean {
-    return Math.round(a.x) === Math.round(b.x) && Math.round(a.y) === Math.round(b.y);
-  }
-}
-
-export class Size {
-  width: number;
-  height: number;
-  constructor(width: number, height: number) {
-    this.width = width;
-    this.height = height;
-  }
-
-  static equals(a: Size, b: Size): boolean {
-    return Math.round(a.width) === Math.round(b.width) &&
-      Math.round(a.height) === Math.round(b.height);
-  }
-}
-
-export class Rect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-
-  constructor(x: number, y: number, width: number, height: number) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-  }
-
-  static equals(a: Rect, b: Rect): boolean {
-    return (Math.round(a.x) === Math.round(b.x) &&
-      Math.round(a.y) === Math.round(b.y) &&
-      Math.round(a.width) === Math.round(b.width) &&
-      Math.round(a.height) === Math.round(b.height));
-  }
-
-  static clone(rect: Rect): Rect {
-    return new Rect(rect.x, rect.y, rect.width, rect.height);
-  }
-}
 
 // Need any here to match signature of findNodeHandle
 // eslint-disable-next-line

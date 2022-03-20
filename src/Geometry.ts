@@ -1,11 +1,7 @@
 import { StyleProp, ViewStyle } from 'react-native';
-import { Placement } from './Types';
-import { Rect, Size, Point, getBorderRadius } from './Utility';
+import { Rect, Size, Point, Placement } from './Types';
+import { getBorderRadius } from './Utility';
 import { POPOVER_MARGIN } from './Constants';
-
-function getArrowSize(placement: any, style: any) {
-  return new Size(0, 0);
-}
 
 type ComputeGeometryBaseProps = {
   requestedContentSize: Size;

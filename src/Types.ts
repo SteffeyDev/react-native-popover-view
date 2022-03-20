@@ -1,3 +1,5 @@
+import { Animated, StyleProp, ViewStyle } from 'react-native';
+
 // eslint-disable-next-line
 export enum Placement {
   TOP = 'top',
@@ -20,4 +22,87 @@ export type Insets = {
   right?: number;
   bottom?: number;
   top?: number;
+}
+
+export interface ModalPopoverState {
+  visible: boolean;
+}
+
+export interface PopoverProps {
+  isVisible?: boolean;
+
+  // config
+  placement?: Placement;
+  animationConfig?: Partial<Animated.TimingAnimationConfig>;
+  offset?: number;
+  verticalOffset?: number;
+  displayArea?: Rect;
+  displayAreaInsets?: Insets;
+
+  // style
+  popoverStyle?: StyleProp<ViewStyle>;
+  backgroundStyle?: StyleProp<ViewStyle>;
+  arrowShift?: number;
+  arrowSize?: Size;
+
+  // lifecycle
+  onOpenStart?: () => void;
+  onOpenComplete?: () => void;
+  onRequestClose?: () => void;
+  onCloseStart?: () => void;
+  onCloseComplete?: () => void;
+  onPositionChange?: () => void;
+
+  debug?: boolean;
+}
+
+export class Point {
+  x: number;
+  y: number;
+  constructor(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
+  static equals(a: Point, b: Point): boolean {
+    return Math.round(a.x) === Math.round(b.x) && Math.round(a.y) === Math.round(b.y);
+  }
+}
+
+export class Size {
+  width: number;
+  height: number;
+  constructor(width: number, height: number) {
+    this.width = width;
+    this.height = height;
+  }
+
+  static equals(a: Size, b: Size): boolean {
+    return Math.round(a.width) === Math.round(b.width) &&
+      Math.round(a.height) === Math.round(b.height);
+  }
+}
+
+export class Rect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+
+  constructor(x: number, y: number, width: number, height: number) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+  }
+
+  static equals(a: Rect, b: Rect): boolean {
+    return (Math.round(a.x) === Math.round(b.x) &&
+      Math.round(a.y) === Math.round(b.y) &&
+      Math.round(a.width) === Math.round(b.width) &&
+      Math.round(a.height) === Math.round(b.height));
+  }
+
+  static clone(rect: Rect): Rect {
+    return new Rect(rect.x, rect.y, rect.width, rect.height);
+  }
 }
