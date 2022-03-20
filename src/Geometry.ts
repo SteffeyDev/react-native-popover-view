@@ -1,7 +1,11 @@
 import { StyleProp, ViewStyle } from 'react-native';
 import { Placement } from './Types';
-import { Rect, Size, Point, getArrowSize, getBorderRadius } from './Utility';
+import { Rect, Size, Point, getBorderRadius } from './Utility';
 import { POPOVER_MARGIN } from './Constants';
+
+function getArrowSize(placement: any, style: any) {
+  return new Size(0, 0);
+}
 
 type ComputeGeometryBaseProps = {
   requestedContentSize: Size;
@@ -14,14 +18,14 @@ type ComputeGeometryProps = ComputeGeometryBaseProps & {
   placement?: Placement;
   previousPlacement?: Placement;
   fromRect: Rect | null;
-  arrowStyle: StyleProp<ViewStyle>;
+  arrowSize: Size;
   popoverStyle: StyleProp<ViewStyle>;
   arrowShift?: number;
 }
 
 type ComputeGeometryDirectionProps = ComputeGeometryBaseProps & {
   fromRect: Rect;
-  arrowStyle: StyleProp<ViewStyle>;
+  arrowSize: Size;
   borderRadius: number;
   debug: (line: string, obj?: unknown) => void;
 }
@@ -34,7 +38,7 @@ export class Geometry {
   popoverOrigin: Point;
   anchorPoint: Point;
   placement: Placement;
-  forcedContentSize: Size | null;
+  forcedContentSize: Size;
   viewLargerThanDisplayArea: {
     width: boolean,
     height: boolean
@@ -45,7 +49,7 @@ export class Geometry {
       popoverOrigin: Point;
       anchorPoint: Point;
       placement: Placement;
-      forcedContentSize: Size | null;
+      forcedContentSize: Size;
       viewLargerThanDisplayArea: {
         width: boolean,
         height: boolean
@@ -62,8 +66,8 @@ export class Geometry {
     return Point.equals(a.popoverOrigin, b.popoverOrigin) &&
       Point.equals(a.anchorPoint, b.anchorPoint) &&
       a.placement === b.placement &&
-      a.forcedContentSize?.width === b.forcedContentSize?.width &&
-      a.forcedContentSize?.height === b.forcedContentSize?.height &&
+      a.forcedContentSize.width === b.forcedContentSize.width &&
+      a.forcedContentSize.height === b.forcedContentSize.height &&
       a.viewLargerThanDisplayArea?.width === b.viewLargerThanDisplayArea?.width &&
       a.viewLargerThanDisplayArea?.height === b.viewLargerThanDisplayArea?.height;
   }
@@ -223,7 +227,7 @@ function computeTopGeometry({
   displayArea,
   fromRect,
   requestedContentSize,
-  arrowStyle,
+  arrowSize,
   borderRadius,
   offset
 }: ComputeGeometryDirectionProps): Geometry {
@@ -237,7 +241,6 @@ function computeTopGeometry({
 
   if (offset) fromRect.y -= offset;
 
-  const arrowSize = getArrowSize(Placement.TOP, arrowStyle);
   const minY = displayArea.y;
   const preferredY = fromRect.y - requestedContentSize.height - arrowSize.height;
 
@@ -286,7 +289,7 @@ function computeBottomGeometry({
   displayArea,
   fromRect,
   requestedContentSize,
-  arrowStyle,
+  arrowSize,
   borderRadius,
   offset
 }: ComputeGeometryDirectionProps): Geometry {
@@ -300,8 +303,7 @@ function computeBottomGeometry({
 
   if (offset) fromRect.y += offset;
 
-  const arrowSize = getArrowSize(Placement.BOTTOM, arrowStyle);
-  const preferedY = fromRect.y + fromRect.height + arrowSize.height;
+  const preferedY = fromRect.y + fromRect.height;
 
   const forcedContentSize = {
     height: displayArea.y + displayArea.height - preferedY,
@@ -349,7 +351,7 @@ function computeLeftGeometry({
   fromRect,
   requestedContentSize,
   borderRadius,
-  arrowStyle,
+  arrowSize,
   offset
 }: ComputeGeometryDirectionProps): Geometry {
   // Apply a margin on non-arrow sides
@@ -361,8 +363,6 @@ function computeLeftGeometry({
   );
 
   if (offset) fromRect.x -= offset;
-
-  const arrowSize = getArrowSize(Placement.LEFT, arrowStyle);
 
   const forcedContentSize = {
     height: displayArea.height,
@@ -381,7 +381,7 @@ function computeLeftGeometry({
     ? forcedContentSize.height
     : requestedContentSize.height;
 
-  const preferedX = fromRect.x - viewWidth - arrowSize.width;
+  const preferedX = fromRect.x - viewWidth - arrowSize.height;
 
   const preferedY = fromRect.y + ((fromRect.height - viewHeight) / 2);
   const minY = displayArea.y;
@@ -414,7 +414,7 @@ function computeRightGeometry({
   displayArea,
   fromRect,
   requestedContentSize,
-  arrowStyle,
+  arrowSize,
   borderRadius,
   offset
 }: ComputeGeometryDirectionProps): Geometry {
@@ -428,7 +428,6 @@ function computeRightGeometry({
 
   if (offset) fromRect.x += offset;
 
-  const arrowSize = getArrowSize(Placement.RIGHT, arrowStyle);
   const horizontalSpace =
     displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width;
 
@@ -446,7 +445,7 @@ function computeRightGeometry({
     ? forcedContentSize.height
     : requestedContentSize.height;
 
-  const preferedX = fromRect.x + fromRect.width + arrowSize.width;
+  const preferedX = fromRect.x + fromRect.width;
 
   const preferedY = fromRect.y + ((fromRect.height - viewHeight) / 2);
   const minY = displayArea.y + POPOVER_MARGIN;
@@ -482,7 +481,7 @@ function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry | null
     fromRect,
     previousPlacement,
     debug,
-    arrowStyle
+    arrowSize
   } = options;
 
   // Keep same placement if possible (left/right)
@@ -507,7 +506,6 @@ function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry | null
    * Otherwise, find the place that can fit it best (try left/right but
    * default to top/bottom as that will typically have more space)
    */
-  const arrowSize = getArrowSize(Placement.LEFT, arrowStyle);
 
   // generating list of all possible sides with validity
   debug('computeAutoGeometry - displayArea', displayArea);

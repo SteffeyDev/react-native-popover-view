@@ -17,10 +17,11 @@ import {
   LayoutChangeEvent,
   EmitterSubscription
 } from 'react-native';
-import { Rect, Point, Size, getRectForRef, getArrowSize, getBorderRadius } from './Utility';
+import { Rect, Point, Size, getRectForRef } from './Utility';
 import { computeGeometry, Geometry } from './Geometry';
 import { Insets, Placement, Mode } from './Types';
-import { MULTIPLE_POPOVER_WARNING, DEFAULT_BORDER_RADIUS } from './Constants';
+import { MULTIPLE_POPOVER_WARNING, DEFAULT_BORDER_RADIUS, DEFAULT_ARROW_SIZE } from './Constants';
+import Arrow, { ArrowProps } from './Arrow';
 
 const isIOS = Platform.OS === 'ios';
 const isWeb = Platform.OS === 'web';
@@ -50,9 +51,9 @@ interface PopoverProps {
 
   // style
   popoverStyle?: StyleProp<ViewStyle>;
-  arrowStyle?: StyleProp<ViewStyle>;
   backgroundStyle?: StyleProp<ViewStyle>;
   arrowShift?: number;
+  arrowSize?: Size;
 
   // lifecycle
   onOpenStart?: () => void;
@@ -127,8 +128,11 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
 
     // style
     popoverStyle: stylePropType,
-    arrowStyle: stylePropType,
     backgroundStyle: stylePropType,
+    arrowSize: PropTypes.shape({
+      width: PropTypes.number,
+      height: PropTypes.number
+    }),
     arrowShift: PropTypes.number,
 
     // lifecycle
@@ -147,7 +151,7 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
     placement: Placement.AUTO,
     verticalOffset: 0,
     popoverStyle: {},
-    arrowStyle: {},
+    arrowSize: DEFAULT_ARROW_SIZE,
     backgroundStyle: {},
     debug: false
   }
@@ -757,7 +761,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
         requestedContentSize
       }: Partial<BasePopoverState> = this.state;
       const {
-        arrowStyle,
+        arrowSize,
         popoverStyle,
         fromRect,
         displayArea,
@@ -780,7 +784,7 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
           placement,
           fromRect,
           displayArea,
-          arrowStyle,
+          arrowSize: arrowSize || DEFAULT_ARROW_SIZE,
           popoverStyle,
           arrowShift,
           debug: this.debug.bind(this),
@@ -832,111 +836,12 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       popoverOrigin: new Point(0, 0),
       anchorPoint: new Point(0, 0),
       placement: Placement.AUTO,
-      forcedContentSize: null,
+      forcedContentSize: new Size(0, 0),
       viewLargerThanDisplayArea: {
         width: false,
         height: false
       }
     });
-  }
-
-  getArrowDynamicStyle(geom?: Geometry) {
-    const { placement } = geom || this.getGeom();
-    const { arrowStyle, popoverStyle } = this.props;
-    const { width, height } = this.getCalculatedArrowDims(geom);
-
-    const backgroundColor = StyleSheet.flatten(arrowStyle).backgroundColor ||
-      StyleSheet.flatten(popoverStyle).backgroundColor ||
-      styles.popoverContent.backgroundColor;
-
-    let colors = {};
-    switch (placement) {
-      case Placement.TOP:
-        colors = { borderTopColor: backgroundColor };
-        break;
-      case Placement.BOTTOM:
-        colors = { borderBottomColor: backgroundColor };
-        break;
-      case Placement.LEFT:
-        colors = { borderLeftColor: backgroundColor };
-        break;
-      case Placement.RIGHT:
-        colors = { borderRightColor: backgroundColor };
-        break;
-      default:
-    }
-
-    /*
-     * Create the arrow from a rectangle with the appropriate borderXWidth set
-     * A rotation is then applied dependending on the placement
-     * Also make it slightly bigger
-     * to fix a visual artifact when the popover is animated with a scale
-     */
-    return {
-      width,
-      height,
-      borderTopWidth: height / 2,
-      borderRightWidth: width / 2,
-      borderBottomWidth: height / 2,
-      borderLeftWidth: width / 2,
-      ...colors
-    };
-  }
-
-  getCalculatedArrowDims(geom?: Geometry): Size {
-    const { placement } = geom || this.getGeom();
-    const arrowSize = getArrowSize(placement, this.props.arrowStyle);
-    switch (placement) {
-      case Placement.LEFT:
-      case Placement.RIGHT:
-        arrowSize.height += 2;
-        arrowSize.width = (arrowSize.width * 2) + 2;
-        break;
-      default:
-        arrowSize.width += 2;
-        arrowSize.height = (arrowSize.height * 2) + 2;
-    }
-    return arrowSize;
-  }
-
-  getArrowTranslateLocation(translatePoint: Point | null = null, geom: Geometry): Point {
-    const { requestedContentSize } = this.state;
-    const { anchorPoint, placement, forcedContentSize, viewLargerThanDisplayArea } = geom;
-    const { width: arrowWidth, height: arrowHeight } = this.getCalculatedArrowDims(geom);
-
-    let viewWidth = 0;
-    if (viewLargerThanDisplayArea.width && forcedContentSize?.width)
-      viewWidth = forcedContentSize.width;
-    else if (requestedContentSize?.width)
-      viewWidth = requestedContentSize.width;
-
-    let viewHeight = 0;
-    if (viewLargerThanDisplayArea.height && forcedContentSize?.height)
-      viewHeight = forcedContentSize.height;
-    else if (requestedContentSize?.height)
-      viewHeight = requestedContentSize.height;
-
-    let arrowX = anchorPoint.x - (arrowWidth / 2);
-    let arrowY = anchorPoint.y - (arrowHeight / 2);
-
-    const borderRadius = getBorderRadius(this.props.popoverStyle);
-
-    // Ensuring that the arrow does not go outside the bounds of the content box during a move
-    if (translatePoint) {
-      if (placement === Placement.LEFT || placement === Placement.RIGHT) {
-        if (translatePoint.y > (arrowY - borderRadius))
-          arrowY = translatePoint.y + borderRadius;
-        else if (viewHeight && translatePoint.y + viewHeight < arrowY + arrowHeight)
-          arrowY = translatePoint.y + viewHeight - arrowHeight - borderRadius;
-      } else if (placement === Placement.TOP || placement === Placement.BOTTOM) {
-        if (translatePoint.x > arrowX - borderRadius)
-          arrowX = translatePoint.x + borderRadius;
-        else if (viewWidth && translatePoint.x + viewWidth < arrowX + arrowWidth)
-          arrowX = translatePoint.x + viewWidth - arrowWidth - borderRadius;
-      }
-    }
-    // eslint-disable-next-line
-    return new Point(arrowX, FIX_SHIFT /* Temp fix for useNativeDriver issue */ + arrowY);
   }
 
   getTranslateOrigin() {
@@ -1001,7 +906,6 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       translateStart.y += FIX_SHIFT // Temp fix for useNativeDriver issue
       values.translate.setValue(translateStart);
       const translatePoint = new Point(nextGeom.popoverOrigin.x, nextGeom.popoverOrigin.y);
-      values.translateArrow.setValue(this.getArrowTranslateLocation(translatePoint, nextGeom));
 
       this.animateTo({
         values,
@@ -1064,8 +968,6 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       return;
     }
 
-    const newArrowLocation = this.getArrowTranslateLocation(translatePoint, geom);
-
     // eslint-disable-next-line
     translatePoint.y = translatePoint.y + FIX_SHIFT // Temp fix for useNativeDriver issue
 
@@ -1094,10 +996,6 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       Animated.timing(values.scale, {
         ...commonConfig,
         toValue: scale
-      }),
-      Animated.timing(values.translateArrow, {
-        ...commonConfig,
-        toValue: newArrowLocation
       })
     ]).start(() => {
       this.animating = false;
@@ -1109,34 +1007,75 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
   render() {
     const geom = this.getGeom();
 
-    const { animatedValues, nextGeom }: Partial<BasePopoverState> = this.state;
+    const { animatedValues, nextGeom, requestedContentSize }: Partial<BasePopoverState> = this.state;
     const { popoverStyle } = this.props;
-    const { width: arrowWidth, height: arrowHeight } = this.getCalculatedArrowDims();
+    const arrowSize = this.props.arrowSize || DEFAULT_ARROW_SIZE;
 
-    const arrowScale = animatedValues.scale.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, 1],
-      extrapolate: 'clamp'
-    });
-
-    const arrowViewStyle = {
-      // eslint-disable-next-line
-      position: 'absolute' as "absolute",
-      top: 0,
-      ...(I18nManager.isRTL ? { right: 0 } : { left: 0 }),
-      width: arrowWidth,
-      height: arrowHeight,
+    const flattenedPopoverStyle = StyleSheet.flatten(popoverStyle);
+    const { shadowOffset, shadowColor, shadowOpacity, shadowRadius, elevation, ...otherPopoverStyles } = flattenedPopoverStyle;
+    const popoverViewStyle = {
+      position: 'absolute' as const,
+      ...requestedContentSize,
+      ...styles.dropShadow,
+      shadowOffset,
+      shadowColor,
+      shadowOpacity,
+      shadowRadius,
+      elevation,
       transform: [
-        { translateX: animatedValues.translateArrow.x },
-        { translateY: animatedValues.translateArrow.y },
-        { scale: arrowScale }
-      ]
+        { translateX: animatedValues.translate.x },
+        { translateY: animatedValues.translate.y },
+        { scale: animatedValues.scale },
+        { perspective: 1000 }
+      ],
+      ...(shadowOffset
+        ? [
+          { shadowOffset: {
+            width: new Animated.Value(shadowOffset.width),
+            height: new Animated.Value(shadowOffset.width)
+          } }
+        ]
+        : [])
+    };
+    console.log(popoverViewStyle)
+
+    const contentWrapperStyle: ViewStyle = {
+      overflow: 'hidden',
+      ...styles.popoverContent,
+      ...otherPopoverStyles,
     };
 
-    const arrowInnerStyle = [
-      styles.arrow,
-      this.getArrowDynamicStyle()
-    ];
+    /*
+     * We want to always use next here, because the we need this to re-render
+     * before we can animate to the correct spot for the active.
+     */
+    if (nextGeom) {
+      contentWrapperStyle.maxWidth =
+        (nextGeom as Geometry).forcedContentSize.width || undefined;
+      contentWrapperStyle.maxHeight =
+        (nextGeom as Geometry).forcedContentSize.height || undefined;
+    }
+
+    const arrowPositionStyle: ArrowProps['positionStyle'] = {};
+
+    if (geom.placement === Placement.RIGHT || geom.placement === Placement.LEFT) {
+      arrowPositionStyle.top = geom.anchorPoint.y - geom.popoverOrigin.y - arrowSize.height;
+      if (popoverViewStyle.width) popoverViewStyle.width += arrowSize.height;
+      if (geom.placement === Placement.RIGHT) contentWrapperStyle.left = arrowSize.height;
+    } else if (geom.placement === Placement.TOP || geom.placement === Placement.BOTTOM) {
+      arrowPositionStyle.left = geom.anchorPoint.x - geom.popoverOrigin.x - (arrowSize.width / 2);
+      if (popoverViewStyle.height) popoverViewStyle.height += arrowSize.height;
+      if (geom.placement === Placement.BOTTOM) contentWrapperStyle.top = arrowSize.height;
+    }
+    console.log(geom);
+    switch (geom.placement) {
+      case Placement.TOP: arrowPositionStyle.bottom = 0; break;
+      case Placement.BOTTOM: arrowPositionStyle.top = 0; break;
+      case Placement.LEFT: arrowPositionStyle.right = 0; break;
+      case Placement.RIGHT: arrowPositionStyle.left = 0; break;
+      default:
+    }
+    console.log(arrowPositionStyle);
 
     // Temp fix for useNativeDriver issue
     const backgroundShift = animatedValues.fade.interpolate({
@@ -1155,36 +1094,8 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       opacity: animatedValues.fade
     };
 
-    const flattenedPopoverStyle = StyleSheet.flatten(popoverStyle);
-    const popoverViewStyle = {
-      ...styles.dropShadow,
-      ...styles.popoverContent,
-      ...flattenedPopoverStyle,
-      ...(
-        flattenedPopoverStyle.shadowColor ||
-        flattenedPopoverStyle.shadowOpacity ||
-        flattenedPopoverStyle.shadowRadius ||
-        flattenedPopoverStyle.shadowOffset
-          ? { overflow: 'visible' as const }
-          : {}),
-      transform: [
-        { translateX: animatedValues.translate.x },
-        { translateY: animatedValues.translate.y },
-        { scale: animatedValues.scale },
-        { perspective: 1000 }
-      ]
-    };
-
-    /*
-     * We want to always use next here, because the we need this to re-render
-     * before we can animate to the correct spot for the active.
-     */
-    if (nextGeom) {
-      popoverViewStyle.maxWidth =
-        ((nextGeom as Geometry).forcedContentSize || { width: null }).width || undefined;
-      popoverViewStyle.maxHeight =
-        ((nextGeom as Geometry).forcedContentSize || { height: null }).height || undefined;
-    }
+    const backgroundColor = StyleSheet.flatten(popoverStyle).backgroundColor ||
+      styles.popoverContent.backgroundColor;
 
     return (
       <View pointerEvents="box-none" style={[styles.container, { top: -1 * FIX_SHIFT }]}>
@@ -1206,21 +1117,26 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
           )}
 
           <View pointerEvents="box-none" style={{ top: 0, left: 0 }}>
-            <Animated.View
-              style={popoverViewStyle}
-              ref={this.popoverRef}
-              onLayout={(evt: LayoutChangeEvent) => {
-                const layout = { ...evt.nativeEvent.layout };
-                setTimeout(() => this._isMounted && this.measureContent(layout), 10);
-              }}>
-              {this.props.children}
+            <Animated.View style={popoverViewStyle}>
+              <View
+                ref={this.popoverRef}
+                style={contentWrapperStyle}
+                onLayout={(evt: LayoutChangeEvent) => {
+                  const layout = { ...evt.nativeEvent.layout };
+                  setTimeout(() => this._isMounted && this.measureContent(layout), 10);
+                }}>
+                {this.props.children}
+              </View>
+              {geom.placement !== Placement.CENTER &&
+                <Arrow
+                  ref={this.arrowRef}
+                  placement={geom.placement}
+                  color={backgroundColor}
+                  arrowSize={arrowSize}
+                  positionStyle={arrowPositionStyle}
+                />
+              }
             </Animated.View>
-
-            {geom.placement !== Placement.CENTER &&
-              <Animated.View style={arrowViewStyle} ref={this.arrowRef}>
-                <Animated.View style={arrowInnerStyle} />
-              </Animated.View>
-            }
           </View>
         </Animated.View>
       </View>
@@ -1256,8 +1172,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     backgroundColor: 'white',
     borderBottomColor: '#333438',
-    borderRadius: DEFAULT_BORDER_RADIUS,
-    overflow: 'hidden'
+    borderRadius: DEFAULT_BORDER_RADIUS
   },
   selectContainer: {
     backgroundColor: '#f2f2f2',
@@ -1271,13 +1186,6 @@ const styles = StyleSheet.create({
     },
     shadowRadius: 2,
     shadowOpacity: 0.8
-  },
-  arrow: {
-    position: 'absolute',
-    borderTopColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: 'transparent',
-    borderLeftColor: 'transparent'
   }
 });
 
