@@ -1037,7 +1037,6 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
         ]
         : [])
     };
-    console.log(popoverViewStyle)
 
     const contentWrapperStyle: ViewStyle = {
       overflow: 'hidden',
@@ -1067,7 +1066,6 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       if (popoverViewStyle.height) popoverViewStyle.height += arrowSize.height;
       if (geom.placement === Placement.BOTTOM) contentWrapperStyle.top = arrowSize.height;
     }
-    console.log(geom);
     switch (geom.placement) {
       case Placement.TOP: arrowPositionStyle.bottom = 0; break;
       case Placement.BOTTOM: arrowPositionStyle.top = 0; break;
@@ -1075,7 +1073,6 @@ class BasePopover extends Component<BasePopoverProps, BasePopoverState> {
       case Placement.RIGHT: arrowPositionStyle.left = 0; break;
       default:
     }
-    console.log(arrowPositionStyle);
 
     // Temp fix for useNativeDriver issue
     const backgroundShift = animatedValues.fade.interpolate({

@@ -159,7 +159,7 @@
         "no-unneeded-ternary": "error",
         "no-unreachable-loop": "error",
         "no-unsafe-optional-chaining": "error",
-        "no-unused-expressions": "error",
+        "no-unused-expressions": "warn",
         "no-use-before-define": "off",
         "no-useless-backreference": "error",
         "no-useless-call": "error",
