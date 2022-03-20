@@ -396,6 +396,12 @@ As the error suggests, modifying your functional component to use [React.forward
 
 ## <a name="upgrading" />Upgrading
 
+#### `4.x` to `5.0`
+
+* Breaking: Replaces `arrowStyle` with `arrowSize`. The only known customization of the arrow was the `width`, `height`, and `backgroundColor`. In version `5.0`, `arrowSize` prop allows customization of `width` and `height` (with some tweaks, explained in prop table), and the arrow will inherit the `backgroundColor` from `popoverStyle`. To hide arrow, instead of passing `backgroundColor: 'transparent'`, pass an `arrowSize` of `{ width: 0, height: 0 }`, and then use `offset` prop to move popover away from source if desired.
+* Under-the-hood changes: Refactoring may cause slight changes to content handling, review test your popovers after upgrade to make sure they still look as expected.
+* Simplification: Using a shadow no longer requires `popoverStyle` to contain `overflow: visible` (#15)
+
 #### `3.x` to `4.0`
 
 Removed internal safe area view; if you want the Popover to avoid showing behind notches on some devices, follow the instructions: [Usage with Safe Area Context](#safeArea).
