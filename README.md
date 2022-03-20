@@ -297,13 +297,13 @@ All props are optional
 
 Prop              | Type     | Default     | Description
 ----------------- | -------- | ----------- | -----------
-from              | element OR  | Yes      | null        | Either a React element, a function that returns a React element, a `ref` created from `React.createRef` or `React.useRef`, or a Rect object created by `new Rect(x, y, width, height)`.
-isVisible         | bool     | false       | Show/Hide the popover
+from              | multiple | null        | Either a React element, a function that returns a React element, a `ref` created from `React.createRef` or `React.useRef`, or a Rect object created by `new Rect(x, y, width, height)`.
+isVisible         | bool     | false       | Show/Hide the popover. Only required if `from` is *not* a Touchable or function that uses `showPopover` call (see examples). If supplied, takes precedence regardless of `from`.
 mode              | string   | 'rn-modal'  | One of: 'rn-modal', 'js-modal', 'tooltip'. See [Mode](#mode) section below for details.
-placement         | string   | 'auto'      | How to position the popover - top &#124; bottom &#124; left &#124; right &#124; center &#124; auto. When 'auto' is specified, it will determine the ideal placement so that the popover is fully visible within `displayArea`.
+placement         | string   | 'auto'      | How to position the popover, one of 'top', 'bottom', 'left', 'right', 'center', or 'auto'. When 'auto' is specified, it will try to determine the best placement so that the popover is fully visible within `displayArea`.
 offset            | number   | 0           | The amount to shift the popover away from the source. Does not apply if the popover is centered.
 popoverStyle      | object   |             | The style of the popover itself. You can override the `borderRadius`, `backgroundColor`, or any other [`style` prop for a `View`](https://facebook.github.io/react-native/docs/view-style-props.html).
-backgroundStyle   | object   |             | The style of the background that fades in.
+backgroundStyle   | object   |             | The style of the background view. Default is a black background with 0.5 opacity.
 arrowSize         | object   | `{ width: 16, height: 8 }` | The size of the arrow, as an object with `width` & `height` properties. The width of the arrow is the size of the arrow on the edge that touches the popover (base of isosceles triangle), while the height covers the distance from the popover to the source view, regardless of the placement of the popover. You can use `{ width: 0, height: 0 }` to hide the arrow completely.
 arrowShift        | number   | 0           | How much to shift the arrow to either side, as a multiplier. `-1` will shift it all the way to the left (or top) corner of the source view, while `1` will shift all the way to the right (or bottom) corner.  A value of `0.5` or `-0.8` will shift it partly to one side.
 onOpenStart       | function |             | Callback to be fired when the open animation starts (before animation)
