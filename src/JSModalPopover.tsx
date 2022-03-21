@@ -1,4 +1,4 @@
-import React, { Component, RefObject } from 'react';
+import React, { Component, ReactNode, RefObject } from 'react';
 import { View } from 'react-native';
 import AdaptivePopover from './AdaptivePopover';
 import { styles } from './Constants';
@@ -19,15 +19,15 @@ export default class JSModalPopover extends Component<JSModalPopoverProps, Modal
 
   private containerRef = React.createRef<View>();
 
-  componentDidMount() {
+  componentDidMount(): void {
     if (this.props.isVisible) this.setState({ visible: true });
   }
 
-  componentDidUpdate(prevProps: JSModalPopoverProps) {
+  componentDidUpdate(prevProps: JSModalPopoverProps): void {
     if (this.props.isVisible && !prevProps.isVisible) this.setState({ visible: true });
   }
 
-  render() {
+  render(): ReactNode {
     const { onCloseComplete } = this.props;
     const { visible } = this.state;
 

@@ -102,7 +102,7 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
 
   private sourceRef: RefObject<View> = React.createRef();
 
-  render(): ReactElement {
+  render(): ReactNode {
     const { mode, from, isVisible, onRequestClose, ...otherProps } = this.props;
 
     const actualIsVisible = isVisible === undefined

@@ -1,4 +1,4 @@
-import React, { Component, RefObject } from 'react';
+import React, { Component, ReactNode, RefObject } from 'react';
 import { Dimensions, EmitterSubscription, Keyboard, View } from 'react-native';
 import { DEBUG, isIOS } from './Constants';
 import { Point, PopoverProps, Rect } from './Types';
@@ -16,9 +16,9 @@ interface AdaptivePopoverState {
 interface AdaptivePopoverProps extends PopoverProps {
   fromRect?: Rect;
   fromRef?: RefObject<View>;
-  showBackground?: boolean;
   displayArea?: Rect;
   getDisplayAreaOffset: () => Promise<Point>;
+  showBackground?: boolean;
 }
 
 export default class AdaptivePopover extends Component<AdaptivePopoverProps, AdaptivePopoverState> {
@@ -75,14 +75,14 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
     this.keyboardDidShow = this.keyboardDidShow.bind(this);
   }
 
-  componentDidMount() {
+  componentDidMount(): void {
     this.handleResizeEventSubscription = Dimensions.addEventListener('change', this.handleResizeEvent);
     if (this.props.fromRect) this.setState({ fromRect: this.props.fromRect });
     else if (this.props.fromRef) this.calculateRectFromRef();
     this._isMounted = true;
   }
 
-  componentWillUnmount() {
+  componentWillUnmount(): void {
     this._isMounted = false;
 
     if (typeof this.handleResizeEventSubscription?.remove === 'function')
@@ -95,7 +95,7 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
     this.keyboardDidHideSubscription?.remove();
   }
 
-  componentDidUpdate(prevProps: AdaptivePopoverProps) {
+  componentDidUpdate(prevProps: AdaptivePopoverProps): void {
     // Make sure a value we care about has actually changed
     const importantProps = ['fromRef', 'fromRect', 'displayArea'];
     if (!importantProps.reduce((acc, key) => acc || this.props[key] !== prevProps[key], false))
@@ -140,7 +140,7 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
 
 
   // First thing called when device rotates
-  handleResizeEvent(change: unknown) {
+  handleResizeEvent(change: unknown): void {
     this.debug('handleResizeEvent - New Dimensions', change);
     if (this.props.isVisible) {
       this.waitForResizeToFinish = true;
@@ -152,7 +152,7 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
       console.log(`[${(new Date()).toISOString()}] ${line}${obj ? `: ${JSON.stringify(obj)}` : ''}`);
   }
 
-  async setDefaultDisplayArea(newDisplayArea: Rect) {
+  async setDefaultDisplayArea(newDisplayArea: Rect): Promise<void> {
     if (!this._isMounted) return;
 
     const { defaultDisplayArea }: Partial<AdaptivePopoverState> = this.state;
@@ -196,17 +196,17 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
   }
 
   // Custom type here, as KeyboardEvent type does not contain endCoordinates
-  keyboardDidShow(e: { endCoordinates: { height: number } }) {
+  keyboardDidShow(e: { endCoordinates: { height: number } }): void {
     this.debug(`keyboardDidShow - keyboard height: ${e.endCoordinates.height}`);
     this.shiftForKeyboard(e.endCoordinates.height);
   }
 
-  keyboardDidHide() {
+  keyboardDidHide(): void {
     this.debug('keyboardDidHide');
     if (this._isMounted) this.setState({ shiftedDisplayArea: null });
   }
 
-  shiftForKeyboard(keyboardHeight: number) {
+  shiftForKeyboard(keyboardHeight: number): void {
     const displayArea = this.getUnshiftedDisplayArea();
 
     const absoluteVerticalCutoff =
@@ -223,7 +223,7 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
     });
   }
 
-  async calculateRectFromRef() {
+  async calculateRectFromRef(): Promise<void> {
     const { fromRef }: Partial<AdaptivePopoverProps> = this.props;
     const initialRect = this.state.fromRect || new Rect(0, 0, 0, 0);
     const displayAreaOffset = this.state.displayAreaOffset ?? { x: 0, y: 0 };
@@ -255,7 +255,7 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
     if (this._isMounted) this.setState({ fromRect: rect });
   }
 
-  render() {
+  render(): ReactNode {
     const { onOpenStart, onCloseStart, onCloseComplete, fromRef, ...otherProps } = this.props;
     const { fromRect, showing } = this.state;
 

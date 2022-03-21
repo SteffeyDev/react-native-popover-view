@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
+import React, { Component, ReactNode } from 'react';
 import { Animated, Easing, EasingFunction, I18nManager, LayoutChangeEvent, StyleSheet, TouchableWithoutFeedback, View, ViewStyle } from 'react-native';
 import Arrow, { ArrowProps } from './Arrow';
-import { DEBUG, DEFAULT_ARROW_SIZE, DEFAULT_BORDER_RADIUS, FIX_SHIFT, isWeb, styles } from './Constants';
+import { DEBUG, DEFAULT_ARROW_SIZE, FIX_SHIFT, isWeb, styles } from './Constants';
 import { computeGeometry, Geometry } from './Geometry';
 import { Placement, Point, PopoverProps, Rect, Size } from './Types';
 import { getRectForRef } from './Utility';
@@ -56,11 +56,11 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
       console.log(`[${(new Date()).toISOString()}] ${line}${obj ? `: ${JSON.stringify(obj)}` : ''}`);
   }
 
-  componentDidMount() {
+  componentDidMount(): void {
     this._isMounted = true;
   }
 
-  componentDidUpdate(prevProps: BasePopoverProps) {
+  componentDidUpdate(prevProps: BasePopoverProps): void {
     // Make sure a value we care about has actually changed
     const importantProps = ['isVisible', 'fromRect', 'displayArea', 'verticalOffset', 'offset', 'placement'];
     if (!importantProps.reduce((acc, key) => acc || this.props[key] !== prevProps[key], false))
@@ -79,10 +79,11 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
     }
   }
 
-  componentWillUnmount() {
+  componentWillUnmount(): void {
     this._isMounted = false;
 
     if (this.state.showing) {
+      this.debug('componentWillUnmount');
       this.animateOut();
     }
   }
@@ -115,7 +116,7 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
    * This function collects all of them, waiting for 200ms after the last change,
    * then takes action, either bringing up the popover or moving it to its new location
    */
-  handleChange() {
+  handleChange(): void {
     if (this.handleChangeTimeout) clearTimeout(this.handleChangeTimeout);
 
     /*
@@ -218,7 +219,7 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
     });
   }
 
-  getTranslateOrigin() {
+  getTranslateOrigin(): Point {
     const { requestedContentSize } = this.state;
     const arrowSize = this.props.arrowSize || DEFAULT_ARROW_SIZE;
     const {
@@ -260,11 +261,12 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
     return new Point(popoverOrigin.x + shiftHorizontal, popoverOrigin.y + shiftVertical);
   }
 
-  animateOut() {
+  animateOut(): void {
     if (this.props.onCloseStart) setTimeout(this.props.onCloseStart);
 
     if (this._isMounted) this.setState({ showing: false });
 
+    this.debug('animateOut - isMounted', this._isMounted);
     this.animateTo({
       values: this.state.animatedValues,
       fade: 0,
@@ -276,7 +278,7 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
     });
   }
 
-  animateIn() {
+  animateIn(): void {
     const { nextGeom } = this.state;
     if (nextGeom !== undefined && nextGeom instanceof Geometry) {
       const values = this.state.animatedValues;
@@ -288,6 +290,8 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
       values.translate.setValue(translateStart);
       const translatePoint = new Point(nextGeom.popoverOrigin.x, nextGeom.popoverOrigin.y);
 
+      this.debug('animateIn - translateStart', translateStart);
+      this.debug('animateIn - translatePoint', translatePoint);
       this.animateTo({
         values,
         fade: 1,
@@ -335,8 +339,8 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
       },
       geom: Geometry
     }
-  ) {
-    const { fade, translatePoint, scale, callback, easing, values, geom } = args;
+  ): void {
+    const { fade, translatePoint, scale, callback, easing, values } = args;
     const commonConfig = {
       duration: 300,
       easing,
@@ -385,7 +389,7 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
     });
   }
 
-  render() {
+  render(): ReactNode {
     const {
       animatedValues,
       nextGeom,

@@ -1,4 +1,4 @@
-import React, { RefObject, Component } from 'react';
+import React, { RefObject, Component, ReactNode } from 'react';
 import { View, Modal } from 'react-native';
 import AdaptivePopover from './AdaptivePopover';
 import { MULTIPLE_POPOVER_WARNING } from './Constants';
@@ -18,14 +18,14 @@ export default class RNModalPopover extends Component<RNModalPopoverProps, Modal
 
   private static isShowingInModal = false;
 
-  componentDidMount() {
+  componentDidMount(): void {
     if (this.props.isVisible) {
       if (RNModalPopover.isShowingInModal) console.warn(MULTIPLE_POPOVER_WARNING);
       else this.setState({ visible: true });
     }
   }
 
-  componentDidUpdate(prevProps: RNModalPopoverProps, prevState: ModalPopoverState) {
+  componentDidUpdate(prevProps: RNModalPopoverProps, prevState: ModalPopoverState): void {
     if (this.props.isVisible && !prevProps.isVisible) {
       if (RNModalPopover.isShowingInModal) console.warn(MULTIPLE_POPOVER_WARNING);
       else this.setState({ visible: true });
@@ -41,7 +41,7 @@ export default class RNModalPopover extends Component<RNModalPopoverProps, Modal
     }
   }
 
-  render() {
+  render(): ReactNode {
     const {
       statusBarTranslucent,
       onCloseStart,
