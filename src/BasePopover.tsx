@@ -391,11 +391,20 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
       nextGeom,
       requestedContentSize
     }: Partial<BasePopoverState> = this.state;
-    const { popoverStyle } = this.props;
+    const flattenedPopoverStyle = StyleSheet.flatten(this.props.popoverStyle);
     const arrowSize = this.props.arrowSize || DEFAULT_ARROW_SIZE;
     const geom = this.getGeom();
 
-    const flattenedPopoverStyle = StyleSheet.flatten(popoverStyle);
+    const transformStyle = {
+      position: 'absolute' as const,
+      ...requestedContentSize,
+      transform: [
+        { translateX: animatedValues.translate.x },
+        { translateY: animatedValues.translate.y },
+        { scale: animatedValues.scale }
+      ]
+    };
+
     const {
       shadowOffset,
       shadowColor,
@@ -404,28 +413,13 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
       elevation,
       ...otherPopoverStyles
     } = flattenedPopoverStyle;
-    const popoverViewStyle = {
-      position: 'absolute' as const,
-      ...requestedContentSize,
+
+    const shadowStyle = {
       shadowOffset,
       shadowColor,
       shadowOpacity,
       shadowRadius,
-      elevation,
-      transform: [
-        { translateX: animatedValues.translate.x },
-        { translateY: animatedValues.translate.y },
-        { scale: animatedValues.scale },
-        { perspective: 1000 }
-      ],
-      ...(shadowOffset
-        ? [
-          { shadowOffset: {
-            width: new Animated.Value(shadowOffset.width),
-            height: new Animated.Value(shadowOffset.width)
-          } }
-        ]
-        : [])
+      elevation
     };
 
     const contentWrapperStyle: ViewStyle = {
@@ -438,21 +432,19 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
      * before we can animate to the correct spot for the active.
      */
     if (nextGeom) {
-      contentWrapperStyle.maxWidth =
-        (nextGeom as Geometry).forcedContentSize.width || undefined;
-      contentWrapperStyle.maxHeight =
-        (nextGeom as Geometry).forcedContentSize.height || undefined;
+      contentWrapperStyle.maxWidth = nextGeom.forcedContentSize.width;
+      contentWrapperStyle.maxHeight = nextGeom.forcedContentSize.height;
     }
 
     const arrowPositionStyle: ArrowProps['positionStyle'] = {};
 
     if (geom.placement === Placement.RIGHT || geom.placement === Placement.LEFT) {
       arrowPositionStyle.top = geom.anchorPoint.y - geom.popoverOrigin.y - arrowSize.height;
-      if (popoverViewStyle.width) popoverViewStyle.width += arrowSize.height;
+      if (transformStyle.width) transformStyle.width += arrowSize.height;
       if (geom.placement === Placement.RIGHT) contentWrapperStyle.left = arrowSize.height;
     } else if (geom.placement === Placement.TOP || geom.placement === Placement.BOTTOM) {
       arrowPositionStyle.left = geom.anchorPoint.x - geom.popoverOrigin.x - (arrowSize.width / 2);
-      if (popoverViewStyle.height) popoverViewStyle.height += arrowSize.height;
+      if (transformStyle.height) transformStyle.height += arrowSize.height;
       if (geom.placement === Placement.BOTTOM) contentWrapperStyle.top = arrowSize.height;
     }
     switch (geom.placement) {
@@ -480,7 +472,7 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
       opacity: animatedValues.fade
     };
 
-    const backgroundColor = StyleSheet.flatten(popoverStyle).backgroundColor ||
+    const backgroundColor = flattenedPopoverStyle.backgroundColor ||
       styles.popoverContent.backgroundColor;
 
     return (
@@ -502,8 +494,8 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
             </TouchableWithoutFeedback>
           )}
 
-          <View pointerEvents="box-none" style={{ top: 0, left: 0 }}>
-            <Animated.View style={popoverViewStyle}>
+          <View pointerEvents="box-none" style={{ top: 0, left: 0, ...shadowStyle }}>
+            <Animated.View style={transformStyle}>
               <View
                 ref={this.popoverRef}
                 style={contentWrapperStyle}
