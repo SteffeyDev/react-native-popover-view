@@ -10,6 +10,7 @@ interface AdaptivePopoverState {
   shiftedDisplayArea: Rect | null;
   defaultDisplayArea: Rect | null;
   displayAreaOffset: Point | null;
+  showing: boolean;
 }
 
 interface AdaptivePopoverProps extends PopoverProps {
@@ -25,7 +26,8 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
     fromRect: null,
     shiftedDisplayArea: null,
     defaultDisplayArea: null,
-    displayAreaOffset: null
+    displayAreaOffset: null,
+    showing: false
   }
 
   getUnshiftedDisplayArea(): Rect {
@@ -95,20 +97,25 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
 
   componentDidUpdate(prevProps: AdaptivePopoverProps) {
     // Make sure a value we care about has actually changed
-    const importantProps = ['from', 'displayArea'];
+    const importantProps = ['fromRef', 'fromRect', 'displayArea'];
     if (!importantProps.reduce((acc, key) => acc || this.props[key] !== prevProps[key], false))
       return;
 
     if (
-      this.props.fromRect &&
-      prevProps.fromRect &&
-      !Rect.equals(this.props.fromRect, prevProps.fromRect)
+      (!this.props.fromRect && prevProps.fromRect) ||
+      (this.props.fromRect && !prevProps.fromRect) ||
+      (
+        this.props.fromRect &&
+        prevProps.fromRect &&
+        !Rect.equals(this.props.fromRect, prevProps.fromRect)
+      )
     ) {
       this.debug('componentDidUpdate - fromRect changed', this.props.fromRect);
-      this.setState({ fromRect: this.props.fromRect });
-    } else if (this.props.fromRef) {
+      this.setState({ fromRect: this.props.fromRect || null });
+    } else if (this.props.fromRef !== prevProps.fromRef) {
       this.debug('componentDidUpdate - fromRef changed');
-      this.calculateRectFromRef();
+      if (this.props.fromRef) this.calculateRectFromRef();
+      else this.setState({ fromRect: null });
     }
 
     if (this.props.isVisible && prevProps.isVisible) {
@@ -249,11 +256,11 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
   }
 
   render() {
-    const { onOpenStart, onCloseStart, fromRef, ...otherProps } = this.props;
-    const { fromRect } = this.state;
+    const { onOpenStart, onCloseStart, onCloseComplete, fromRef, ...otherProps } = this.props;
+    const { fromRect, showing } = this.state;
 
     // Don't render popover until we have an initial fromRect calculated for the view
-    if (fromRef && !fromRect) return null;
+    if (fromRef && !fromRect && !showing) return null;
 
     return (
       <BasePopover
@@ -266,6 +273,7 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
           this.keyboardDidShowSubscription = Keyboard.addListener('keyboardDidShow', this.keyboardDidShow);
           this.keyboardDidHideSubscription = Keyboard.addListener('keyboardDidHide', this.keyboardDidHide);
           this.displayAreaStore = this.getDisplayArea();
+          this.setState({ showing: true });
         }}
         onCloseStart={() => {
           if (onCloseStart) onCloseStart();
@@ -279,6 +287,10 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
             this.keyboardDidHideSubscription = null;
           }
           if (this._isMounted) this.setState({ shiftedDisplayArea: null });
+        }}
+        onCloseComplete={() => {
+          if (onCloseComplete) onCloseComplete();
+          this.setState({ showing: false });
         }}
         skipMeasureContent={() => this.waitForResizeToFinish}
         onDisplayAreaChanged={rect => this.setDefaultDisplayArea(rect)}
