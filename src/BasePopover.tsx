@@ -513,7 +513,7 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
                 }}>
                 {this.props.children}
               </View>
-              {geom.placement !== Placement.CENTER &&
+              {geom.placement !== Placement.FLOATING &&
                 <Arrow
                   ref={this.arrowRef}
                   placement={geom.placement}

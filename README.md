@@ -26,7 +26,7 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
 ## <a name="features"/>Popover Features
 * Extremely simple but also highly customizable
 * Moves to avoid keyboard
-* Ability to show from a view, from a rect, or float in center of screen
+* Ability to show from a view, from a rect, or floating
 * Adapts to changing content size
 * Automatically detects best placement on screen
 * Moves to stay visible on orientation change or when entering split-screen mode
@@ -176,9 +176,9 @@ function App() {
 }
 ```
 
-### Showing popover centered on the screen
+### Showing popover without anchor
 
-If you just want the popover to be centered on the screen, not anchored to anything, you can omit the `from` prop altogether.
+If you just want the popover to be floating on the screen, not anchored to anything, you can omit the `from` prop altogether.
 
 ```jsx
 import React, { useState } from 'react';
@@ -300,7 +300,7 @@ Prop              | Type     | Default     | Description
 from              | multiple | null        | Either a React element, a function that returns a React element, a `ref` created from `React.createRef` or `React.useRef`, or a Rect object created by `new Rect(x, y, width, height)`.
 isVisible         | bool     | false       | Show/Hide the popover. Only required if `from` is *not* a Touchable or function that uses `showPopover` call (see examples). If supplied, takes precedence regardless of `from`.
 mode              | string   | 'rn-modal'  | One of: 'rn-modal', 'js-modal', 'tooltip'. See [Mode](#mode) section below for details.
-placement         | string   | 'auto'      | How to position the popover, one of 'top', 'bottom', 'left', 'right', 'center', or 'auto'. When 'auto' is specified, it will try to determine the best placement so that the popover is fully visible within `displayArea`.
+placement         | string   | 'auto'      | How to position the popover, one of 'top', 'bottom', 'left', 'right', 'floating', or 'auto'. When 'auto' is specified, it will try to determine the best placement so that the popover is fully visible within `displayArea`.
 offset            | number   | 0           | The amount to shift the popover away from the source. Does not apply if the popover is centered.
 popoverStyle      | object   |             | The style of the popover itself. You can override the `borderRadius`, `backgroundColor`, or any other [`style` prop for a `View`](https://facebook.github.io/react-native/docs/view-style-props.html).
 backgroundStyle   | object   |             | The style of the background view. Default is a black background with 0.5 opacity.

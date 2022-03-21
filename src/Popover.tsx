@@ -61,6 +61,7 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
       Placement.TOP,
       Placement.BOTTOM,
       Placement.AUTO,
+      Placement.FLOATING,
       Placement.CENTER
     ]),
     animationConfig: PropTypes.object,
@@ -103,7 +104,7 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
   private sourceRef: RefObject<View> = React.createRef();
 
   render(): ReactNode {
-    const { mode, from, isVisible, onRequestClose, ...otherProps } = this.props;
+    const { mode, from, isVisible, onRequestClose, placement, ...otherProps } = this.props;
 
     const actualIsVisible = isVisible === undefined
       ? this.state.isVisible
@@ -151,7 +152,9 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
       onRequestClose: () => {
         if (onRequestClose) onRequestClose();
         this.setState({ isVisible: false });
-      }
+      },
+      // Handle changing CENTER -> FLOATING until CENTER is removed
+      placement: placement === Placement.CENTER ? Placement.FLOATING : placement
     };
 
     if (mode === Mode.RN_MODAL) {

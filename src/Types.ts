@@ -7,6 +7,8 @@ export enum Placement {
   BOTTOM = 'bottom',
   LEFT = 'left',
   AUTO = 'auto',
+  FLOATING = 'floating',
+  // deprecated
   CENTER = 'center'
 }
 

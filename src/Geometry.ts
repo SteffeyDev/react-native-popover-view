@@ -103,7 +103,7 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
       case Placement.RIGHT:
         newGeom = computeRightGeometry({ ...options, fromRect, borderRadius });
         break;
-      case Placement.CENTER:
+      case Placement.FLOATING:
         newGeom = null;
         break;
       default:
@@ -153,7 +153,7 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
             new Point(constrainedX, constrainedY),
           anchorPoint:
             new Point(fromRect.x + (fromRect.width / 2), fromRect.y + (fromRect.height / 2)),
-          placement: Placement.CENTER,
+          placement: Placement.FLOATING,
           forcedContentSize,
           viewLargerThanDisplayArea: {
             width: requestedContentSize.width > forcedContentSize.width,
@@ -162,7 +162,7 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
         });
       } else if (
         /*
-         * If we can't fit inside or outside the fromRect, show the popover centered on the screen,
+         * If we can't fit inside or outside the fromRect, show the popover floating on the screen,
          *  but only do this if they haven't asked for a specifc placement type
          *  and if it will actually help show more content
          */
@@ -189,14 +189,14 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
     const preferedY = ((displayArea.height - requestedContentSize.height) / 2) + displayArea.y;
     const preferedX = ((displayArea.width - requestedContentSize.width) / 2) + displayArea.x;
 
-    debug('computeGeometry - showing centered on screen');
+    debug('computeGeometry - showing floating');
     newGeom = new Geometry({
       popoverOrigin: new Point(Math.max(minX, preferedX), Math.max(minY, preferedY)),
       anchorPoint: new Point(
         (displayArea.width / 2) + displayArea.x,
         (displayArea.height / 2) + displayArea.y
       ),
-      placement: Placement.CENTER,
+      placement: Placement.FLOATING,
       forcedContentSize: {
         width: displayArea.width,
         height: displayArea.height
