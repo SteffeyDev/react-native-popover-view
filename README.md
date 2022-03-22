@@ -10,7 +10,6 @@ It is written entirely in TypeScript and uses [React Native's native driver](htt
 
 The `<Popover>` is able to handle dynamic content and adapt to screen size changes while showing, and will move out of the way for on-screen keyboards automatically.
 
-
 ##### Table of Contents
 * [Features](#features)
 * [Demo](#demo)
@@ -30,13 +29,11 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
 * Adapts to changing content size
 * Automatically detects best placement on screen
 * Moves to stay visible on orientation change or when entering split-screen mode
-* Great for use in Tablets: you can put entire views that you would normally show in a modal (on a smaller device) into a popover, optionally give it an anchor point, and have it float on top of all of the other views.
 
 ## <a name="demo"/>Demo App
 
 You can play around with the various features using [the Expo test app](https://expo.io/@steffeydev/popover-view-test-app).
 Source Code: [react-native-popover-view-test-app](https://github.com/SteffeyDev/react-native-popover-view-test-app)
-
 
 ## <a name="installation"/>Installation
 
@@ -297,8 +294,8 @@ All props are optional
 
 Prop              | Type     | Default     | Description
 ----------------- | -------- | ----------- | -----------
-from              | multiple | null        | Either a React element, a function that returns a React element, a `ref` created from `React.createRef` or `React.useRef`, or a Rect object created by `new Rect(x, y, width, height)`.
-isVisible         | bool     | false       | Show/Hide the popover. Only required if `from` is *not* a Touchable or function that uses `showPopover` call (see examples). If supplied, takes precedence regardless of `from`.
+from              | multiple | null        | Popover source. See [From](#from) section below.
+isVisible         | bool     | false       | Show/Hide the popover. Required if `from` is *not* a Touchable or function that uses `showPopover` call (see examples). If supplied, takes precedence regardless of `from`.
 mode              | string   | 'rn-modal'  | One of: 'rn-modal', 'js-modal', 'tooltip'. See [Mode](#mode) section below for details.
 placement         | string   | 'auto'      | How to position the popover, one of 'top', 'bottom', 'left', 'right', 'floating', or 'auto'. When 'auto' is specified, it will try to determine the best placement so that the popover is fully visible within `displayArea`.
 offset            | number   | 0           | The amount to shift the popover away from the source. Does not apply if the popover is centered.
@@ -314,11 +311,20 @@ onCloseStart      | function |             | Callback to be fired when the popov
 onCloseComplete   | function |             | Callback to be fired when the popover is finished closing (after animation)
 onPositionChange  | function |             | Callback to be fired when the popover position finishes moving position (after animation)
 animationConfig   | object   |             | An object containing any configuration options that can be passed to Animated.timing (e.g. `{ duration: 600, easing: Easing.inOut(Easing.quad) }`).  The configuration options you pass will override the defaults for all animations.
-statusBarTranslucent | bool  |             | For 'rn-modal' mode only. Determines whether the background should go under the status bar. Passed through to RN `Modal` component, see [their docs](https://reactnative.dev/docs/modal#statusbartranslucent-1) as well.
+statusBarTranslucent | bool  |             | For 'rn-modal' mode on Android only. Determines whether the background should go under the status bar. Passed through to RN `Modal` component, see [their docs](https://reactnative.dev/docs/modal#statusbartranslucent-1) as well.
 displayArea       | rect     |             | Area where the popover is allowed to be displayed.  By default, this will be automatically calculated to be the size of the display, or the size of the parent component if mode is not 'rn-modal'.
 displayAreaInsets | object   |             | Insets to apply to the display area.  The Popover will not be allowed to go beyond the display area minus the insets.
 verticalOffset    | number   | 0           | The amount to vertically shift the popover on the screen, for use in correcting an occasional issue on Android.  In certain Android configurations, you may need to apply a `verticalOffset` of `-StatusBar.currentHeight` for the popover to originate from the correct place.  For shifting the popover in other situations, the `offset` prop should be used.
 debug             | bool     | false       | Set this to `true` to turn on debug logging to the console.  This is useful for figuring out why a Popover isn't showing.
+
+### <a name="from"/>From
+
+ The `from` prop can be:
+ * A React element. If that element has an `onPress` prop, that prop will be be used to open the `Popover`.
+ * A `ref` object created using `useRef` in function components or `createRef` in class components.
+ * A function that takes two ordered argument, a `ref` and a `showPopover` callback, and returns a React element. Pass the `ref` argument to `ref` prop of the element that will be the source of the `Popover` (the view that the arrow will point to), and call `showPopover` callback to trigger the popover (or pass to the `onPress` prop or similar of a component). You can also ignore the `showPopover` argument and control visibility using the `isVisible` prop.
+ * A point: `{ x: number, y: number }`. In React Native coordinate system, (0, 0) is the top left of the screen.
+ * A rectangle: `{ x: number, y: number, width: number, height: number }`. The popover arrow will be pinned to the edges of the rectangle.
 
 If no `from` is provided, the popover will float in the center of the screen.
 
@@ -399,9 +405,10 @@ As the error suggests, modifying your functional component to use [React.forward
 
 #### `4.x` to `5.0`
 
-* Breaking: Replaces `arrowStyle` with `arrowSize`. The only known customization of the arrow was the `width`, `height`, and `backgroundColor`. In version `5.0`, `arrowSize` prop allows customization of `width` and `height` (with some tweaks, explained in prop table), and the arrow will inherit the `backgroundColor` from `popoverStyle`. To hide arrow, instead of passing `backgroundColor: 'transparent'`, pass an `arrowSize` of `{ width: 0, height: 0 }`, and then use `offset` prop to move popover away from source if desired.
+* Breaking: Replaces `arrowStyle` with `arrowSize`. The only known customization of the arrow was the `width`, `height`, and `backgroundColor`. In version `5.0`, `arrowSize` prop allows customization of `width` and `height` (with some tweaks, explained in prop table), and the arrow will inherit the `backgroundColor` from `popoverStyle`. To hide arrow, instead of passing `backgroundColor: 'transparent'`, pass an `arrowSize` of `{ width: 0, height: 0 }`, and then use `offset` prop to move popover away from source if desired. The shadow props passed to `popoverStyle` will apply to the arrow as well.
 * Under-the-hood changes: Refactoring may cause slight changes to content handling, review test your popovers after upgrade to make sure they still look as expected.
 * Simplification: Using a shadow no longer requires `popoverStyle` to contain `overflow: visible` (#15)
+* Deprecation: `Rect` is deprecated and will be removed in the future. Instead of using `new Rect(x, y, width, height)`, just pass in an object of the form `{ x: number, y: number, width: number, height: number }`. 
 
 #### `3.x` to `4.0`
 

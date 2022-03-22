@@ -119,8 +119,9 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
     let sourceElement: ReactElement | undefined;
 
     if (from) {
-      if (from instanceof Rect) {
-        fromRect = from;
+      if (typeof from === 'object' && (from as Rect).x && (from as Rect).y) {
+        const fromAsRect = from as Rect;
+        fromRect = new Rect(fromAsRect.x, fromAsRect.y, fromAsRect.width, fromAsRect.height);
       } else if ({}.hasOwnProperty.call(from, 'current')) {
         fromRef = from as RefObject<View>;
       } else if (typeof from === 'function') {
