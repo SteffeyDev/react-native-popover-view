@@ -43,6 +43,7 @@ export interface PopoverProps {
 
   // style
   popoverStyle?: StyleProp<ViewStyle>;
+  popoverShift?: { x?: number, y?: number };
   backgroundStyle?: StyleProp<ViewStyle>;
   arrowShift?: number;
   arrowSize?: Size;

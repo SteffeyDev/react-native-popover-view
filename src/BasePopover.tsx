@@ -144,7 +144,8 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
         onOpenStart,
         arrowShift,
         onPositionChange,
-        offset
+        offset,
+        popoverShift
       } = this.props;
 
       if (requestedContentSize) {
@@ -164,7 +165,8 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
           arrowShift,
           debug: this.debug.bind(this),
           previousPlacement: this.getGeom().placement,
-          offset
+          offset,
+          popoverShift
         });
 
         this.setState({ nextGeom: geom, requestedContentSize }, () => {

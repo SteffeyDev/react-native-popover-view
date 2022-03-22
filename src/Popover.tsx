@@ -69,6 +69,10 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
 
     // style
     popoverStyle: stylePropType,
+    popoverShift: PropTypes.shape({
+      x: PropTypes.number,
+      y: PropTypes.number
+    }),
     backgroundStyle: stylePropType,
     arrowSize: PropTypes.shape({
       width: PropTypes.number,

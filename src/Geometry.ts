@@ -1,5 +1,5 @@
 import { StyleProp, ViewStyle } from 'react-native';
-import { Rect, Size, Point, Placement } from './Types';
+import { Rect, Size, Point, Placement, PopoverProps } from './Types';
 import { getBorderRadius } from './Utility';
 import { POPOVER_MARGIN } from './Constants';
 
@@ -17,6 +17,7 @@ type ComputeGeometryProps = ComputeGeometryBaseProps & {
   arrowSize: Size;
   popoverStyle: StyleProp<ViewStyle>;
   arrowShift?: number;
+  popoverShift?: PopoverProps['popoverShift'];
 }
 
 type ComputeGeometryDirectionProps = ComputeGeometryBaseProps & {
@@ -70,7 +71,15 @@ export class Geometry {
 }
 
 export function computeGeometry(options: ComputeGeometryProps): Geometry {
-  const { requestedContentSize, placement, displayArea, debug, popoverStyle, arrowShift } = options;
+  const {
+    requestedContentSize,
+    placement,
+    displayArea,
+    debug,
+    popoverStyle,
+    arrowShift,
+    popoverShift
+  } = options;
 
   let newGeom = null;
 
@@ -206,6 +215,20 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
         height: preferedY < minY - 1
       }
     });
+
+    // Apply popover shift
+    if (!newGeom.viewLargerThanDisplayArea.width && popoverShift?.x) {
+      debug('computeGeometry - applying popoverShift.x', popoverShift.x);
+      const horizontalMargin = (displayArea.width - requestedContentSize.width) / 2;
+      newGeom.popoverOrigin.x += popoverShift.x * horizontalMargin;
+      newGeom.anchorPoint.x = newGeom.popoverOrigin.x + (requestedContentSize.width / 2);
+    }
+    if (!newGeom.viewLargerThanDisplayArea.height && popoverShift?.y) {
+      debug('computeGeometry - applying popoverShift.y', popoverShift.y);
+      const verticalMargin = (displayArea.height - requestedContentSize.height) / 2;
+      newGeom.popoverOrigin.y += popoverShift.y * verticalMargin;
+      newGeom.anchorPoint.y = newGeom.popoverOrigin.y + (requestedContentSize.height / 2);
+    }
   }
 
   if (arrowShift && fromRect) {
