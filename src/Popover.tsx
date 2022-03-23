@@ -1,7 +1,7 @@
 import React, { Component, RefObject, ReactNode, ReactElement } from 'react';
 import PropTypes from 'prop-types';
 import { View } from 'react-native';
-import { Rect, PopoverProps, Placement, Mode } from './Types';
+import { Rect, PopoverProps, Placement, Mode, Point } from './Types';
 import { DEFAULT_ARROW_SIZE, isWeb } from './Constants';
 import JSModalPopover from './JSModalPopover';
 import RNModalPopover from './RNModalPopover';
@@ -119,9 +119,13 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
     let sourceElement: ReactElement | undefined;
 
     if (from) {
-      if (typeof from === 'object' && (from as Rect).x && (from as Rect).y) {
-        const fromAsRect = from as Rect;
-        fromRect = new Rect(fromAsRect.x, fromAsRect.y, fromAsRect.width, fromAsRect.height);
+      if (typeof from === 'object' && (from as Point).x && (from as Point).y) {
+        if ((from as Rect).width && (from as Rect).height) {
+          const fromAsRect = from as Rect;
+          fromRect = new Rect(fromAsRect.x, fromAsRect.y, fromAsRect.width, fromAsRect.height);
+        } else {
+          fromRect = new Rect((from as Point).x, (from as Point).y, 0, 0);
+        }
       } else if ({}.hasOwnProperty.call(from, 'current')) {
         fromRef = from as RefObject<View>;
       } else if (typeof from === 'function') {

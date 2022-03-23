@@ -30,7 +30,7 @@ export interface ModalPopoverState {
   visible: boolean;
 }
 
-export interface PopoverProps {
+export type PopoverProps = {
   isVisible?: boolean;
 
   // config
@@ -66,8 +66,8 @@ export class Point {
     this.x = x;
     this.y = y;
   }
-  static equals(a: Point, b: Point): boolean {
-    return Math.round(a.x) === Math.round(b.x) && Math.round(a.y) === Math.round(b.y);
+  equals(b: Point): boolean {
+    return Math.round(this.x) === Math.round(b.x) && Math.round(this.y) === Math.round(b.y);
   }
 }
 
@@ -79,9 +79,9 @@ export class Size {
     this.height = height;
   }
 
-  static equals(a: Size, b: Size): boolean {
-    return Math.round(a.width) === Math.round(b.width) &&
-      Math.round(a.height) === Math.round(b.height);
+  equals(b: Size): boolean {
+    return Math.round(this.width) === Math.round(b.width) &&
+      Math.round(this.height) === Math.round(b.height);
   }
 }
 
@@ -98,11 +98,11 @@ export class Rect {
     this.height = height;
   }
 
-  static equals(a: Rect, b: Rect): boolean {
-    return (Math.round(a.x) === Math.round(b.x) &&
-      Math.round(a.y) === Math.round(b.y) &&
-      Math.round(a.width) === Math.round(b.width) &&
-      Math.round(a.height) === Math.round(b.height));
+  equals(b: Rect): boolean {
+    return (Math.round(this.x) === Math.round(b.x) &&
+      Math.round(this.y) === Math.round(b.y) &&
+      Math.round(this.width) === Math.round(b.width) &&
+      Math.round(this.height) === Math.round(b.height));
   }
 
   static clone(rect: Rect): Rect {

@@ -60,11 +60,10 @@ export class Geometry {
     this.viewLargerThanDisplayArea = viewLargerThanDisplayArea;
   }
   static equals(a: Geometry, b: Geometry): boolean {
-    return Point.equals(a.popoverOrigin, b.popoverOrigin) &&
-      Point.equals(a.anchorPoint, b.anchorPoint) &&
+    return a.popoverOrigin.equals(b.popoverOrigin) &&
+      a.anchorPoint.equals(b.anchorPoint) &&
       a.placement === b.placement &&
-      a.forcedContentSize.width === b.forcedContentSize.width &&
-      a.forcedContentSize.height === b.forcedContentSize.height &&
+      a.forcedContentSize.equals(b.forcedContentSize) &&
       a.viewLargerThanDisplayArea?.width === b.viewLargerThanDisplayArea?.width &&
       a.viewLargerThanDisplayArea?.height === b.viewLargerThanDisplayArea?.height;
   }
@@ -151,10 +150,10 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
         if (constrainedY + requestedContentSize.height > displayArea.y + displayArea.height)
           constrainedY = displayArea.y + displayArea.height - requestedContentSize.height;
 
-        const forcedContentSize = {
-          width: Math.min(fromRect.width - 20, displayArea.width),
-          height: Math.min(fromRect.height - 20, displayArea.height)
-        };
+        const forcedContentSize = new Size(
+          Math.min(fromRect.width - 20, displayArea.width),
+          Math.min(fromRect.height - 20, displayArea.height)
+        );
 
         debug('computeGeometry - showing inside anchor');
         newGeom = new Geometry({
@@ -206,10 +205,7 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
         (displayArea.height / 2) + displayArea.y
       ),
       placement: Placement.FLOATING,
-      forcedContentSize: {
-        width: displayArea.width,
-        height: displayArea.height
-      },
+      forcedContentSize: new Size(displayArea.width, displayArea.height),
       viewLargerThanDisplayArea: {
         width: preferedX < minX - 1,
         height: preferedY < minY - 1
@@ -263,10 +259,10 @@ function computeTopGeometry({
   const minY = displayArea.y;
   const preferredY = fromRect.y - requestedContentSize.height - arrowSize.height;
 
-  const forcedContentSize = {
-    height: (fromRect.y - arrowSize.height - displayArea.y),
-    width: displayArea.width
-  };
+  const forcedContentSize = new Size(
+    (fromRect.y - arrowSize.height - displayArea.y),
+    displayArea.width
+  );
 
   const viewLargerThanDisplayArea = {
     height: preferredY <= minY - 1,
@@ -324,10 +320,10 @@ function computeBottomGeometry({
 
   const preferedY = fromRect.y + fromRect.height;
 
-  const forcedContentSize = {
-    height: displayArea.y + displayArea.height - preferedY,
-    width: displayArea.width
-  };
+  const forcedContentSize = new Size(
+    displayArea.width,
+    displayArea.y + displayArea.height - preferedY
+  );
 
   const viewLargerThanDisplayArea = {
     height: preferedY + requestedContentSize.height >= displayArea.y + displayArea.height + 1,
@@ -383,10 +379,10 @@ function computeLeftGeometry({
 
   if (offset) fromRect.x -= offset;
 
-  const forcedContentSize = {
-    height: displayArea.height,
-    width: fromRect.x - displayArea.x - arrowSize.width
-  };
+  const forcedContentSize = new Size(
+    fromRect.x - displayArea.x - arrowSize.width,
+    displayArea.height
+  );
 
   const viewLargerThanDisplayArea = {
     height: requestedContentSize.height >= displayArea.height + 1,
@@ -450,10 +446,10 @@ function computeRightGeometry({
   const horizontalSpace =
     displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width;
 
-  const forcedContentSize = {
-    height: displayArea.height,
-    width: horizontalSpace
-  };
+  const forcedContentSize = new Size(
+    horizontalSpace,
+    displayArea.height
+  );
 
   const viewLargerThanDisplayArea = {
     height: requestedContentSize.height >= displayArea.height + 1,

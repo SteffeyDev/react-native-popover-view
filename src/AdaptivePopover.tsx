@@ -2,7 +2,7 @@ import React, { Component, ReactNode, RefObject } from 'react';
 import { Dimensions, EmitterSubscription, Keyboard, View } from 'react-native';
 import { DEBUG, isIOS } from './Constants';
 import { Point, PopoverProps, Rect } from './Types';
-import { getRectForRef } from './Utility';
+import { getChangedProps, getRectForRef } from './Utility';
 import BasePopover from './BasePopover';
 
 interface AdaptivePopoverState {
@@ -13,7 +13,7 @@ interface AdaptivePopoverState {
   showing: boolean;
 }
 
-interface AdaptivePopoverProps extends PopoverProps {
+type AdaptivePopoverProps = PopoverProps & {
   fromRect?: Rect;
   fromRef?: RefObject<View>;
   displayArea?: Rect;
@@ -98,18 +98,11 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
   componentDidUpdate(prevProps: AdaptivePopoverProps): void {
     // Make sure a value we care about has actually changed
     const importantProps = ['fromRef', 'fromRect', 'displayArea'];
-    if (!importantProps.reduce((acc, key) => acc || this.props[key] !== prevProps[key], false))
-      return;
+    const changedProps = getChangedProps(this.props, prevProps, importantProps);
+    if (!changedProps.length) return;
+    this.debug('[AdaptivePopover] componentDidUpdate - changedProps', changedProps);
 
-    if (
-      (!this.props.fromRect && prevProps.fromRect) ||
-      (this.props.fromRect && !prevProps.fromRect) ||
-      (
-        this.props.fromRect &&
-        prevProps.fromRect &&
-        !Rect.equals(this.props.fromRect, prevProps.fromRect)
-      )
-    ) {
+    if (changedProps.includes('fromRect')) {
       this.debug('componentDidUpdate - fromRect changed', this.props.fromRect);
       this.setState({ fromRect: this.props.fromRect || null });
     } else if (this.props.fromRef !== prevProps.fromRef) {
@@ -119,17 +112,11 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
     }
 
     if (this.props.isVisible && prevProps.isVisible) {
-      const { displayArea }: Partial<AdaptivePopoverProps> = this.props;
       if (
-        (this.props.displayArea && !prevProps.displayArea) ||
-        (
-          displayArea &&
-          prevProps.displayArea &&
-          !Rect.equals(displayArea, prevProps.displayArea)
-        ) ||
+        changedProps.includes('displayArea') ||
         (
           this.displayAreaStore &&
-          !Rect.equals(this.getDisplayArea(), this.displayAreaStore)
+          !this.getDisplayArea().equals(this.displayAreaStore)
         )
       ) {
         this.debug('componentDidUpdate - displayArea changed', this.getDisplayArea());
@@ -164,7 +151,7 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
      */
     const isValidDisplayArea = newDisplayArea.width > 0 && newDisplayArea.height > 0;
     if (
-      (!defaultDisplayArea || !Rect.equals(defaultDisplayArea, newDisplayArea)) &&
+      (!defaultDisplayArea || !newDisplayArea.equals(defaultDisplayArea)) &&
       isValidDisplayArea
     ) {
       this.debug('setDefaultDisplayArea - newDisplayArea', newDisplayArea);
@@ -214,12 +201,8 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
     const combinedY = Math.min(displayArea.height + displayArea.y, absoluteVerticalCutoff);
 
     this.setState({
-      shiftedDisplayArea: {
-        x: displayArea.x,
-        y: displayArea.y,
-        width: displayArea.width,
-        height: combinedY - displayArea.y
-      }
+      shiftedDisplayArea:
+        new Rect(displayArea.x, displayArea.y, displayArea.width, combinedY - displayArea.y)
     });
   }
 
@@ -249,7 +232,7 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
       rect = new Rect(rect.x + horizontalOffset, rect.y + verticalOffset, rect.width, rect.height);
       // Timeout after 2 seconds
       if (count++ > 20) return;
-    } while (Rect.equals(rect, initialRect));
+    } while (rect.equals(initialRect));
 
     this.debug('calculateRectFromRef - calculated Rect', rect);
     if (this._isMounted) this.setState({ fromRect: rect });

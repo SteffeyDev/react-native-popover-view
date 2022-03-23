@@ -38,7 +38,7 @@ export async function waitForChange(
     if (count++ > 20) {
       throw new Error('waitForChange - Timed out waiting for change (waited 2 seconds)');
     }
-  } while (Rect.equals(first, second));
+  } while (first.equals(second));
 }
 
 export async function waitForNewRect(ref: RefType, initialRect: Rect): Promise<Rect> {
@@ -84,4 +84,19 @@ export function getArrowSize(
 export function getBorderRadius(popoverStyle: StyleProp<ViewStyle>): number {
   if (StyleSheet.flatten(popoverStyle).borderRadius === 0) return 0;
   return StyleSheet.flatten(popoverStyle).borderRadius || DEFAULT_BORDER_RADIUS;
+}
+
+export function getChangedProps(
+  props: Record<string, unknown>,
+  prevProps: Record<string, unknown>,
+  importantProps: string[]
+): string[] {
+  return importantProps.filter(key => {
+    const curVal = props[key];
+    const prevVal = prevProps[key];
+    if (curVal instanceof Rect && prevVal instanceof Rect) {
+      return !curVal.equals(prevVal);
+    }
+    return curVal !== prevVal;
+  });
 }

@@ -4,9 +4,9 @@ import Arrow, { ArrowProps } from './Arrow';
 import { DEBUG, DEFAULT_ARROW_SIZE, FIX_SHIFT, isWeb, styles } from './Constants';
 import { computeGeometry, Geometry } from './Geometry';
 import { Placement, Point, PopoverProps, Rect, Size } from './Types';
-import { getRectForRef } from './Utility';
+import { getChangedProps, getRectForRef } from './Utility';
 
-interface BasePopoverProps extends Omit<PopoverProps, 'displayAreaInsets'> {
+type BasePopoverProps = Omit<PopoverProps, 'displayAreaInsets'> & {
   displayArea: Rect;
   showBackground?: boolean;
   fromRect: Rect | null;
@@ -63,8 +63,9 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
   componentDidUpdate(prevProps: BasePopoverProps): void {
     // Make sure a value we care about has actually changed
     const importantProps = ['isVisible', 'fromRect', 'displayArea', 'verticalOffset', 'offset', 'placement'];
-    if (!importantProps.reduce((acc, key) => acc || this.props[key] !== prevProps[key], false))
-      return;
+    const changedProps = getChangedProps(this.props, prevProps, importantProps);
+    if (!changedProps.length) return;
+    this.debug('[BasePopover] componentDidUpdate - changedProps', changedProps);
 
     if (this.props.isVisible !== prevProps.isVisible) {
       this.debug(`componentDidUpdate - isVisible changed, now ${this.props.isVisible}`);
@@ -89,25 +90,27 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
   }
 
   measureContent(requestedContentSize: Size): void {
-    if (!requestedContentSize.width)
+    if (!requestedContentSize.width) {
       console.warn(`Popover Warning - Can't Show - The Popover content has a width of 0, so there is nothing to present.`);
-    if (!requestedContentSize.height) console.warn(`Popover Warning - Can't Show - The Popover content has a height of 0, so there is nothing to present.`);
+      return;
+    }
+    if (!requestedContentSize.height) {
+      console.warn(`Popover Warning - Can't Show - The Popover content has a height of 0, so there is nothing to present.`);
+      return;
+    }
     if (this.props.skipMeasureContent()) {
       this.debug(`measureContent - Skipping, waiting for resize to finish`);
       return;
     }
 
-    if (requestedContentSize.width && requestedContentSize.height) {
-      if (
-        !this.state.requestedContentSize ||
-        requestedContentSize.width !== this.state.requestedContentSize.width ||
-        requestedContentSize.height !== this.state.requestedContentSize.height
-      ) {
-        this.debug(`measureContent - new requestedContentSize: ${JSON.stringify(requestedContentSize)} (used to be ${JSON.stringify(this.state.requestedContentSize)})`);
-        this.setState({ requestedContentSize }, () => this.handleChange());
-      } else {
-        this.debug(`measureContent - Skipping, content size did not change`);
-      }
+    if (
+      !this.state.requestedContentSize ||
+      !requestedContentSize.equals(this.state.requestedContentSize)
+    ) {
+      this.debug(`measureContent - new requestedContentSize: ${JSON.stringify(requestedContentSize)} (used to be ${JSON.stringify(this.state.requestedContentSize)})`);
+      this.setState({ requestedContentSize }, () => this.handleChange());
+    } else {
+      this.debug(`measureContent - Skipping, content size did not change`);
     }
   }
 
@@ -509,7 +512,7 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
                   const layout = { ...evt.nativeEvent.layout };
                   setTimeout(
                     () => this._isMounted &&
-                      this.measureContent({ width: layout.width, height: layout.height }),
+                      this.measureContent(new Size(layout.width, layout.height)),
                     10
                   );
                 }}>
