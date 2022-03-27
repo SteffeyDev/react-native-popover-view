@@ -405,9 +405,10 @@ As the error suggests, modifying your functional component to use [React.forward
 
 #### `4.x` to `5.0`
 
-* Breaking: Replaces `arrowStyle` with `arrowSize`. The only known customization of the arrow was the `width`, `height`, and `backgroundColor`. In version `5.0`, `arrowSize` prop allows customization of `width` and `height` (with some tweaks, explained in prop table), and the arrow will inherit the `backgroundColor` from `popoverStyle`. To hide arrow, instead of passing `backgroundColor: 'transparent'`, pass an `arrowSize` of `{ width: 0, height: 0 }`, and then use `offset` prop to move popover away from source if desired. The shadow props passed to `popoverStyle` will apply to the arrow as well.
-* Under-the-hood changes: Refactoring and optimizations may cause slight changes to content handling and placement, review test your popovers after upgrade to make sure they still look as expected.
-* Simplification: Using a shadow no longer requires `popoverStyle` to contain `overflow: visible` (#15)
+* New Props: `offset` & `popoverShift`
+* Breaking: Replaces `arrowStyle` with `arrowSize`. The only known customization of the arrow was the `width`, `height`, and `backgroundColor`. In version `5.0`, `arrowSize` prop allows customization of `width` and `height` (with some tweaks, explained in prop table), and the arrow will inherit the `backgroundColor` from `popoverStyle`. To hide arrow, instead of passing `backgroundColor: 'transparent'`, pass an `arrowSize` of `{ width: 0, height: 0 }`, and then use the `offset` prop to move popover away from source if desired. The shadow props passed to `popoverStyle` will apply to the arrow as well.
+* Under-the-hood changes: Refactoring and optimizations may cause slight changes to content handling and placement, review and test your popovers after upgrade to make sure they still look as expected.
+* Simplification: Using a shadow no longer requires `popoverStyle` to contain `overflow: visible` ([#15](https://github.com/SteffeyDev/react-native-popover-view/issues/15))
 * Deprecation: `Rect` is deprecated and will be removed in the future. Instead of using `new Rect(x, y, width, height)`, just pass in an object of the form `{ x: number, y: number, width: number, height: number }`. 
 
 #### `3.x` to `4.0`
