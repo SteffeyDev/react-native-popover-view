@@ -230,7 +230,6 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
     const {
       forcedContentSize,
       viewLargerThanDisplayArea,
-      popoverOrigin,
       anchorPoint,
       placement
     } = this.getGeom();
@@ -240,30 +239,24 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
       viewWidth = forcedContentSize.width;
     else if (requestedContentSize?.width)
       viewWidth = requestedContentSize.width;
+    if ([Placement.LEFT, Placement.RIGHT].includes(placement))
+      viewWidth += arrowSize.height;
 
     let viewHeight = 0;
     if (viewLargerThanDisplayArea.height && forcedContentSize?.height)
       viewHeight = forcedContentSize.height;
     else if (requestedContentSize?.height)
       viewHeight = requestedContentSize.height;
-
-    const popoverCenter =
-      new Point(popoverOrigin.x + (viewWidth / 2), popoverOrigin.y + (viewHeight / 2));
-
-    let shiftHorizontal = anchorPoint.x - popoverCenter.x;
-    if ([Placement.LEFT, Placement.RIGHT].includes(placement))
-      shiftHorizontal -= arrowSize.height / 2;
-
-    let shiftVertical = anchorPoint.y - popoverCenter.y;
     if ([Placement.TOP, Placement.BOTTOM].includes(placement))
-      shiftVertical -= arrowSize.height / 2;
+      viewHeight += arrowSize.height;
 
-    this.debug('getTranslateOrigin - popoverOrigin', popoverOrigin);
     this.debug('getTranslateOrigin - popoverSize', { width: viewWidth, height: viewHeight });
     this.debug('getTranslateOrigin - anchorPoint', anchorPoint);
-    this.debug('getTranslateOrigin - shift', { hoizontal: shiftHorizontal, vertical: shiftVertical });
 
-    return new Point(popoverOrigin.x + shiftHorizontal, popoverOrigin.y + shiftVertical);
+    return new Point(
+      anchorPoint.x - (viewWidth / 2),
+      anchorPoint.y - (viewHeight / 2)
+    );
   }
 
   animateOut(): void {
