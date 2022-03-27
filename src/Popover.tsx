@@ -1,12 +1,14 @@
 import React, { Component, RefObject, ReactNode, ReactElement } from 'react';
 import PropTypes from 'prop-types';
 import { View } from 'react-native';
-import { Rect, PopoverProps, Placement, Mode, Point } from './Types';
+import { Rect, PopoverProps, Placement, Mode, Point, Size } from './Types';
 import { DEFAULT_ARROW_SIZE, isWeb } from './Constants';
 import JSModalPopover from './JSModalPopover';
 import RNModalPopover from './RNModalPopover';
 
-interface PublicPopoverProps extends PopoverProps {
+interface PublicPopoverProps extends Omit<PopoverProps, 'displayArea' | 'arrowSize'> {
+  displayArea?: Pick<Rect, 'x' | 'y' | 'width' | 'height'>;
+  arrowSize?: Pick<Size, 'width' | 'height'>;
   mode?: Mode;
   from?:
     | Rect
@@ -41,7 +43,6 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
 
     // config
     displayArea: PropTypes.oneOfType([
-      PropTypes.instanceOf(Rect),
       PropTypes.exact({
         x: PropTypes.number,
         y: PropTypes.number,
@@ -108,7 +109,16 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
   private sourceRef: RefObject<View> = React.createRef();
 
   render(): ReactNode {
-    const { mode, from, isVisible, onRequestClose, placement, ...otherProps } = this.props;
+    const {
+      mode,
+      from,
+      isVisible,
+      onRequestClose,
+      placement,
+      arrowSize,
+      displayArea,
+      ...otherProps
+    } = this.props;
 
     const actualIsVisible = isVisible === undefined
       ? this.state.isVisible
@@ -158,6 +168,10 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
       fromRect,
       fromRef,
       isVisible: actualIsVisible,
+      arrowSize: arrowSize ? new Size(arrowSize?.width, arrowSize?.height) : undefined,
+      displayArea: displayArea
+        ? new Rect(displayArea.x, displayArea.y, displayArea.width, displayArea.height)
+        : undefined,
       onRequestClose: () => {
         if (onRequestClose) onRequestClose();
         this.setState({ isVisible: false });
