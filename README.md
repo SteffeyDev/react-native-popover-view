@@ -10,9 +10,13 @@ It is written entirely in TypeScript and uses [React Native's native driver](htt
 
 The `<Popover>` is able to handle dynamic content and adapt to screen size changes while showing, and will move out of the way for on-screen keyboards automatically.
 
+![Demo Video](react-native-popover-view.gif)
+
+You can play around with all of the features using [the Expo test app](https://expo.io/@steffeydev/popover-view-test-app).
+Source Code: [react-native-popover-view-test-app](https://github.com/SteffeyDev/react-native-popover-view-test-app)
+
 ##### Table of Contents
 * [Features](#features)
-* [Demo](#demo)
 * [Installation](#installation)
 * [Usage](#usage)
 * [Props](#props)
@@ -23,17 +27,9 @@ The `<Popover>` is able to handle dynamic content and adapt to screen size chang
 * [Credits](#credits)
 
 ## <a name="features"/>Popover Features
-* Extremely simple but also highly customizable
-* Moves to avoid keyboard
-* Ability to show from a view, from a rect, or floating
-* Adapts to changing content size
-* Automatically detects best placement on screen
-* Moves to stay visible on orientation change or when entering split-screen mode
-
-## <a name="demo"/>Demo App
-
-You can play around with the various features using [the Expo test app](https://expo.io/@steffeydev/popover-view-test-app).
-Source Code: [react-native-popover-view-test-app](https://github.com/SteffeyDev/react-native-popover-view-test-app)
+* **Simple**: By default the popover will float in the center of the screen, but if you choose to anchor it to a view (like a `Touchable`) or to a point on the screen, it will automatically find the best placement to accommodate the popover content.
+* **Customizable**: Tweak everything, including the popover and arrow style, placement heuristics, animation configuration, and more.
+* **Adaptable**: Popover adapts to changing content size, screen size, and orientation, and will move to accomidate the on-screen keyboard for text input into the popover.
 
 ## <a name="installation"/>Installation
 
