@@ -10,8 +10,7 @@ It is written entirely in TypeScript and uses [React Native's native driver](htt
 
 ![Demo Video](gifs/react-native-popover-view-smaller.gif)
 
-You can play around with all of the features using [the Expo test app](https://expo.io/@steffeydev/popover-view-test-app).
-Source Code: [react-native-popover-view-test-app](https://github.com/SteffeyDev/react-native-popover-view-test-app)
+[Open the snack](https://snack.expo.dev/@steffeydev/react-native-popover-view) to play with all the features!
 
 ##### Table of Contents
 * [Features](#features)
