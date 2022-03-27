@@ -3,17 +3,26 @@ import { View, ViewStyle } from 'react-native';
 import { Placement, Size } from './Types';
 
 export type ArrowProps = {
-    placement: Placement,
-    color: ViewStyle['backgroundColor'],
-    arrowSize: Size,
-    positionStyle: Pick<ViewStyle, 'top' | 'bottom' | 'left' | 'right'>
+    placement: Placement;
+    color: ViewStyle['backgroundColor'];
+    arrowSize: Size;
+    positionStyle: Pick<ViewStyle, 'top' | 'bottom' | 'left' | 'right'>;
 };
 const Arrow = React.forwardRef((props: ArrowProps, ref: ForwardedRef<View>): ReactElement => {
   const { placement, color, arrowSize, positionStyle } = props;
 
-  // Make width and height slightly bigger so that it overlaps popover to eliminate seem
-  const width = arrowSize.width + 2;
-  const height = arrowSize.height + 2;
+  /*
+   * Make width and height slightly bigger so that it overlaps popover to eliminate seem
+   * (unless transparency is in play, in which case the overlap would show)
+   */
+  const isTransparent = color
+    ? color.toString() === 'transparent' ||
+      color.toString().startsWith('rgba') ||
+      color.toString().startsWith('hsla') ||
+      (color.toString().startsWith('#') && color.toString().length > 7)
+    : false;
+  const width = arrowSize.width + (isTransparent ? 0 : 2);
+  const height = arrowSize.height + (isTransparent ? 0 : 2);
 
   // Flip width and height when showing on side to account for inner transform
   const placeLeftOrRight = [Placement.LEFT, Placement.RIGHT].includes(placement);
