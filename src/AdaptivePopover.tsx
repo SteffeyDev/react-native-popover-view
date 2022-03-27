@@ -41,9 +41,10 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
     const { displayAreaInsets } = this.props;
     const displayArea = this.state.shiftedDisplayArea || this.getUnshiftedDisplayArea();
     if (displayAreaInsets) {
+      this.debug('[AdaptivePopover] getDisplayArea - displayAreaInsets', displayAreaInsets);
       return new Rect(
         displayArea.x + (displayAreaInsets.left ?? 0),
-        displayArea.x + (displayAreaInsets.top ?? 0),
+        displayArea.y + (displayAreaInsets.top ?? 0),
         displayArea.width - (displayAreaInsets.left ?? 0) - (displayAreaInsets.right ?? 0),
         displayArea.height - (displayAreaInsets.top ?? 0) - (displayAreaInsets.bottom ?? 0)
       );
