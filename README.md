@@ -10,7 +10,7 @@ It is written entirely in TypeScript and uses [React Native's native driver](htt
 
 The `<Popover>` is able to handle dynamic content and adapt to screen size changes while showing, and will move out of the way for on-screen keyboards automatically.
 
-![Demo Video](react-native-popover-view.gif)
+![Demo Video](gifs/react-native-popover-view-smaller.gif)
 
 You can play around with all of the features using [the Expo test app](https://expo.io/@steffeydev/popover-view-test-app).
 Source Code: [react-native-popover-view-test-app](https://github.com/SteffeyDev/react-native-popover-view-test-app)
