@@ -4,11 +4,9 @@
 [![npm version](http://img.shields.io/npm/dm/react-native-popover-view.svg?style=flat-square)](https://npmjs.org/package/react-native-popover-view "View this project on npm")
 [![npm licence](http://img.shields.io/npm/l/react-native-popover-view.svg?style=flat-square)](https://npmjs.org/package/react-native-popover-view "View this project on npm")
 
-A well-tested, adaptable, lightweight `<Popover>` component for react-native with no third-party dependencies.  Tested and working on iOS and Android.  May work on Web, but not officially supported.
+A well-tested, adaptable, lightweight `<Popover>` component for react-native with no dependencies.  Tested and working on iOS and Android.  May work on Web, but not officially supported.
 
-It is written entirely in TypeScript and uses [React Native's native driver](https://facebook.github.io/react-native/blog/2017/02/14/using-native-driver-for-animated.html) for responsive animations, even when the JS thread is busy.
-
-The `<Popover>` is able to handle dynamic content and adapt to screen size changes while showing, and will move out of the way for on-screen keyboards automatically.
+It is written entirely in TypeScript and uses [React Native's native driver](https://reactnative.dev/docs/animations#using-the-native-driver) for responsive animations, even when the JS thread is busy.
 
 ![Demo Video](gifs/react-native-popover-view-smaller.gif)
 
@@ -307,9 +305,9 @@ onCloseStart      | function |             | Callback to be fired when the popov
 onCloseComplete   | function |             | Callback to be fired when the popover is finished closing (after animation)
 onPositionChange  | function |             | Callback to be fired when the popover position finishes moving position (after animation)
 animationConfig   | object   |             | An object containing any configuration options that can be passed to Animated.timing (e.g. `{ duration: 600, easing: Easing.inOut(Easing.quad) }`).  The configuration options you pass will override the defaults for all animations.
-statusBarTranslucent | bool  |             | For 'rn-modal' mode on Android only. Determines whether the background should go under the status bar. Passed through to RN `Modal` component, see [their docs](https://reactnative.dev/docs/modal#statusbartranslucent-1) as well.
 displayArea       | rect     |             | Area where the popover is allowed to be displayed.  By default, this will be automatically calculated to be the size of the display, or the size of the parent component if mode is not 'rn-modal'.
 displayAreaInsets | object   |             | Insets to apply to the display area.  The Popover will not be allowed to go beyond the display area minus the insets.
+statusBarTranslucent | bool  |             | For 'rn-modal' mode on Android only. Determines whether the background should go under the status bar. Passed through to RN `Modal` component, see [their docs](https://reactnative.dev/docs/modal#statusbartranslucent-1) as well.
 verticalOffset    | number   | 0           | The amount to vertically shift the popover on the screen, for use in correcting an occasional issue on Android.  In certain Android configurations, you may need to apply a `verticalOffset` of `-StatusBar.currentHeight` for the popover to originate from the correct place.  For shifting the popover in other situations, the `offset` prop should be used.
 debug             | bool     | false       | Set this to `true` to turn on debug logging to the console.  This is useful for figuring out why a Popover isn't showing.
 
@@ -337,11 +335,17 @@ Shows the popover full screen in a [React Native Modal](https://facebook.github.
 
 #### JS Modal
 
-Shows the popover in the space provided, filling the `Popover` component's parent.  This looks identical to `rn-modal` if the `Popover` component's parent is a top-level view, but may look weird if the `Popover` is nested inside a few views with their own padding and margins.  With careful component hierarchy design, this can allow for nested popovers and popovers in other Modals. Taps to the area outside the popover will trigger the `onRequestClose` callback.
+Use this if you want to show nested `Popover`s, or are showing the `Popover` from a view that is already inside a native modal. Unlike with `Tooltip`, taps to the area outside the popover will trigger the `onRequestClose` callback.
 
 #### Tooltip
 
-Shows the `Popover` without taking over the screen, no background is faded in and taps to the area around the popover fall through to those views (as expected).  The `onRequestClose` callback will never be called, so the `Popover` will have to be dismissed some other way.
+Shows the `Popover` without taking over the screen, no background is faded in and taps to the area around the popover fall are not blocked.  The `onRequestClose` callback will never be called, so the `Popover` will have to be dismissed some other way.
+
+#### Tips for using JS Modal and Tooltip
+
+Both JS Modal and Tooltip modes render the `Popover` into the react component tree instead of in a dedicated native modal.  Because of this, you must place the `Popover` component at the proper place in the component hiearchy for it to show, potentially in a different place than the `Touchable` that the `Popover` is anchored to.
+
+The key thing to consider is that the `Popover` will only be able to render in the space of its immediate parent. If the parent of the `Popover` is a view with the same dimensions of the `Touchable`, the `Popover` will not be able to show.  If you can't see the `Popover` when using these modes, try moving the `Popover` to the root view, or as close to the root view as possible, so that the `Popover`'s immediate parent fills the screen. If you render the `Touchable` inside a `ScrollView`, the `Popover` should be an immediate child of the `ScrollView`.
 
 ## <a name="safeArea" />Usage with Safe Area Context
 
@@ -402,7 +406,7 @@ As the error suggests, modifying your functional component to use [React.forward
 #### `4.x` to `5.0`
 
 * Breaking: Replaces `arrowStyle` with `arrowSize`. The only known customization of the arrow was the `width`, `height`, and `backgroundColor`. In version `5.0`, `arrowSize` prop allows customization of `width` and `height` (with some tweaks, explained in prop table), and the arrow will inherit the `backgroundColor` from `popoverStyle`. To hide arrow, instead of passing `backgroundColor: 'transparent'`, pass an `arrowSize` of `{ width: 0, height: 0 }`, and then use `offset` prop to move popover away from source if desired. The shadow props passed to `popoverStyle` will apply to the arrow as well.
-* Under-the-hood changes: Refactoring may cause slight changes to content handling, review test your popovers after upgrade to make sure they still look as expected.
+* Under-the-hood changes: Refactoring and optimizations may cause slight changes to content handling and placement, review test your popovers after upgrade to make sure they still look as expected.
 * Simplification: Using a shadow no longer requires `popoverStyle` to contain `overflow: visible` (#15)
 * Deprecation: `Rect` is deprecated and will be removed in the future. Instead of using `new Rect(x, y, width, height)`, just pass in an object of the form `{ x: number, y: number, width: number, height: number }`. 
 
