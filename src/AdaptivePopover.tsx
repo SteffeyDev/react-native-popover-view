@@ -233,7 +233,11 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
       rect = new Rect(rect.x + horizontalOffset, rect.y + verticalOffset, rect.width, rect.height);
       // Timeout after 2 seconds
       if (count++ > 20) return;
-    } while (rect.equals(initialRect));
+      /*
+       * Checking if x and y is less than 0 because of a strange issue on Android related
+       * to the "Toggle from" feature, where the rect.y is a large negative number at first
+       */
+    } while (rect.equals(initialRect) || rect.y < 0 || rect.x < 0);
 
     this.debug('calculateRectFromRef - calculated Rect', rect);
     if (this._isMounted) this.setState({ fromRect: rect });
