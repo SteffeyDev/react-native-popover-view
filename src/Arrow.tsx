@@ -7,9 +7,10 @@ export type ArrowProps = {
     color: ViewStyle['backgroundColor'];
     arrowSize: Size;
     positionStyle: Pick<ViewStyle, 'top' | 'bottom' | 'left' | 'right'>;
+    elevation?: number;
 };
 const Arrow = React.forwardRef((props: ArrowProps, ref: ForwardedRef<View>): ReactElement => {
-  const { placement, color, arrowSize, positionStyle } = props;
+  const { placement, color, arrowSize, positionStyle, elevation } = props;
 
   /*
    * Make width and height slightly bigger so that it overlaps popover to eliminate seem
@@ -31,6 +32,7 @@ const Arrow = React.forwardRef((props: ArrowProps, ref: ForwardedRef<View>): Rea
     width: placeLeftOrRight ? height : width,
     height: placeLeftOrRight ? width : height,
     overflow: 'hidden',
+    elevation,
     ...positionStyle
   };
 

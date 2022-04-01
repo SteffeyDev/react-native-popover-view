@@ -420,13 +420,13 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
       shadowOffset,
       shadowColor,
       shadowOpacity,
-      shadowRadius,
-      elevation
+      shadowRadius
     };
 
     const contentWrapperStyle: ViewStyle = {
       ...styles.popoverContent,
-      ...otherPopoverStyles
+      ...otherPopoverStyles,
+      elevation
     };
 
     /*
@@ -518,6 +518,7 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
                   color={backgroundColor}
                   arrowSize={arrowSize}
                   positionStyle={arrowPositionStyle}
+                  elevation={elevation}
                 />
               }
             </Animated.View>
