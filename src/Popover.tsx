@@ -22,11 +22,18 @@ interface PublicPopoverState {
 }
 
 // React Native Web does not export ViewPropTypes, so this is a workaround
-const stylePropType =
-  isWeb
-    ? PropTypes.object
-    // eslint-disable-next-line
-    : require('react-native').ViewPropTypes.style
+let stylePropType;
+if( isWeb ) {
+  stylePropType = PropTypes.object;
+} else {
+  try {
+    // RN 68+
+    stylePropType = require('deprecated-react-native-prop-types').ViewPropTypes.style;
+  } catch (error) {
+    // RN 67-
+    stylePropType = require('react-native').ViewPropTypes.style;
+  }
+}
 
 export default class Popover extends Component<PublicPopoverProps, PublicPopoverState> {
   static propTypes = {
