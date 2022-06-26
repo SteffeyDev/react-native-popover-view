@@ -277,8 +277,9 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
           if (this._isMounted) this.setState({ shiftedDisplayArea: null });
         }}
         onCloseComplete={() => {
-          if (onCloseComplete) onCloseComplete();
-          this.setState({ showing: false });
+          this.setState({ showing: false }, () => {
+            if (onCloseComplete) onCloseComplete();
+          });
         }}
         skipMeasureContent={() => this.waitForResizeToFinish}
         onDisplayAreaChanged={rect => this.setDefaultDisplayArea(rect)}
