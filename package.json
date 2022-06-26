@@ -55,7 +55,6 @@
     "jest-serializer-enzyme": "^1.0.0",
     "patch-package": "^6.2.2",
     "postinstall-postinstall": "^2.1.0",
-    "prop-types": "^15.7.2",
     "react": "^17.0.2",
     "react-addons-test-utils": "^15.6.2",
     "react-dom": "^17.0.2",
@@ -63,5 +62,8 @@
     "react-test-renderer": "^17.0.2",
     "typescript": "^4.2.4"
   },
-  "dependencies": {}
+  "dependencies": {
+    "prop-types": "^15.8.1",
+    "deprecated-react-native-prop-types": "^2.3.0"
+  }
 }

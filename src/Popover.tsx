@@ -1,8 +1,9 @@
 import React, { Component, RefObject, ReactNode, ReactElement } from 'react';
 import PropTypes from 'prop-types';
+import { ViewPropTypes } from 'deprecated-react-native-prop-types';
 import { View } from 'react-native';
 import { Rect, PopoverProps, Placement, Mode, Point, Size } from './Types';
-import { DEFAULT_ARROW_SIZE, isWeb } from './Constants';
+import { DEFAULT_ARROW_SIZE } from './Constants';
 import JSModalPopover from './JSModalPopover';
 import RNModalPopover from './RNModalPopover';
 
@@ -20,13 +21,6 @@ interface PublicPopoverProps extends Omit<PopoverProps, 'displayArea' | 'arrowSi
 interface PublicPopoverState {
   isVisible: boolean;
 }
-
-// React Native Web does not export ViewPropTypes, so this is a workaround
-const stylePropType =
-  isWeb
-    ? PropTypes.object
-    // eslint-disable-next-line
-    : require('react-native').ViewPropTypes.style
 
 export default class Popover extends Component<PublicPopoverProps, PublicPopoverState> {
   static propTypes = {
@@ -69,12 +63,12 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
     verticalOffset: PropTypes.number,
 
     // style
-    popoverStyle: stylePropType,
+    popoverStyle: ViewPropTypes.style,
     popoverShift: PropTypes.shape({
       x: PropTypes.number,
       y: PropTypes.number
     }),
-    backgroundStyle: stylePropType,
+    backgroundStyle: ViewPropTypes.style,
     arrowSize: PropTypes.shape({
       width: PropTypes.number,
       height: PropTypes.number
