@@ -256,7 +256,7 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
         displayArea={this.getDisplayArea()}
         fromRect={fromRect}
         onOpenStart={() => {
-          if (onOpenStart) onOpenStart();
+          onOpenStart?.();
           this.debug('Setting up keyboard listeners');
           this.keyboardDidShowSubscription = Keyboard.addListener('keyboardDidShow', this.keyboardDidShow);
           this.keyboardDidHideSubscription = Keyboard.addListener('keyboardDidHide', this.keyboardDidHide);
@@ -264,7 +264,7 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
           this.setState({ showing: true });
         }}
         onCloseStart={() => {
-          if (onCloseStart) onCloseStart();
+          onCloseStart?.();
           this.debug('Tearing down keyboard listeners');
           if (this.keyboardDidShowSubscription !== null) {
             this.keyboardDidShowSubscription.remove();
@@ -278,7 +278,7 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
         }}
         onCloseComplete={() => {
           this.setState({ showing: false }, () => {
-            if (onCloseComplete) onCloseComplete();
+            onCloseComplete?.();
           });
         }}
         skipMeasureContent={() => this.waitForResizeToFinish}
