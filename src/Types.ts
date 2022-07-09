@@ -34,7 +34,7 @@ export type PopoverProps = {
   isVisible?: boolean;
 
   // config
-  placement?: Placement;
+  placement?: Placement | Array<Placement>;
   animationConfig?: Partial<Animated.TimingAnimationConfig>;
   offset?: number;
   verticalOffset?: number;
