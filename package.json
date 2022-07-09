@@ -1,6 +1,6 @@
 {
   "name": "react-native-popover-view",
-  "version": "3.1.1",
+  "version": "5.0.2",
   "description": "A <Popover /> component for react-native iOS, Android, and Web",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -42,8 +42,8 @@
   },
   "devDependencies": {
     "@types/node": "^14.0.11",
-    "@types/react": "^16.9.35",
-    "@types/react-native": "^0.62.13",
+    "@types/react": "^17.0.3",
+    "@types/react-native": "^0.65.1",
     "@typescript-eslint/eslint-plugin": "^4.21.0",
     "@typescript-eslint/parser": "^4.21.0",
     "enzyme": "^3.10.0",
@@ -51,18 +51,19 @@
     "enzyme-to-json": "^3.3.5",
     "eslint": "^7.24.0",
     "eslint-plugin-react": "^7.23.2",
-    "jest": "^24.8.0",
+    "jest": "^26.6.3",
     "jest-serializer-enzyme": "^1.0.0",
     "patch-package": "^6.2.2",
     "postinstall-postinstall": "^2.1.0",
-    "react": "^16.8.6",
+    "react": "^17.0.2",
     "react-addons-test-utils": "^15.6.2",
-    "react-dom": "^16.8.6",
-    "react-native": "^0.62.2",
-    "react-test-renderer": "^16.8.6",
-    "typescript": "^3.9.3"
+    "react-dom": "^17.0.2",
+    "react-native": "^0.65.1",
+    "react-test-renderer": "^17.0.2",
+    "typescript": "^4.2.4"
   },
   "dependencies": {
-    "react-native-safe-area-view": "0.14.9"
+    "prop-types": "^15.8.1",
+    "deprecated-react-native-prop-types": "^2.3.0"
   }
 }

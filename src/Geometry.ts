@@ -1,25 +1,28 @@
 import { StyleProp, ViewStyle } from 'react-native';
-import { Placement } from './Constants';
-import { Rect, Size, Point, getArrowSize, getBorderRadius } from './Utility';
+import { Rect, Size, Point, Placement, PopoverProps } from './Types';
+import { getBorderRadius } from './Utility';
+import { POPOVER_MARGIN } from './Constants';
 
 type ComputeGeometryBaseProps = {
   requestedContentSize: Size;
   displayArea: Rect;
   debug: (line: string, obj?: unknown) => void;
+  offset?: number;
 }
 
 type ComputeGeometryProps = ComputeGeometryBaseProps & {
   placement?: Placement;
   previousPlacement?: Placement;
   fromRect: Rect | null;
-  arrowStyle: StyleProp<ViewStyle>;
+  arrowSize: Size;
   popoverStyle: StyleProp<ViewStyle>;
   arrowShift?: number;
+  popoverShift?: PopoverProps['popoverShift'];
 }
 
 type ComputeGeometryDirectionProps = ComputeGeometryBaseProps & {
   fromRect: Rect;
-  arrowStyle: StyleProp<ViewStyle>;
+  arrowSize: Size;
   borderRadius: number;
   debug: (line: string, obj?: unknown) => void;
 }
@@ -32,7 +35,7 @@ export class Geometry {
   popoverOrigin: Point;
   anchorPoint: Point;
   placement: Placement;
-  forcedContentSize: Size | null;
+  forcedContentSize: Size;
   viewLargerThanDisplayArea: {
     width: boolean,
     height: boolean
@@ -43,7 +46,7 @@ export class Geometry {
       popoverOrigin: Point;
       anchorPoint: Point;
       placement: Placement;
-      forcedContentSize: Size | null;
+      forcedContentSize: Size;
       viewLargerThanDisplayArea: {
         width: boolean,
         height: boolean
@@ -57,18 +60,25 @@ export class Geometry {
     this.viewLargerThanDisplayArea = viewLargerThanDisplayArea;
   }
   static equals(a: Geometry, b: Geometry): boolean {
-    return Point.equals(a.popoverOrigin, b.popoverOrigin) &&
-      Point.equals(a.anchorPoint, b.anchorPoint) &&
+    return a.popoverOrigin.equals(b.popoverOrigin) &&
+      a.anchorPoint.equals(b.anchorPoint) &&
       a.placement === b.placement &&
-      a.forcedContentSize?.width === b.forcedContentSize?.width &&
-      a.forcedContentSize?.height === b.forcedContentSize?.height &&
+      a.forcedContentSize.equals(b.forcedContentSize) &&
       a.viewLargerThanDisplayArea?.width === b.viewLargerThanDisplayArea?.width &&
       a.viewLargerThanDisplayArea?.height === b.viewLargerThanDisplayArea?.height;
   }
 }
 
 export function computeGeometry(options: ComputeGeometryProps): Geometry {
-  const { requestedContentSize, placement, displayArea, debug, popoverStyle, arrowShift } = options;
+  const {
+    requestedContentSize,
+    placement,
+    displayArea,
+    debug,
+    popoverStyle,
+    arrowShift,
+    popoverShift
+  } = options;
 
   let newGeom = null;
 
@@ -77,14 +87,6 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
     ? Rect.clone(options.fromRect)
     : null;
   if (fromRect && options.fromRect instanceof Rect) {
-
-    // Check to see if fromRect is outside of displayArea, and adjust if it is
-    if (fromRect.x > displayArea.x + displayArea.width)
-      fromRect.x = displayArea.x + displayArea.width;
-    if (fromRect.y > displayArea.y + displayArea.height)
-      fromRect.y = displayArea.y + displayArea.height;
-    if (fromRect.x < 0) fromRect.x = -1 * fromRect.width;
-    if (fromRect.y < 0) fromRect.y = -1 * fromRect.height;
 
     const borderRadius = getBorderRadius(popoverStyle);
 
@@ -101,7 +103,7 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
       case Placement.RIGHT:
         newGeom = computeRightGeometry({ ...options, fromRect, borderRadius });
         break;
-      case Placement.CENTER:
+      case Placement.FLOATING:
         newGeom = null;
         break;
       default:
@@ -111,7 +113,7 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
     debug('computeGeometry - initial chosen geometry', newGeom);
 
     /*
-     * If the popover will be restricted and the view that the popover isshowing
+     * If the popover will be restricted and the view that the popover is showing
      * from is sufficiently large, try to show the popover inside the view
      */
     if (
@@ -140,10 +142,10 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
         if (constrainedY + requestedContentSize.height > displayArea.y + displayArea.height)
           constrainedY = displayArea.y + displayArea.height - requestedContentSize.height;
 
-        const forcedContentSize = {
-          width: Math.min(fromRect.width - 20, displayArea.width),
-          height: Math.min(fromRect.height - 20, displayArea.height)
-        };
+        const forcedContentSize = new Size(
+          Math.min(fromRect.width - 20, displayArea.width),
+          Math.min(fromRect.height - 20, displayArea.height)
+        );
 
         debug('computeGeometry - showing inside anchor');
         newGeom = new Geometry({
@@ -151,7 +153,7 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
             new Point(constrainedX, constrainedY),
           anchorPoint:
             new Point(fromRect.x + (fromRect.width / 2), fromRect.y + (fromRect.height / 2)),
-          placement: Placement.CENTER,
+          placement: Placement.FLOATING,
           forcedContentSize,
           viewLargerThanDisplayArea: {
             width: requestedContentSize.width > forcedContentSize.width,
@@ -160,7 +162,7 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
         });
       } else if (
         /*
-         * If we can't fit inside or outside the fromRect, show the popover centered on the screen,
+         * If we can't fit inside or outside the fromRect, show the popover floating on the screen,
          *  but only do this if they haven't asked for a specifc placement type
          *  and if it will actually help show more content
          */
@@ -187,23 +189,34 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
     const preferedY = ((displayArea.height - requestedContentSize.height) / 2) + displayArea.y;
     const preferedX = ((displayArea.width - requestedContentSize.width) / 2) + displayArea.x;
 
-    debug('computeGeometry - showing centered on screen');
+    debug('computeGeometry - showing floating');
     newGeom = new Geometry({
       popoverOrigin: new Point(Math.max(minX, preferedX), Math.max(minY, preferedY)),
       anchorPoint: new Point(
         (displayArea.width / 2) + displayArea.x,
         (displayArea.height / 2) + displayArea.y
       ),
-      placement: Placement.CENTER,
-      forcedContentSize: {
-        width: displayArea.width,
-        height: displayArea.height
-      },
+      placement: Placement.FLOATING,
+      forcedContentSize: new Size(displayArea.width, displayArea.height),
       viewLargerThanDisplayArea: {
         width: preferedX < minX - 1,
         height: preferedY < minY - 1
       }
     });
+
+    // Apply popover shift
+    if (!newGeom.viewLargerThanDisplayArea.width && popoverShift?.x) {
+      debug('computeGeometry - applying popoverShift.x', popoverShift.x);
+      const horizontalMargin = (displayArea.width - requestedContentSize.width) / 2;
+      newGeom.popoverOrigin.x += popoverShift.x * horizontalMargin;
+      newGeom.anchorPoint.x = newGeom.popoverOrigin.x + (requestedContentSize.width / 2);
+    }
+    if (!newGeom.viewLargerThanDisplayArea.height && popoverShift?.y) {
+      debug('computeGeometry - applying popoverShift.y', popoverShift.y);
+      const verticalMargin = (displayArea.height - requestedContentSize.height) / 2;
+      newGeom.popoverOrigin.y += popoverShift.y * verticalMargin;
+      newGeom.anchorPoint.y = newGeom.popoverOrigin.y + (requestedContentSize.height / 2);
+    }
   }
 
   if (arrowShift && fromRect) {
@@ -221,21 +234,32 @@ function computeTopGeometry({
   displayArea,
   fromRect,
   requestedContentSize,
-  arrowStyle,
-  borderRadius
+  arrowSize,
+  borderRadius,
+  offset
 }: ComputeGeometryDirectionProps): Geometry {
-  const arrowSize = getArrowSize(Placement.TOP, arrowStyle);
+  // Apply a margin on non-arrow sides
+  displayArea = new Rect(
+    displayArea.x + POPOVER_MARGIN,
+    displayArea.y + POPOVER_MARGIN,
+    displayArea.width - (POPOVER_MARGIN * 2),
+    displayArea.height
+  );
+
+  if (offset) fromRect.y -= offset;
+
   const minY = displayArea.y;
+  const maxY = displayArea.y + displayArea.height;
   const preferredY = fromRect.y - requestedContentSize.height - arrowSize.height;
 
-  const forcedContentSize = {
-    height: (fromRect.y - arrowSize.height - displayArea.y),
-    width: displayArea.width
-  };
+  const forcedContentSize = new Size(
+    displayArea.width,
+    (fromRect.y - arrowSize.height - displayArea.y)
+  );
 
   const viewLargerThanDisplayArea = {
-    height: preferredY < minY - 1,
-    width: requestedContentSize.width > displayArea.width + 1
+    height: preferredY <= minY - 1,
+    width: requestedContentSize.width >= displayArea.width + 1
   };
 
   const viewWidth = viewLargerThanDisplayArea.width
@@ -248,13 +272,13 @@ function computeTopGeometry({
 
   const popoverOrigin = new Point(
     Math.min(maxX, Math.max(minX, preferredX)),
-    Math.max(minY, preferredY)
+    Math.min(maxY, Math.max(minY, preferredY))
   );
 
   const anchorPoint = new Point(fromRect.x + (fromRect.width / 2), fromRect.y);
 
   // Make sure the arrow isn't cut off
-  anchorPoint.x = Math.max(anchorPoint.x, (arrowSize.width / 2) + borderRadius);
+  anchorPoint.x = Math.max(anchorPoint.x, popoverOrigin.x + (arrowSize.width / 2) + borderRadius);
   anchorPoint.x = Math.min(
     anchorPoint.x,
     displayArea.x + displayArea.width - (arrowSize.width / 2) - borderRadius
@@ -273,20 +297,32 @@ function computeBottomGeometry({
   displayArea,
   fromRect,
   requestedContentSize,
-  arrowStyle,
-  borderRadius
+  arrowSize,
+  borderRadius,
+  offset
 }: ComputeGeometryDirectionProps): Geometry {
-  const arrowSize = getArrowSize(Placement.BOTTOM, arrowStyle);
-  const preferedY = fromRect.y + fromRect.height + arrowSize.height;
+  // Apply a margin on non-arrow sides
+  displayArea = new Rect(
+    displayArea.x + POPOVER_MARGIN,
+    displayArea.y,
+    displayArea.width - (POPOVER_MARGIN * 2),
+    displayArea.height - POPOVER_MARGIN
+  );
 
-  const forcedContentSize = {
-    height: displayArea.y + displayArea.height - preferedY,
-    width: displayArea.width
-  };
+  if (offset) fromRect.y += offset;
+
+  const minY = displayArea.y;
+  const maxY = displayArea.y + displayArea.height;
+  const preferedY = fromRect.y + fromRect.height;
+
+  const forcedContentSize = new Size(
+    displayArea.width,
+    displayArea.y + displayArea.height - preferedY
+  );
 
   const viewLargerThanDisplayArea = {
-    height: preferedY + requestedContentSize.height > displayArea.y + displayArea.height + 1,
-    width: requestedContentSize.width > displayArea.width + 1
+    height: preferedY + requestedContentSize.height >= displayArea.y + displayArea.height + 1,
+    width: requestedContentSize.width >= displayArea.width + 1
   };
 
   const viewWidth = viewLargerThanDisplayArea.width
@@ -299,13 +335,13 @@ function computeBottomGeometry({
 
   const popoverOrigin = new Point(
     Math.min(maxX, Math.max(minX, preferedX)),
-    preferedY
+    Math.min(maxY, Math.max(minY, preferedY))
   );
 
   const anchorPoint = new Point(fromRect.x + (fromRect.width / 2), fromRect.y + fromRect.height);
 
   // Make sure the arrow isn't cut off
-  anchorPoint.x = Math.max(anchorPoint.x, (arrowSize.width / 2) + borderRadius);
+  anchorPoint.x = Math.max(anchorPoint.x, popoverOrigin.x + (arrowSize.width / 2) + borderRadius);
   anchorPoint.x = Math.min(
     anchorPoint.x,
     displayArea.x + displayArea.width - (arrowSize.width / 2) - borderRadius
@@ -325,18 +361,27 @@ function computeLeftGeometry({
   fromRect,
   requestedContentSize,
   borderRadius,
-  arrowStyle
+  arrowSize,
+  offset
 }: ComputeGeometryDirectionProps): Geometry {
-  const arrowSize = getArrowSize(Placement.LEFT, arrowStyle);
+  // Apply a margin on non-arrow sides
+  displayArea = new Rect(
+    displayArea.x + POPOVER_MARGIN,
+    displayArea.y + POPOVER_MARGIN,
+    displayArea.width,
+    displayArea.height - (POPOVER_MARGIN * 2)
+  );
 
-  const forcedContentSize = {
-    height: displayArea.height,
-    width: fromRect.x - displayArea.x - arrowSize.width
-  };
+  if (offset) fromRect.x -= offset;
+
+  const forcedContentSize = new Size(
+    fromRect.x - displayArea.x - arrowSize.width,
+    displayArea.height
+  );
 
   const viewLargerThanDisplayArea = {
-    height: requestedContentSize.height > displayArea.height + 1,
-    width: requestedContentSize.width > fromRect.x - displayArea.x - arrowSize.width + 1
+    height: requestedContentSize.height >= displayArea.height + 1,
+    width: requestedContentSize.width >= fromRect.x - displayArea.x - arrowSize.width + 1
   };
 
   const viewWidth = viewLargerThanDisplayArea.width
@@ -346,21 +391,23 @@ function computeLeftGeometry({
     ? forcedContentSize.height
     : requestedContentSize.height;
 
-  const preferedX = fromRect.x - viewWidth - arrowSize.width;
+  const preferedX = fromRect.x - viewWidth - arrowSize.height;
+  const minX = displayArea.x;
+  const maxX = displayArea.x + displayArea.width;
 
   const preferedY = fromRect.y + ((fromRect.height - viewHeight) / 2);
   const minY = displayArea.y;
   const maxY = (displayArea.height - viewHeight) + displayArea.y;
 
   const popoverOrigin = new Point(
-    preferedX,
+    Math.min(Math.max(minX, preferedX), maxX),
     Math.min(Math.max(minY, preferedY), maxY)
   );
 
   const anchorPoint = new Point(fromRect.x, fromRect.y + (fromRect.height / 2));
 
   // Make sure the arrow isn't cut off
-  anchorPoint.y = Math.max(anchorPoint.y, (arrowSize.height / 2) + borderRadius);
+  anchorPoint.y = Math.max(anchorPoint.y, popoverOrigin.y + (arrowSize.height / 2) + borderRadius);
   anchorPoint.y = Math.min(
     anchorPoint.y,
     displayArea.y + displayArea.height - (arrowSize.height / 2) - borderRadius
@@ -379,42 +426,54 @@ function computeRightGeometry({
   displayArea,
   fromRect,
   requestedContentSize,
-  arrowStyle,
-  borderRadius
+  arrowSize,
+  borderRadius,
+  offset
 }: ComputeGeometryDirectionProps): Geometry {
-  const arrowSize = getArrowSize(Placement.RIGHT, arrowStyle);
+  // Apply a margin on non-arrow sides
+  displayArea = new Rect(
+    displayArea.x,
+    displayArea.y + POPOVER_MARGIN,
+    displayArea.width - POPOVER_MARGIN,
+    displayArea.height - (POPOVER_MARGIN * 2)
+  );
+
+  if (offset) fromRect.x += offset;
+
   const horizontalSpace =
     displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width;
 
-  const forcedContentSize = {
-    height: displayArea.height,
-    width: horizontalSpace
-  };
+  const forcedContentSize = new Size(
+    horizontalSpace,
+    displayArea.height
+  );
 
   const viewLargerThanDisplayArea = {
-    height: requestedContentSize.height > displayArea.height + 1,
-    width: requestedContentSize.width > horizontalSpace + 1
+    height: requestedContentSize.height >= displayArea.height + 1,
+    width: requestedContentSize.width >= horizontalSpace + 1
   };
 
   const viewHeight = viewLargerThanDisplayArea.height
     ? forcedContentSize.height
     : requestedContentSize.height;
 
-  const preferedX = fromRect.x + fromRect.width + arrowSize.width;
+  const preferedX = fromRect.x + fromRect.width;
+  const minX = displayArea.x;
+  const maxX = displayArea.x + displayArea.width;
 
   const preferedY = fromRect.y + ((fromRect.height - viewHeight) / 2);
   const minY = displayArea.y;
   const maxY = (displayArea.height - viewHeight) + displayArea.y;
 
   const popoverOrigin = new Point(
-    preferedX,
+    Math.min(Math.max(minX, preferedX), maxX),
     Math.min(Math.max(minY, preferedY), maxY)
   );
 
   const anchorPoint = new Point(fromRect.x + fromRect.width, fromRect.y + (fromRect.height / 2.0));
 
   // Make sure the arrow isn't cut off
-  anchorPoint.y = Math.max(anchorPoint.y, (arrowSize.height / 2) + borderRadius);
+  anchorPoint.y = Math.max(anchorPoint.y, popoverOrigin.y + (arrowSize.height / 2) + borderRadius);
   anchorPoint.y = Math.min(
     anchorPoint.y,
     displayArea.y + displayArea.height - (arrowSize.height / 2) - borderRadius
@@ -436,7 +495,7 @@ function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry | null
     fromRect,
     previousPlacement,
     debug,
-    arrowStyle
+    arrowSize
   } = options;
 
   // Keep same placement if possible (left/right)
@@ -461,10 +520,11 @@ function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry | null
    * Otherwise, find the place that can fit it best (try left/right but
    * default to top/bottom as that will typically have more space)
    */
-  const arrowSize = getArrowSize(Placement.LEFT, arrowStyle);
 
   // generating list of all possible sides with validity
-  const spaceList: Record<Placement, PlacementOption> = {
+  debug('computeAutoGeometry - displayArea', displayArea);
+  debug('computeAutoGeometry - fromRect', fromRect);
+  const spaceList: SpaceList = {
     [Placement.LEFT]: {
       sizeAvailable: fromRect.x - displayArea.x - arrowSize.width,
       sizeRequested: requestedContentSize.width
@@ -494,26 +554,33 @@ function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry | null
   switch (bestPlacementPosition) {
     case Placement.LEFT: return computeLeftGeometry(options);
     case Placement.RIGHT: return computeRightGeometry(options);
-    case Placement.Bottom: return computeBottomGeometry(options);
+    case Placement.BOTTOM: return computeBottomGeometry(options);
     case Placement.TOP: return computeTopGeometry(options);
     // Return nothing so popover will be placed in middle of screen
     default: return null;
   }
 }
 
+type SpaceList = Record<
+  Placement.LEFT | Placement.RIGHT | Placement.TOP | Placement.BOTTOM,
+  PlacementOption
+>
 type PlacementOption = {
-  sizeRequested: boolean;
+  sizeRequested: number;
   sizeAvailable: number;
 }
-function findBestPlacement(spaceList: Record<Placement, PlacementOption>): Placement | null {
-  return Object.entries(spaceList).reduce(
-    (bestPlacement, [placement, { sizeRequested, sizeAvailable }]) => (
+function findBestPlacement(spaceList: SpaceList): Placement | null {
+  return Object.keys(spaceList).reduce(
+    (bestPlacement, placement) => (
       // If it can fit, and is the first one or fits better than the last one, use this placement
-      sizeRequested <= sizeAvailable &&
-        (!bestPlacement || sizeAvailable > spaceList[bestPlacement].sizeAvailable)
-        ? placement
+      spaceList[placement].sizeRequested <= spaceList[placement].sizeAvailable &&
+        (
+          !bestPlacement ||
+          spaceList[placement].sizeAvailable > spaceList[bestPlacement].sizeAvailable
+        )
+        ? placement as Placement
         : bestPlacement
     ),
-    null
+    null as Placement | null
   );
 }

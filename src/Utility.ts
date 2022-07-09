@@ -1,63 +1,18 @@
+import { RefObject, ComponentClass, Component } from 'react';
 import { NativeModules, findNodeHandle, StyleProp, ViewStyle, StyleSheet } from 'react-native';
-import { Placement, DEFAULT_ARROW_SIZE, DEFAULT_BORDER_RADIUS } from './Constants';
+import { Placement, Point, Rect, Size } from './Types';
+import { DEFAULT_ARROW_SIZE, DEFAULT_BORDER_RADIUS } from './Constants';
 
-export class Point {
-  x: number;
-  y: number;
-  constructor(x: number, y: number) {
-    this.x = x;
-    this.y = y;
-  }
-  static equals(a: Point, b: Point): boolean {
-    return Math.round(a.x) === Math.round(b.x) && Math.round(a.y) === Math.round(b.y);
-  }
-}
+// Need any here to match signature of findNodeHandle
+// eslint-disable-next-line
+type RefType = RefObject<number | Component<any, any, any> | ComponentClass<any, any> | null>;
 
-export class Size {
-  width: number;
-  height: number;
-  constructor(width: number, height: number) {
-    this.width = width;
-    this.height = height;
-  }
-
-  static equals(a: Size, b: Size): boolean {
-    return Math.round(a.width) === Math.round(b.width) &&
-      Math.round(a.height) === Math.round(b.height);
-  }
-}
-
-export class Rect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-
-  constructor(x: number, y: number, width: number, height: number) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-  }
-
-  static equals(a: Rect, b: Rect): boolean {
-    return (Math.round(a.x) === Math.round(b.x) &&
-      Math.round(a.y) === Math.round(b.y) &&
-      Math.round(a.width) === Math.round(b.width) &&
-      Math.round(a.height) === Math.round(b.height));
-  }
-
-  static clone(rect: Rect): Rect {
-    return new Rect(rect.x, rect.y, rect.width, rect.height);
-  }
-}
-
-export function getRectForRef(ref: RefObject): Promise<Rect> {
+export function getRectForRef(ref: RefType): Promise<Rect> {
   return new Promise((resolve, reject) => {
     if (ref.current) {
       NativeModules.UIManager.measure(
         findNodeHandle(ref.current),
-        (_, _, width: number, height: number, x: number, y: number) =>
+        (_1: unknown, _2: unknown, width: number, height: number, x: number, y: number) =>
           resolve(new Rect(x, y, width, height))
       );
     } else {
@@ -69,7 +24,7 @@ export function getRectForRef(ref: RefObject): Promise<Rect> {
 export async function waitForChange(
   getFirst: () => Promise<Rect>,
   getSecond: () => Promise<Rect>
-): void {
+): Promise<void> {
   // Failsafe so that the interval doesn't run forever
   let count = 0;
   let first, second;
@@ -83,10 +38,10 @@ export async function waitForChange(
     if (count++ > 20) {
       throw new Error('waitForChange - Timed out waiting for change (waited 2 seconds)');
     }
-  } while (Rect.equals(first, second));
+  } while (first.equals(second));
 }
 
-export async function waitForNewRect(ref: RefObject, initialRect: Rect): Promise<Rect> {
+export async function waitForNewRect(ref: RefType, initialRect: Rect): Promise<Rect> {
   await waitForChange(() => getRectForRef(ref), () => Promise.resolve(initialRect));
   const rect = await getRectForRef(ref);
   return rect;
@@ -113,7 +68,7 @@ export function pointChanged(a: Point, b: Point): boolean {
 export function getArrowSize(
   placement: Placement,
   arrowStyle: StyleProp<ViewStyle>
-): Promise<Size> {
+): Size {
   let { width, height } = StyleSheet.flatten(arrowStyle);
   if (typeof width !== 'number') ({ width } = DEFAULT_ARROW_SIZE);
   if (typeof height !== 'number') ({ height } = DEFAULT_ARROW_SIZE);
@@ -129,4 +84,19 @@ export function getArrowSize(
 export function getBorderRadius(popoverStyle: StyleProp<ViewStyle>): number {
   if (StyleSheet.flatten(popoverStyle).borderRadius === 0) return 0;
   return StyleSheet.flatten(popoverStyle).borderRadius || DEFAULT_BORDER_RADIUS;
+}
+
+export function getChangedProps(
+  props: Record<string, unknown>,
+  prevProps: Record<string, unknown>,
+  importantProps: string[]
+): string[] {
+  return importantProps.filter(key => {
+    const curVal = props[key];
+    const prevVal = prevProps[key];
+    if (curVal instanceof Rect && prevVal instanceof Rect) {
+      return !curVal.equals(prevVal);
+    }
+    return curVal !== prevVal;
+  });
 }
