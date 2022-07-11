@@ -50,7 +50,7 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
       top: PropTypes.number,
       bottom: PropTypes.number
     }),
-    placement:PropTypes.oneOfType([
+    placement: PropTypes.oneOfType([
       PropTypes.oneOf([
         Placement.LEFT,
         Placement.RIGHT,
