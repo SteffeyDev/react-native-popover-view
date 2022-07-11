@@ -50,14 +50,27 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
       top: PropTypes.number,
       bottom: PropTypes.number
     }),
-    placement: PropTypes.oneOf([
-      Placement.LEFT,
-      Placement.RIGHT,
-      Placement.TOP,
-      Placement.BOTTOM,
-      Placement.AUTO,
-      Placement.FLOATING,
-      Placement.CENTER
+    placement:PropTypes.oneOfType([
+      PropTypes.oneOf([
+        Placement.LEFT,
+        Placement.RIGHT,
+        Placement.TOP,
+        Placement.BOTTOM,
+        Placement.AUTO,
+        Placement.FLOATING,
+        Placement.CENTER
+      ]),
+      PropTypes.arrayOf(
+        PropTypes.oneOf([
+          Placement.LEFT,
+          Placement.RIGHT,
+          Placement.TOP,
+          Placement.BOTTOM,
+          Placement.AUTO,
+          Placement.FLOATING,
+          Placement.CENTER
+        ])
+      )
     ]),
     animationConfig: PropTypes.object,
     verticalOffset: PropTypes.number,
