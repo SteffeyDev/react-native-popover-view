@@ -225,19 +225,23 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
     const verticalOffset = (this.props.verticalOffset ?? 0) - displayAreaOffset.y;
     const horizontalOffset = -displayAreaOffset.x;
 
-    this.debug('calculateRectFromRef - waiting for ref to move');
+    this.debug('calculateRectFromRef - waiting for ref to move from', initialRect);
     let rect: Rect;
     count = 0;
     do {
       rect = await getRectForRef(fromRef);
       rect = new Rect(rect.x + horizontalOffset, rect.y + verticalOffset, rect.width, rect.height);
+
+      await new Promise(resolve => {
+        setTimeout(resolve, 100);
+      });
       // Timeout after 2 seconds
       if (count++ > 20) return;
       /*
-       * Checking if x and y is less than 0 because of a strange issue on Android related
+       * Checking if x and y is less than -1000 because of a strange issue on Android related
        * to the "Toggle from" feature, where the rect.y is a large negative number at first
        */
-    } while (rect.equals(initialRect) || rect.y < 0 || rect.x < 0);
+    } while (rect.equals(initialRect) || rect.y < -1000 || rect.x < -1000);
 
     this.debug('calculateRectFromRef - calculated Rect', rect);
     if (this._isMounted) this.setState({ fromRect: rect });

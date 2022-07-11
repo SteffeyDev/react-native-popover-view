@@ -31,13 +31,6 @@ type ComputeGeometryAutoProps = ComputeGeometryDirectionProps & {
   previousPlacement?: Placement;
 };
 
-type SpaceListProps = {
-  fromRect: Rect;
-  displayArea: Rect;
-  arrowSize: Size;
-  requestedContentSize: Size;
-}
-
 export class Geometry {
   popoverOrigin: Point;
   anchorPoint: Point;
@@ -89,8 +82,6 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
   } = options;
 
   let newGeom = null;
-  let selectedPlacement = 
-    Array.isArray(placement) ? (placement?.[0] || Placement.AUTO) : placement;
 
   // Make copy so doesn't modify original
   const fromRect = options.fromRect
@@ -100,24 +91,17 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
 
     const borderRadius = getBorderRadius(popoverStyle);
 
-    if(Array.isArray(placement)) {
-      const spaceList: SpaceList = generateSpaceList({ 
-        fromRect, 
-        displayArea, 
-        arrowSize, 
-        requestedContentSize 
-      });
-      let fountPlacement: boolean = false;
-      for(let i = 0; i < placement.length; ++i) {
-        if(isPlacementPossible(spaceList, placement[i])){
-          selectedPlacement = placement[i];
-          fountPlacement = true;
-          break;
-        }
-      }
-      if(!fountPlacement) {
-        selectedPlacement = findBestPlacement(spaceList) || undefined;
-      }
+    // Default to first option if given list of placements
+    let selectedPlacement = Array.isArray(placement) ? placement[0] : placement;
+
+    // If we can find a placement in the list that is better, use that
+    if (Array.isArray(placement)) {
+      const spaceList =
+        generateSpaceList({ fromRect, displayArea, requestedContentSize, arrowSize });
+      const bestPlacements = calculateBestPlacements(spaceList);
+      const [bestProvidedPlacement] = placement.
+        filter(p => p === Placement.AUTO || p === Placement.FLOATING || bestPlacements.includes(p));
+      if (bestProvidedPlacement) selectedPlacement = bestProvidedPlacement;
     }
 
     switch (selectedPlacement) {
@@ -196,7 +180,7 @@ export function computeGeometry(options: ComputeGeometryProps): Geometry {
          *  but only do this if they haven't asked for a specifc placement type
          *  and if it will actually help show more content
          */
-        selectedPlacement === Placement.AUTO &&
+        placement === Placement.AUTO &&
         (
           (
             newGeom.viewLargerThanDisplayArea.width &&
@@ -518,26 +502,46 @@ function computeRightGeometry({
   });
 }
 
-const generateSpaceList = ({fromRect, displayArea, arrowSize, requestedContentSize}: SpaceListProps) => {
+type PlacementOption = {
+  sizeRequested: number;
+  sizeAvailable: number;
+  fits: boolean;
+  extraSpace: number;
+}
+type SpaceList = Partial<Record<Placement, PlacementOption>>
+type SpaceListProps = Pick<ComputeGeometryDirectionProps, 'fromRect' | 'displayArea' | 'arrowSize' | 'requestedContentSize'>;
+function generateSpaceList({
+  fromRect,
+  displayArea,
+  arrowSize,
+  requestedContentSize
+}: SpaceListProps): SpaceList {
+  function generateOption(props: Pick<PlacementOption, 'sizeRequested' | 'sizeAvailable'>): PlacementOption {
+    return {
+      ...props,
+      fits: props.sizeAvailable >= props.sizeRequested,
+      extraSpace: props.sizeAvailable - props.sizeRequested
+    };
+  }
   return {
-    [Placement.LEFT]: {
+    [Placement.LEFT]: generateOption({
       sizeAvailable: fromRect.x - displayArea.x - arrowSize.width,
       sizeRequested: requestedContentSize.width
-    },
-    [Placement.RIGHT]: {
+    }),
+    [Placement.RIGHT]: generateOption({
       sizeAvailable:
         displayArea.x + displayArea.width - (fromRect.x + fromRect.width) - arrowSize.width,
       sizeRequested: requestedContentSize.width
-    },
-    [Placement.TOP]: {
+    }),
+    [Placement.TOP]: generateOption({
       sizeAvailable: fromRect.y - displayArea.y - arrowSize.width,
       sizeRequested: requestedContentSize.height
-    },
-    [Placement.BOTTOM]: {
+    }),
+    [Placement.BOTTOM]: generateOption({
       sizeAvailable:
         displayArea.y + displayArea.height - (fromRect.y + fromRect.height) - arrowSize.width,
       sizeRequested: requestedContentSize.height
-    }
+    })
   };
 }
 
@@ -577,12 +581,11 @@ function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry | null
   // generating list of all possible sides with validity
   debug('computeAutoGeometry - displayArea', displayArea);
   debug('computeAutoGeometry - fromRect', fromRect);
-  const spaceList: SpaceList = generateSpaceList({fromRect, displayArea, arrowSize, requestedContentSize});
 
-  debug('computeAutoGeometry - List of availabe space', spaceList);
+  const spaceList = generateSpaceList({ fromRect, displayArea, arrowSize, requestedContentSize });
+  debug('computeAutoGeometry - List of available space', spaceList);
 
-  const bestPlacementPosition = findBestPlacement(spaceList);
-
+  const [bestPlacementPosition] = calculateBestPlacements(spaceList);
   debug('computeAutoGeometry - Found best postition for placement', bestPlacementPosition);
 
   switch (bestPlacementPosition) {
@@ -595,33 +598,8 @@ function computeAutoGeometry(options: ComputeGeometryAutoProps): Geometry | null
   }
 }
 
-type SpaceList = Record<
-  Placement.LEFT | Placement.RIGHT | Placement.TOP | Placement.BOTTOM,
-  PlacementOption
->
-type PlacementOption = {
-  sizeRequested: number;
-  sizeAvailable: number;
-}
-function findBestPlacement(spaceList: SpaceList): Placement | null {
-  return Object.keys(spaceList).reduce(
-    (bestPlacement, placement) => (
-      // If it can fit, and is the first one or fits better than the last one, use this placement
-      spaceList[placement].sizeRequested <= spaceList[placement].sizeAvailable &&
-        (
-          !bestPlacement ||
-          spaceList[placement].sizeAvailable > spaceList[bestPlacement].sizeAvailable
-        )
-        ? placement as Placement
-        : bestPlacement
-    ),
-    null as Placement | null
-  );
-}
-
-function isPlacementPossible(spaceList: SpaceList, placementPosition: Placement): boolean {
-  if(typeof placementPosition === 'string'){
-    return spaceList?.[placementPosition]?.sizeRequested <= spaceList?.[placementPosition]?.sizeAvailable
-  }
-  return false;
+function calculateBestPlacements(spaceList: SpaceList): Placement[] {
+  return (Object.keys(spaceList) as Placement[]).filter(
+    o => spaceList[o]?.fits
+  ).sort((a, b) => (spaceList[b]?.extraSpace ?? 0) - (spaceList[a]?.extraSpace ?? 0));
 }
