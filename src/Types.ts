@@ -1,4 +1,5 @@
 import { Animated, StyleProp, ViewStyle } from 'react-native';
+import { ReactNode } from 'react';
 
 // eslint-disable-next-line
 export enum Placement {
@@ -31,6 +32,7 @@ export interface ModalPopoverState {
 }
 
 export type PopoverProps = {
+  children: ReactNode;
   isVisible?: boolean;
 
   // config
