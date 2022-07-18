@@ -32,7 +32,7 @@ export interface ModalPopoverState {
 }
 
 export type PopoverProps = {
-  children: ReactNode;
+  children?: ReactNode;
   isVisible?: boolean;
 
   // config
