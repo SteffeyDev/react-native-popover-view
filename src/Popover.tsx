@@ -15,7 +15,8 @@ interface PublicPopoverProps extends Omit<PopoverProps, 'displayArea' | 'arrowSi
     | Rect
     | RefObject<View>
     | ((sourceRef: RefObject<View>, openPopover: () => void) => ReactNode)
-    | ReactNode;
+    | ReactNode
+    | Point;
 }
 
 interface PublicPopoverState {
@@ -136,8 +137,8 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
     let sourceElement: ReactElement | undefined;
 
     if (from) {
-      if (typeof from === 'object' && (from as Point).x && (from as Point).y) {
-        if ((from as Rect).width && (from as Rect).height) {
+      if (typeof from === 'object' && ((from as Point).x || (from as Point).x === 0) && ((from as Point).y || (from as Point).y === 0)) {
+        if (((from as Rect).width || (from as Rect).width === 0) && ((from as Rect).height || (from as Rect).height === 0)) {
           const fromAsRect = from as Rect;
           fromRect = new Rect(fromAsRect.x, fromAsRect.y, fromAsRect.width, fromAsRect.height);
         } else {
