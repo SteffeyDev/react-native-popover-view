@@ -1,7 +1,7 @@
 import React, { Component, RefObject, ReactNode, ReactElement } from 'react';
 import PropTypes from 'prop-types';
 import { ViewPropTypes } from 'deprecated-react-native-prop-types';
-import { View } from 'react-native';
+import { View, ViewProps } from 'react-native';
 import { Rect, PopoverProps, Placement, Mode, Point, Size } from './Types';
 import { DEFAULT_ARROW_SIZE } from './Constants';
 import JSModalPopover from './JSModalPopover';
@@ -17,6 +17,7 @@ interface PublicPopoverProps extends Omit<PopoverProps, 'displayArea' | 'arrowSi
     | ((sourceRef: RefObject<View>, openPopover: () => void) => ReactNode)
     | ReactNode
     | Point;
+  testID?: ViewProps['testID'];
 }
 
 interface PublicPopoverState {
