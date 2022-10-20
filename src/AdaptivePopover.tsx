@@ -230,6 +230,10 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
     count = 0;
     do {
       rect = await getRectForRef(fromRef);
+      if ([rect.x, rect.y, rect.width,rect.height].every(i => i === undefined)) {
+        this.debug('rect not found')
+        return
+      }
       rect = new Rect(rect.x + horizontalOffset, rect.y + verticalOffset, rect.width, rect.height);
 
       await new Promise(resolve => {
