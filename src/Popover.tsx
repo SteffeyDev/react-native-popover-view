@@ -7,7 +7,7 @@ import { DEFAULT_ARROW_SIZE } from './Constants';
 import JSModalPopover from './JSModalPopover';
 import RNModalPopover from './RNModalPopover';
 
-interface PublicPopoverProps extends Omit<PopoverProps, 'displayArea' | 'arrowSize'> {
+export interface PublicPopoverProps extends Omit<PopoverProps, 'displayArea' | 'arrowSize'> {
   displayArea?: Pick<Rect, 'x' | 'y' | 'width' | 'height'>;
   arrowSize?: Pick<Size, 'width' | 'height'>;
   mode?: Mode;

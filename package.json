@@ -1,6 +1,6 @@
 {
   "name": "react-native-popover-view",
-  "version": "5.1.6",
+  "version": "5.1.7",
   "description": "A <Popover /> component for react-native iOS, Android, and Web",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
