@@ -117,6 +117,33 @@ function App() {
 }
 ```
 
+### Showing popover from an element (alternative approach)
+
+If you prefer to let the `Popover` handle opening from an element but need to close it programmatically, you can also use the exposed method `requestClose` to close it manually.
+
+```jsx
+import React, { useRef } from 'react';
+import Popover from 'react-native-popover-view';
+
+function App() {
+  const popoverRef = useRef();
+
+  return (
+    <Popover
+      ref={popoverRef}
+      from={(
+        <TouchableOpacity>
+          <Text>Press here to open popover!</Text>
+        </TouchableOpacity>
+      )}>
+      <TouchableOpacity onPress={() => popoverRef.current.requestClose()}>
+        <Text>Tap to close me</Text>
+      </TouchableOpacity>
+    </Popover>
+  );
+}
+```
+
 ### Showing popover from a reference to an element
 
 If you need even more control (e.g. having the `Popover` and `Touchable` in complete different parts of the node hierarchy), you can just pass in a normal `ref`.
