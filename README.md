@@ -12,6 +12,12 @@ It is written entirely in TypeScript and uses [React Native's native driver](htt
 
 [Open the snack](https://snack.expo.dev/@steffeydev/react-native-popover-view) to play with all the features!
 
+------
+
+##### Looking for maintainers
+
+I no longer have any React Native apps that I actively maintain, and so am thus detached from the community and need to focus my attention elsewhere. If you actively use this project and are interested in maintaining it, please reach out and let me know!
+
 ##### Table of Contents
 * [Features](#features)
 * [Installation](#installation)
