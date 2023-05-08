@@ -41,12 +41,6 @@ export async function waitForChange(
   } while (first.equals(second));
 }
 
-export async function waitForNewRect(ref: RefType, initialRect: Rect): Promise<Rect> {
-  await waitForChange(() => getRectForRef(ref), () => Promise.resolve(initialRect));
-  const rect = await getRectForRef(ref);
-  return rect;
-}
-
 export function sizeChanged(a: Size | null, b: Size | null): boolean {
   if (!a || !b) return false;
   return Math.round(a.width) !== Math.round(b.width) ||

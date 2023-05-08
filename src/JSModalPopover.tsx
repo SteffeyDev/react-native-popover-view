@@ -44,8 +44,12 @@ export default class JSModalPopover extends Component<JSModalPopoverProps, Modal
               this.setState({ visible: false });
             }}
             getDisplayAreaOffset={async () => {
-              const rect = await getRectForRef(this.containerRef);
-              return new Point(rect.x, rect.y);
+              try {
+                const rect = await getRectForRef(this.containerRef);
+                return new Point(rect.x, rect.y);
+              } catch (err: unknown) {
+                return new Point(0, 0);
+              }
             }}
           />
         </View>

@@ -28,6 +28,6 @@ project.xcworkspace
 #
 node_modules/
 npm-debug.log
-
+.history/
 *.swp
 .dccache
