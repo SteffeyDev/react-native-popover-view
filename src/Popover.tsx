@@ -1,4 +1,4 @@
-import React, { Component, RefObject, ReactNode, ReactElement } from 'react';
+import React, { Component, PropsWithChildren, RefObject, ReactNode, ReactElement } from 'react';
 import PropTypes from 'prop-types';
 import { ViewPropTypes } from 'deprecated-react-native-prop-types';
 import { View, ViewProps } from 'react-native';
@@ -7,7 +7,7 @@ import { DEFAULT_ARROW_SIZE } from './Constants';
 import JSModalPopover from './JSModalPopover';
 import RNModalPopover from './RNModalPopover';
 
-export interface PublicPopoverProps extends Omit<PopoverProps, 'displayArea' | 'arrowSize'> {
+export interface PublicPopoverProps extends PropsWithChildren<Omit<PopoverProps, 'displayArea' | 'arrowSize'>> {
   displayArea?: Pick<Rect, 'x' | 'y' | 'width' | 'height'>;
   arrowSize?: Pick<Size, 'width' | 'height'>;
   mode?: Mode;
