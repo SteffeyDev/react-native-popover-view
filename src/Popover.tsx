@@ -13,8 +13,8 @@ export interface PublicPopoverProps extends Omit<PopoverProps, 'displayArea' | '
   mode?: Mode;
   from?:
     | Rect
-    | RefObject<View>
-    | ((sourceRef: RefObject<View>, openPopover: () => void) => ReactNode)
+    | RefObject<Component>
+    | ((sourceRef: RefObject<Component>, openPopover: () => void) => ReactNode)
     | ReactNode
     | Point;
   testID?: ViewProps['testID'];
