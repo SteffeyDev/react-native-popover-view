@@ -236,20 +236,28 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
       }
       rect = new Rect(rect.x + horizontalOffset, rect.y + verticalOffset, rect.width, rect.height);
 
+      if (count === 0 && AdaptivePopover.hasRetrievedSatisfyingRect(rect, initialRect)) {
+        break;
+      }
+
       await new Promise(resolve => {
         setTimeout(resolve, 100);
       });
       // Timeout after 2 seconds
       if (count++ > 20) return;
-      /*
-       * Checking if x and y is less than -1000 because of a strange issue on Android related
-       * to the "Toggle from" feature, where the rect.y is a large negative number at first
-       */
-    } while (rect.equals(initialRect) || rect.y < -1000 || rect.x < -1000);
+
+    } while (!AdaptivePopover.hasRetrievedSatisfyingRect(rect, initialRect));
 
     this.debug('calculateRectFromRef - calculated Rect', rect);
     if (this._isMounted) this.setState({ fromRect: rect });
   }
+
+  static hasRetrievedSatisfyingRect = (rect: Rect, initialRect: Rect): boolean =>
+    /*
+     * Checking if x and y is less than -1000 because of a strange issue on Android related
+     * to the "Toggle from" feature, where the rect.y is a large negative number at first
+     */
+    !(rect.equals(initialRect) || rect.y < -1000 || rect.x < -1000)
 
   render(): ReactNode {
     const { onOpenStart, onCloseStart, onCloseComplete, fromRef, ...otherProps } = this.props;
