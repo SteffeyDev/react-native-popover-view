@@ -1,21 +1,31 @@
-import { RefObject } from 'react';
-import { StyleProp, ViewStyle, StyleSheet } from 'react-native';
+import { RefObject, ComponentClass, Component } from 'react';
+import { NativeModules, findNodeHandle, StyleProp, ViewStyle, StyleSheet, MeasureInWindowOnSuccessCallback } from 'react-native';
 import { Placement, Point, Rect, Size } from './Types';
 import { DEFAULT_ARROW_SIZE, DEFAULT_BORDER_RADIUS } from './Constants';
 
 // eslint-disable-next-line
-type RefType = RefObject<{
-  measureInWindow: (callback: (x: number, y: number, width: number, height: number) => void) => void
-}>;
+type RefType = RefObject<number | Component<any, any, any> | ComponentClass<any, any> | {
+  measureInWindow(callback: MeasureInWindowOnSuccessCallback): void;
+} | null>;
 
 export function getRectForRef(ref: RefType): Promise<Rect> {
   return new Promise((resolve, reject) => {
-    if (ref.current) {
-      ref.current.measureInWindow((x: number, y: number, width: number, height: number) =>
-        resolve(new Rect(x, y, width, height))
+    if (!ref.current) {
+      reject(new Error('getRectForRef - current is not set'));
+      return;
+    }
+
+    if (typeof ref.current === 'object' && 'measureInWindow' in ref.current) {
+      ref.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) =>
+          resolve(new Rect(x, y, width, height))
       );
     } else {
-      reject(new Error('getRectForRef - current is not set'));
+      NativeModules.UIManager.measure(
+        findNodeHandle(ref.current),
+        (_1: unknown, _2: unknown, width: number, height: number, x: number, y: number) =>
+          resolve(new Rect(x, y, width, height))
+      );
     }
   });
 }
