@@ -1,11 +1,11 @@
 import { RefObject, ComponentClass, Component } from 'react';
-import { NativeModules, findNodeHandle, StyleProp, ViewStyle, StyleSheet, MeasureInWindowOnSuccessCallback } from 'react-native';
+import { NativeModules, findNodeHandle, StyleProp, ViewStyle, StyleSheet, MeasureOnSuccessCallback } from 'react-native';
 import { Placement, Point, Rect, Size } from './Types';
 import { DEFAULT_ARROW_SIZE, DEFAULT_BORDER_RADIUS } from './Constants';
 
 // eslint-disable-next-line
 type RefType = RefObject<number | Component<any, any, any> | ComponentClass<any, any> | {
-  measureInWindow(callback: MeasureInWindowOnSuccessCallback): void;
+  measure(callback: MeasureOnSuccessCallback): void;
 } | null>;
 
 export function getRectForRef(ref: RefType): Promise<Rect> {
@@ -15,8 +15,8 @@ export function getRectForRef(ref: RefType): Promise<Rect> {
       return;
     }
 
-    if (typeof ref.current === 'object' && 'measureInWindow' in ref.current) {
-      ref.current.measureInWindow(
+    if (typeof ref.current === 'object' && 'measure' in ref.current) {
+      ref.current.measure(
         (x: number, y: number, width: number, height: number) =>
           resolve(new Rect(x, y, width, height))
       );
