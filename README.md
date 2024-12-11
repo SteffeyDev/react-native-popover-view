@@ -480,6 +480,8 @@ Pull requests are welcome; if you find that you are having to bend over backward
 
 Use `yarn build` to build the `dist` folder (compile TypeScript to JavaScript), and use `yarn watch` to continuously build on save.
 
+There's a separate package, [react-native-popover-view-test-app](https://github.com/SteffeyDev/react-native-popover-view-test-app) that can be used during development. In the package, there's a script, (`./transfer`) that you can adapt to help copy the dist files from this project to the test app while watching for changes.
+
 ## <a name="credits"/>Credits
 
 This is a fork of [react-native-popover](https://github.com/jeanregisser/react-native-popover), originally created by Jean Regisser <jean.regisser@gmail.com> (https://github.com/jeanregisser) but since abandoned.
