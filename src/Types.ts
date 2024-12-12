@@ -39,7 +39,6 @@ export type PopoverProps = {
   placement?: Placement | Array<Placement>;
   animationConfig?: Partial<Animated.TimingAnimationConfig>;
   offset?: number;
-  verticalOffset?: number;
   displayArea?: Rect;
   displayAreaInsets?: Insets;
 
@@ -49,6 +48,7 @@ export type PopoverProps = {
   backgroundStyle?: StyleProp<ViewStyle>;
   arrowShift?: number;
   arrowSize?: Size;
+  statusBarTranslucent?: boolean;
 
   // lifecycle
   onOpenStart?: () => void;

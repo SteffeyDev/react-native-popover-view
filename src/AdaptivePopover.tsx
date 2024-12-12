@@ -1,6 +1,6 @@
 import React, { Component, ReactNode, RefObject } from 'react';
-import { Dimensions, EmitterSubscription, Keyboard, View } from 'react-native';
-import { DEBUG, isIOS } from './Constants';
+import { Dimensions, EmitterSubscription, Keyboard, Platform, StatusBar, View } from 'react-native';
+import { DEBUG, DEFAULT_STATUS_BAR_TRANSLUCENT, isIOS } from './Constants';
 import { Point, PopoverProps, Rect } from './Types';
 import { getChangedProps, getRectForRef } from './Utility';
 import BasePopover from './BasePopover';
@@ -222,7 +222,14 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
       if (count++ > 20) return;
     }
 
-    const verticalOffset = (this.props.verticalOffset ?? 0) - displayAreaOffset.y;
+    const shouldAdjustForAndroidStatusBar =
+      Platform.OS === 'android' &&
+      (this.props.statusBarTranslucent ?? DEFAULT_STATUS_BAR_TRANSLUCENT);
+    const verticalOffsetAndroidAdjustment =
+      shouldAdjustForAndroidStatusBar
+        ? (StatusBar.currentHeight ?? 0)
+        : 0;
+    const verticalOffset = verticalOffsetAndroidAdjustment - displayAreaOffset.y;
     const horizontalOffset = -displayAreaOffset.x;
 
     this.debug('calculateRectFromRef - waiting for ref to move from', initialRect);

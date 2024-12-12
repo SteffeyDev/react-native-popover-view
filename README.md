@@ -339,8 +339,7 @@ onPositionChange  | function |             | Callback to be fired when the popov
 animationConfig   | object   |             | An object containing any configuration options that can be passed to Animated.timing (e.g. `{ duration: 600, easing: Easing.inOut(Easing.quad) }`).  The configuration options you pass will override the defaults for all animations.
 displayArea       | rect     |             | Area where the popover is allowed to be displayed.  By default, this will be automatically calculated to be the size of the display, or the size of the parent component if mode is not 'rn-modal'.
 displayAreaInsets | object   |             | Insets to apply to the display area.  The Popover will not be allowed to go beyond the display area minus the insets.
-statusBarTranslucent | bool  |             | For 'rn-modal' mode on Android only. Determines whether the background should go under the status bar. Passed through to RN `Modal` component, see [their docs](https://reactnative.dev/docs/modal#statusbartranslucent-1) as well.
-verticalOffset    | number   | 0           | The amount to vertically shift the popover on the screen, for use in correcting an occasional issue on Android.  In certain Android configurations, you may need to apply a `verticalOffset` of `-StatusBar.currentHeight` for the popover to originate from the correct place.  For shifting the popover in other situations, the `offset` prop should be used.
+statusBarTranslucent | bool  | true        | For 'rn-modal' mode on Android only. Determines whether the background should go under the status bar. Passed through to RN `Modal` component, see [their docs](https://reactnative.dev/docs/modal#statusbartranslucent-1) as well.
 debug             | bool     | false       | Set this to `true` to turn on debug logging to the console.  This is useful for figuring out why a Popover isn't showing.
 
 ### <a name="from"/>From
@@ -408,20 +407,6 @@ If on an **Android device**, try adding these props to the component whose `ref`
 * `collapsable={false}`
 
 See https://github.com/facebook/react-native/issues/3282 and https://github.com/SteffeyDev/react-native-popover-view/issues/28 for more info.
-
-#### Android vertical positioning incorrect
-
-Depending on how your app is configured, you may need to use the following `verticalOffset` prop to correctly position the popover on Android:
-```
-import { Platform, StatusBar, ... } from 'react-native';
-
-...
-
-  <Popover
-    {...otherProps}
-    verticalOffset={Platform.OS === 'android' ? -StatusBar.currentHeight : 0 }
-  />
-```
 
 #### Error when passing a functional component to the `from` prop
 

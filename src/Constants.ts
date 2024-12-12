@@ -5,6 +5,7 @@ export const MULTIPLE_POPOVER_WARNING = `Popover Warning - Can't Show - Attempte
 
 export const DEFAULT_ARROW_SIZE = new Size(16, 8);
 export const DEFAULT_BORDER_RADIUS = 3;
+export const DEFAULT_STATUS_BAR_TRANSLUCENT = true;
 export const POPOVER_MARGIN = 10;
 
 export const DEBUG = false;
