@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { ViewPropTypes } from 'deprecated-react-native-prop-types';
 import { View, ViewProps } from 'react-native';
 import { Rect, PopoverProps, Placement, Mode, Point, Size } from './Types';
-import { DEFAULT_ARROW_SIZE } from './Constants';
+import { DEFAULT_ARROW_SIZE, DEFAULT_STATUS_BAR_TRANSLUCENT } from './Constants';
 import JSModalPopover from './JSModalPopover';
 import RNModalPopover from './RNModalPopover';
 
@@ -75,7 +75,6 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
       )
     ]),
     animationConfig: PropTypes.object,
-    verticalOffset: PropTypes.number,
 
     // style
     popoverStyle: ViewPropTypes.style,
@@ -104,7 +103,7 @@ export default class Popover extends Component<PublicPopoverProps, PublicPopover
   static defaultProps: Partial<PublicPopoverProps> = {
     mode: Mode.RN_MODAL,
     placement: Placement.AUTO,
-    verticalOffset: 0,
+    statusBarTranslucent: DEFAULT_STATUS_BAR_TRANSLUCENT,
     popoverStyle: {},
     arrowSize: DEFAULT_ARROW_SIZE,
     backgroundStyle: {},

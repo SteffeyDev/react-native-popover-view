@@ -1,11 +1,10 @@
 import React, { RefObject, Component, ReactNode } from 'react';
 import { View, Modal } from 'react-native';
 import AdaptivePopover from './AdaptivePopover';
-import { MULTIPLE_POPOVER_WARNING } from './Constants';
+import { DEFAULT_STATUS_BAR_TRANSLUCENT, MULTIPLE_POPOVER_WARNING } from './Constants';
 import { PopoverProps, Rect, ModalPopoverState, Point } from './Types';
 
 interface RNModalPopoverProps extends PopoverProps {
-  statusBarTranslucent?: boolean
   fromRect?: Rect;
   fromRef?: RefObject<View>;
   displayArea?: Rect;
@@ -55,7 +54,7 @@ export default class RNModalPopover extends Component<RNModalPopoverProps, Modal
         supportedOrientations={['portrait', 'portrait-upside-down', 'landscape']}
         hardwareAccelerated={true}
         visible={visible}
-        statusBarTranslucent={statusBarTranslucent}
+        statusBarTranslucent={statusBarTranslucent ?? DEFAULT_STATUS_BAR_TRANSLUCENT}
         onShow={() => {
           RNModalPopover.isShowingInModal = true;
         }}

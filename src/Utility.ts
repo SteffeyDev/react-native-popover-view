@@ -1,18 +1,17 @@
-import { RefObject, ComponentClass, Component } from 'react';
-import { NativeModules, findNodeHandle, StyleProp, ViewStyle, StyleSheet } from 'react-native';
+import { RefObject } from 'react';
+import { MeasureInWindowOnSuccessCallback, StyleProp, ViewStyle, StyleSheet } from 'react-native';
 import { Placement, Point, Rect, Size } from './Types';
 import { DEFAULT_ARROW_SIZE, DEFAULT_BORDER_RADIUS } from './Constants';
 
-// Need any here to match signature of findNodeHandle
-// eslint-disable-next-line
-type RefType = RefObject<number | Component<any, any, any> | ComponentClass<any, any> | null>;
+type RefType = RefObject<{
+  measureInWindow: (callback: MeasureInWindowOnSuccessCallback) => void
+}>;
 
 export function getRectForRef(ref: RefType): Promise<Rect> {
   return new Promise((resolve, reject) => {
     if (ref.current) {
-      NativeModules.UIManager.measure(
-        findNodeHandle(ref.current),
-        (_1: unknown, _2: unknown, width: number, height: number, x: number, y: number) =>
+      ref.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) =>
           resolve(new Rect(x, y, width, height))
       );
     } else {

@@ -62,7 +62,7 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
 
   componentDidUpdate(prevProps: BasePopoverProps): void {
     // Make sure a value we care about has actually changed
-    const importantProps = ['isVisible', 'fromRect', 'displayArea', 'verticalOffset', 'offset', 'placement'];
+    const importantProps = ['isVisible', 'fromRect', 'displayArea', 'offset', 'placement'];
     const changedProps = getChangedProps(this.props, prevProps, importantProps);
     if (!changedProps.length) return;
     this.debug('[BasePopover] componentDidUpdate - changedProps', changedProps);
