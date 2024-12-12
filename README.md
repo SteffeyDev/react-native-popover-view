@@ -356,9 +356,9 @@ If no `from` is provided, the popover will float in the center of the screen.
 ### <a name="mode"/>Mode
 
 The Popover can show in three modes:
-* Popover.MODE.RN_MODAL ('rn-modal')
-* Popover.MODE.JS_MODAL ('js-modal')
-* Popover.MODE.TOOLTIP ('tooltip')
+* PopoverMode.RN_MODAL ('rn-modal')
+* PopoverMode.JS_MODAL ('js-modal')
+* PopoverMode.TOOLTIP ('tooltip')
 
 #### RN Modal (Default)
 
