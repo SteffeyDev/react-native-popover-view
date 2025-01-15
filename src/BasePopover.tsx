@@ -478,7 +478,11 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
       styles.popoverContent.backgroundColor;
 
     return (
-      <View pointerEvents="box-none" style={[styles.container, { top: -1 * FIX_SHIFT }]}>
+      <View
+        pointerEvents="box-none"
+        accessibilityViewIsModal
+        importantForAccessibility="yes"
+        style={[styles.container, { top: -1 * FIX_SHIFT }]}>
         <View
           pointerEvents="box-none"
           style={[styles.container, { top: FIX_SHIFT, flex: 1 }]}
@@ -489,9 +493,9 @@ export default class BasePopover extends Component<BasePopoverProps, BasePopover
             evt.nativeEvent.layout.height
           ))}
         />
-        <Animated.View pointerEvents="box-none" style={containerStyle}>
+        <Animated.View pointerEvents="box-none" style={containerStyle} onAccessibilityEscape={this.props.onRequestClose}>
           {this.props.showBackground !== false && (
-            <TouchableWithoutFeedback onPress={this.props.onRequestClose}>
+            <TouchableWithoutFeedback onPress={this.props.onRequestClose} accessibilityRole="button" accessible>
               <Animated.View style={backgroundStyle} />
             </TouchableWithoutFeedback>
           )}
