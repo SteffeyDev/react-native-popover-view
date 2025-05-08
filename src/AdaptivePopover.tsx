@@ -28,7 +28,7 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
     defaultDisplayArea: null,
     displayAreaOffset: null,
     showing: false
-  }
+  };
 
   getUnshiftedDisplayArea(): Rect {
     return this.props.displayArea ||
@@ -117,7 +117,8 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
         changedProps.includes('displayArea') ||
         (
           this.displayAreaStore &&
-          !this.getDisplayArea().equals(this.displayAreaStore)
+          !this.getDisplayArea().
+            equals(this.displayAreaStore)
         )
       ) {
         this.debug('componentDidUpdate - displayArea changed', this.getDisplayArea());
@@ -161,7 +162,10 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
         this.debug('setDefaultDisplayArea - displayAreaOffset', displayAreaOffset);
         await new Promise(resolve => {
           this.setState(
-            { defaultDisplayArea: newDisplayArea, displayAreaOffset },
+            {
+              defaultDisplayArea: newDisplayArea,
+              displayAreaOffset
+            },
             () => resolve(null)
           );
         });
@@ -210,16 +214,39 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
   async calculateRectFromRef(): Promise<void> {
     const { fromRef }: Partial<AdaptivePopoverProps> = this.props;
     const initialRect = this.state.fromRect || new Rect(0, 0, 0, 0);
-    const displayAreaOffset = this.state.displayAreaOffset ?? { x: 0, y: 0 };
+    const displayAreaOffset = this.state.displayAreaOffset ?? {
+      x: 0,
+      y: 0
+    };
 
     this.debug('calculateRectFromRef - waiting for ref');
+
+    // If no fromRef is provided, exit early
+    if (!fromRef) {
+      this.debug('calculateRectFromRef - no fromRef provided');
+      return;
+    }
+
     let count = 0;
-    while (!fromRef?.current) {
+    // Wait for ref.current to be available, but don't block forever
+    while (!fromRef.current) {
       await new Promise(resolve => {
         setTimeout(resolve, 100);
       });
       // Timeout after 2 seconds
-      if (count++ > 20) return;
+      if (count++ > 20) {
+        this.debug('calculateRectFromRef - timed out waiting for ref.current');
+        // If we can't get a ref after waiting, use a default rect in the center of the screen
+        if (this._isMounted) {
+          const {
+            width,
+            height
+          } = Dimensions.get('window');
+          const defaultRect = new Rect(width / 2, height / 2, 0, 0);
+          this.setState({ fromRect: defaultRect });
+        }
+        return;
+      }
     }
 
     const shouldAdjustForAndroidStatusBar =
@@ -233,30 +260,80 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
     const horizontalOffset = -displayAreaOffset.x;
 
     this.debug('calculateRectFromRef - waiting for ref to move from', initialRect);
-    let rect: Rect;
+    let rect: Rect | undefined;
     count = 0;
-    do {
-      rect = await getRectForRef(fromRef);
-      if ([rect.x, rect.y, rect.width, rect.height].every(i => i === undefined)) {
-        this.debug('calculateRectFromRef - rect not found, all properties undefined');
-        return;
+
+    try {
+      do {
+        try {
+          rect = await getRectForRef(fromRef);
+
+          // Check if we got a valid rect
+          if (rect.width === 0 && rect.height === 0 && rect.x === 0 && rect.y === 0) {
+            // This is our default rect from getRectForRef, meaning the ref wasn't ready
+            this.debug('calculateRectFromRef - got default rect, waiting for valid rect');
+            await new Promise(resolve => setTimeout(resolve, 100));
+            if (count++ > 20) {
+              // If we can't get a valid rect after waiting, use a default rect
+              this.debug('calculateRectFromRef - timed out waiting for valid rect');
+              if (this._isMounted) {
+                const {
+                  width,
+                  height
+                } = Dimensions.get('window');
+                rect = new Rect(width / 2, height / 2, 0, 0);
+                this.setState({ fromRect: rect });
+              }
+              return;
+            }
+            continue;
+          }
+
+          if ([rect.x, rect.y, rect.width, rect.height].every(i => i === undefined)) {
+            this.debug('calculateRectFromRef - rect not found, all properties undefined');
+            return;
+          }
+
+          rect = new Rect(rect.x + horizontalOffset, rect.y + verticalOffset, rect.width, rect.height);
+
+          if (count === 0 && AdaptivePopover.hasRetrievedSatisfyingRect(rect, initialRect)) {
+            break;
+          }
+
+          await new Promise(resolve => {
+            setTimeout(resolve, 100);
+          });
+          // Timeout after 2 seconds
+          if (count++ > 20) {
+            this.debug('calculateRectFromRef - timed out waiting for satisfying rect');
+            break;
+          }
+
+        } catch (error) {
+          this.debug(`calculateRectFromRef - error getting rect: ${error}`);
+          // If we encounter an error, wait a bit and try again
+          await new Promise(resolve => setTimeout(resolve, 100));
+          if (count++ > 20) {
+            this.debug('calculateRectFromRef - timed out after errors');
+            return;
+          }
+        }
+      } while (!rect || !AdaptivePopover.hasRetrievedSatisfyingRect(rect, initialRect));
+
+      this.debug('calculateRectFromRef - calculated Rect', rect);
+      if (this._isMounted) this.setState({ fromRect: rect });
+    } catch (error) {
+      this.debug(`calculateRectFromRef - unexpected error: ${error}`);
+      // If we encounter an unexpected error, use a default rect in the center of the screen
+      if (this._isMounted) {
+        const {
+          width,
+          height
+        } = Dimensions.get('window');
+        const defaultRect = new Rect(width / 2, height / 2, 0, 0);
+        this.setState({ fromRect: defaultRect });
       }
-      rect = new Rect(rect.x + horizontalOffset, rect.y + verticalOffset, rect.width, rect.height);
-
-      if (count === 0 && AdaptivePopover.hasRetrievedSatisfyingRect(rect, initialRect)) {
-        break;
-      }
-
-      await new Promise(resolve => {
-        setTimeout(resolve, 100);
-      });
-      // Timeout after 2 seconds
-      if (count++ > 20) return;
-
-    } while (!AdaptivePopover.hasRetrievedSatisfyingRect(rect, initialRect));
-
-    this.debug('calculateRectFromRef - calculated Rect', rect);
-    if (this._isMounted) this.setState({ fromRect: rect });
+    }
   }
 
   static hasRetrievedSatisfyingRect = (rect: Rect, initialRect: Rect): boolean =>
@@ -264,11 +341,20 @@ export default class AdaptivePopover extends Component<AdaptivePopoverProps, Ada
      * Checking if x and y is less than -1000 because of a strange issue on Android related
      * to the "Toggle from" feature, where the rect.y is a large negative number at first
      */
-    !(rect.equals(initialRect) || rect.y < -1000 || rect.x < -1000)
+    !(rect.equals(initialRect) || rect.y < -1000 || rect.x < -1000);
 
   render(): ReactNode {
-    const { onOpenStart, onCloseStart, onCloseComplete, fromRef, ...otherProps } = this.props;
-    const { fromRect, showing } = this.state;
+    const {
+      onOpenStart,
+      onCloseStart,
+      onCloseComplete,
+      fromRef,
+      ...otherProps
+    } = this.props;
+    const {
+      fromRect,
+      showing
+    } = this.state;
 
     // Don't render popover until we have an initial fromRect calculated for the view
     if (fromRef && !fromRect && !showing) return null;

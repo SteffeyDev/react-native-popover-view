@@ -10,12 +10,20 @@ type RefType = RefObject<{
 export function getRectForRef(ref: RefType): Promise<Rect> {
   return new Promise((resolve, reject) => {
     if (ref.current) {
-      ref.current.measureInWindow(
-        (x: number, y: number, width: number, height: number) =>
-          resolve(new Rect(x, y, width, height))
-      );
+      try {
+        ref.current.measureInWindow(
+          (x: number, y: number, width: number, height: number) =>
+            resolve(new Rect(x, y, width, height))
+        );
+      } catch (error) {
+        // If measureInWindow fails, return a default rect
+        console.warn('getRectForRef - measureInWindow failed:', error);
+        resolve(new Rect(0, 0, 0, 0));
+      }
     } else {
-      reject(new Error('getRectForRef - current is not set'));
+      // Instead of rejecting, resolve with a default rect
+      console.warn('getRectForRef - current is not set');
+      resolve(new Rect(0, 0, 0, 0));
     }
   });
 }
@@ -27,23 +35,47 @@ export async function waitForChange(
   // Failsafe so that the interval doesn't run forever
   let count = 0;
   let first, second;
-  do {
-    first = await getFirst();
-    second = await getSecond();
-    await new Promise(resolve => {
-      setTimeout(resolve, 100);
-    });
-    count++;
-    if (count++ > 20) {
-      throw new Error('waitForChange - Timed out waiting for change (waited 2 seconds)');
-    }
-  } while (first.equals(second));
+  try {
+    do {
+      try {
+        first = await getFirst();
+        second = await getSecond();
+      } catch (error) {
+        console.warn('waitForChange - error getting rects:', error);
+        await new Promise(resolve => {
+          setTimeout(resolve, 100);
+        });
+        count++;
+        if (count > 20) {
+          console.warn('waitForChange - Timed out waiting for valid rects (waited 2 seconds)');
+          return;
+        }
+        continue;
+      }
+
+      await new Promise(resolve => {
+        setTimeout(resolve, 100);
+      });
+      count++;
+      if (count > 20) {
+        console.warn('waitForChange - Timed out waiting for change (waited 2 seconds)');
+        return;
+      }
+    } while (first && second && first.equals(second));
+  } catch (error) {
+    console.warn('waitForChange - unexpected error:', error);
+  }
 }
 
 export async function waitForNewRect(ref: RefType, initialRect: Rect): Promise<Rect> {
-  await waitForChange(() => getRectForRef(ref), () => Promise.resolve(initialRect));
-  const rect = await getRectForRef(ref);
-  return rect;
+  try {
+    await waitForChange(() => getRectForRef(ref), () => Promise.resolve(initialRect));
+    const rect = await getRectForRef(ref);
+    return rect;
+  } catch (error) {
+    console.warn('waitForNewRect - error:', error);
+    return initialRect; // Return the initial rect if there's an error
+  }
 }
 
 export function sizeChanged(a: Size | null, b: Size | null): boolean {
