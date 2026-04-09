@@ -45,7 +45,7 @@ export function getRectForRef(ref) {
             });
         }
         else {
-            reject(new Error('getRectForRef - current is not set'));
+            resolve(new Rect(0, 0, 0, 0));
         }
     });
 }
