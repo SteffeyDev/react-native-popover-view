@@ -15,7 +15,7 @@ export function getRectForRef(ref: RefType): Promise<Rect> {
           resolve(new Rect(x, y, width, height))
       );
     } else {
-      reject(new Error('getRectForRef - current is not set'));
+      resolve(new Rect(0, 0, 0, 0));
     }
   });
 }
